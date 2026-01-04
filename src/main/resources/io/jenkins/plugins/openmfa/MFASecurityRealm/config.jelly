@@ -1,0 +1,21 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+  <f:entry title="${%config.delegate.title}" field="delegate">
+    <f:hetero-radio name="delegate" descriptors="${descriptor.getAllDescriptors()}"
+      field="delegate" />
+  </f:entry>
+
+  <f:entry title="${%config.requireMFA.title}" field="requireMFA">
+    <f:checkbox />
+    <f:description>
+      ${%config.requireMFA.description}
+    </f:description>
+  </f:entry>
+
+  <f:entry title="${%config.issuer.title}" field="issuer">
+    <f:textbox default="${descriptor.defaultIssuer}" />
+    <f:description>
+      ${%config.issuer.description}
+    </f:description>
+  </f:entry>
+</j:jelly>

@@ -1,0 +1,52 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:f="/lib/form">
+  <l:layout title="${%title}" norefresh="true">
+    <l:main-panel>
+      <j:choose>
+        <j:when test="${it.hasPendingAuth()}">
+          <div
+            style="max-width: 400px; margin: 100px auto; padding: 30px; border: 1px solid #ccc; border-radius: 5px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h2 style="text-align: center; margin-bottom: 30px;">
+              <img src="${rootURL}/images/secure.png"
+                alt="${%security.alt}"
+                style="width: 48px; height: 48px; vertical-align: middle;" /> ${%title} </h2>
+
+            <p style="text-align: center; margin-bottom: 20px;">
+              ${%prompt}
+            </p>
+
+            <form method="post" action="${rootURL}${it.securityCheckEndpoint}"
+              style="text-align: center;">
+              <div style="margin-bottom: 20px;">
+                <input type="text" name="${it.formParamTotpCode}" size="8" maxlength="6"
+                  required="true"
+                  pattern="[0-9]{6}"
+                  placeholder="000000"
+                  autofocus="true"
+                  style="font-size: 24px; text-align: center; letter-spacing: 5px; padding: 10px;" />
+              </div>
+
+              <div style="margin-bottom: 20px;">
+                <f:submit value="${%submit.button}"
+                  style="padding: 10px 30px; font-size: 16px;" />
+              </div>
+            </form>
+
+            <div
+              style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #666; font-size: 12px;">
+              <p>${%lost.device}</p>
+            </div>
+          </div>
+        </j:when>
+        <j:otherwise>
+          <div style="max-width: 400px; margin: 100px auto; text-align: center;">
+            <h2>${%no.pending.auth}</h2>
+            <p>
+              <st:out value="${%please.login(rootURL)}" />
+            </p>
+          </div>
+        </j:otherwise>
+      </j:choose>
+    </l:main-panel>
+  </l:layout>
+</j:jelly>

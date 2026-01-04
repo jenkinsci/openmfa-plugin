@@ -1,0 +1,93 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form" xmlns:l="/lib/layout">
+  <l:layout title="${%title}" permission="${app.ADMINISTER}">
+    <l:side-panel>
+      <st:include page="sidepanel.jelly" it="${app}" optional="true" />
+    </l:side-panel>
+    <l:main-panel>
+      <h1>${%title}</h1>
+
+      <j:set var="mfaProperty" value="${it.getMFAProperty()}" />
+
+      <j:choose>
+        <j:when test="${mfaProperty != null and mfaProperty.enabled and mfaProperty.configured}">
+          <!-- MFA is enabled -->
+          <div class="alert alert-success">
+            <strong>${%enabled.title}</strong>
+            <p>${%enabled.message}</p>
+          </div>
+
+          <div style="margin-top: 20px;">
+            <form method="post" action="doDisable">
+              <f:submit value="${%disable.button}" />
+            </form>
+          </div>
+
+          <div style="margin-top: 20px;">
+            <form method="post" action="doReset">
+              <f:submit value="${%reset.button}" />
+            </form>
+          </div>
+        </j:when>
+        <j:otherwise>
+          <!-- MFA is not enabled, show setup -->
+          <div class="alert alert-info">
+            <strong>${%setup.title}</strong>
+            <p>${%setup.message}</p>
+          </div>
+
+          <j:set var="secret" value="${it.generateSecret()}" />
+          <j:set var="user" value="${it.getCurrentUser()}" />
+          <j:set var="qrCode" value="${it.generateQRCode(user.id, secret)}" />
+
+          <div style="margin-top: 20px;">
+            <h2>${%step1.title}</h2>
+            <p>${%step1.message}</p>
+            <img src="${qrCode}" alt="${%step1.qrcode.alt}" style="border: 1px solid #ccc; padding: 10px;" />
+          </div>
+
+          <div style="margin-top: 20px;">
+            <h2>${%step2.title}</h2>
+            <p>${%step2.message}</p>
+            <code style="background-color: #f5f5f5; padding: 10px; display: block; margin: 10px 0;">
+              ${secret}</code>
+          </div>
+
+          <div style="margin-top: 20px;">
+            <h2>${%step3.title}</h2>
+            <p>${%step3.message}</p>
+
+            <form method="post" action="doEnable">
+              <input type="hidden" name="${it.formParamSecret}" value="${secret}" />
+              <table>
+                <tr>
+                  <td>${%verification.code}</td>
+                  <td>
+                    <input type="text" name="${it.formParamCode}" size="${it.totpCodeDigits}" maxlength="${it.totpCodeDigits}" required="true"
+                      pattern="[0-9]{${it.totpCodeDigits}}" placeholder="${it.codePlaceholder}" />
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="2">
+                    <f:submit value="${%enable.button}" />
+                  </td>
+                </tr>
+              </table>
+            </form>
+          </div>
+        </j:otherwise>
+      </j:choose>
+
+      <div
+        style="margin-top: 40px; padding: 20px; background-color: #f9f9f9; border: 1px solid #ddd;">
+        <h3>${%notes.title}</h3>
+        <ul>
+          <li>${%notes.backup}</li>
+          <li>${%notes.required}</li>
+          <li>${%notes.lost}</li>
+          <li>${%notes.expiry}</li>
+        </ul>
+      </div>
+    </l:main-panel>
+  </l:layout>
+</j:jelly>
