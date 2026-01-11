@@ -1,0 +1,7 @@
+<?jelly escape-by-default='true'?>
+<div xmlns:j="jelly:core">
+  <p>
+    Configure global settings for the OpenMFA plugin. These settings apply to all users
+    and control how Multi-Factor Authentication is enforced across your Jenkins instance.
+  </p>
+</div>

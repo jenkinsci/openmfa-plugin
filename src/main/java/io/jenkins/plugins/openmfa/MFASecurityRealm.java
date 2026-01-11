@@ -25,138 +25,159 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 @Setter
 public class MFASecurityRealm extends SecurityRealm {
 
-    @DataBoundSetter
-    private SecurityRealm delegate;
+  @DataBoundSetter
+  private SecurityRealm delegate;
 
-    @DataBoundSetter
-    private boolean requireMFA = UIConstants.Defaults.DEFAULT_REQUIRE_MFA;
+  @DataBoundSetter
+  private boolean requireMFA = UIConstants.Defaults.DEFAULT_REQUIRE_MFA;
 
-    @DataBoundSetter
-    private String issuer = UIConstants.Defaults.DEFAULT_ISSUER;
+  @DataBoundSetter
+  private String issuer = UIConstants.Defaults.DEFAULT_ISSUER;
 
-    @DataBoundConstructor
-    public MFASecurityRealm(SecurityRealm delegate) {
-        this.delegate = delegate;
-        this.requireMFA = UIConstants.Defaults.DEFAULT_REQUIRE_MFA;
-        this.issuer = UIConstants.Defaults.DEFAULT_ISSUER;
+  @DataBoundConstructor
+  public MFASecurityRealm(SecurityRealm delegate) {
+    this.delegate = delegate;
+    this.requireMFA = UIConstants.Defaults.DEFAULT_REQUIRE_MFA;
+    this.issuer = UIConstants.Defaults.DEFAULT_ISSUER;
+  }
+
+  @Override
+  public SecurityComponents createSecurityComponents() {
+    SecurityComponents delegateComponents = delegate.createSecurityComponents();
+
+    AuthenticationManager authManager =
+      new MFAAuthenticationManager(delegateComponents.manager2, requireMFA);
+
+    return new SecurityComponents(authManager, delegateComponents.userDetails2);
+  }
+
+  @Override
+  public UserDetails loadUserByUsername2(String username)
+    throws UsernameNotFoundException {
+    return delegate.loadUserByUsername2(username);
+  }
+
+  @Override
+  public hudson.security.GroupDetails loadGroupByGroupname2(
+    String groupname, boolean includeChildren)
+    throws UsernameNotFoundException {
+    return delegate.loadGroupByGroupname2(groupname, true);
+  }
+
+  /**
+   * Custom authentication manager that verifies MFA after successful primary
+   * authentication.
+   */
+  @Log
+  private static class MFAAuthenticationManager implements AuthenticationManager {
+
+    private final AuthenticationManager delegate;
+    private final boolean requireMFA;
+
+    MFAAuthenticationManager(AuthenticationManager delegate, boolean requireMFA) {
+      this.delegate = delegate;
+      this.requireMFA = requireMFA;
     }
 
     @Override
-    public SecurityComponents createSecurityComponents() {
-        SecurityComponents delegateComponents = delegate.createSecurityComponents();
+    public Authentication authenticate(Authentication authentication)
+      throws AuthenticationException {
+      // First, authenticate with the underlying realm (e.g., LDAP)
+      Authentication delegateAuth = delegate.authenticate(authentication);
 
-        AuthenticationManager authManager = new MFAAuthenticationManager(delegateComponents.manager2, requireMFA);
+      if (delegateAuth == null || !delegateAuth.isAuthenticated()) {
+        return delegateAuth;
+      }
 
-        return new SecurityComponents(authManager, delegateComponents.userDetails2);
+      // Check if MFA token is provided
+      if (authentication instanceof MFAAuthenticationToken) {
+        MFAAuthenticationToken mfaToken = (MFAAuthenticationToken) authentication;
+        String totpCode = mfaToken.getTotpCode();
+
+        // Get user and check MFA
+        User user = User.getById(delegateAuth.getName(), false);
+        if (user != null) {
+          MFAUserProperty mfaProperty = MFAUserProperty.forUser(user);
+
+          if (
+            mfaProperty != null && mfaProperty.isEnabled()
+              && mfaProperty.isConfigured()
+          ) {
+            // MFA is enabled, verify code
+            if (totpCode == null || totpCode.isEmpty()) {
+              log.warning(
+                String.format(
+                  "MFA required but no TOTP code provided for user: %s", user.getId()
+                )
+              );
+              throw new BadCredentialsException("MFA code required");
+            }
+
+            if (!mfaProperty.verifyCode(totpCode)) {
+              log.warning(
+                String.format("Invalid MFA code for user: %s", user.getId())
+              );
+              throw new BadCredentialsException("Invalid MFA code");
+            }
+
+            log.info(
+              String.format("MFA verification successful for user: %s", user.getId())
+            );
+          } else if (requireMFA) {
+            // MFA is required but not configured
+            log.warning(
+              String
+                .format("MFA required but not configured for user: %s", user.getId())
+            );
+            throw new BadCredentialsException("MFA must be configured");
+          }
+        }
+      } else {
+        // Not an MFA token, check if MFA is required
+        User user = User.getById(delegateAuth.getName(), false);
+        if (user != null) {
+          MFAUserProperty mfaProperty = MFAUserProperty.forUser(user);
+          if (
+            (mfaProperty != null && mfaProperty.isEnabled()
+              && mfaProperty.isConfigured()) || requireMFA
+          ) {
+            throw new BadCredentialsException("MFA code required");
+          }
+        }
+      }
+
+      return delegateAuth;
     }
+  }
 
-    @Override
-    public UserDetails loadUserByUsername2(String username) throws UsernameNotFoundException {
-        return delegate.loadUserByUsername2(username);
-    }
+  @Extension
+  public static class DescriptorImpl extends Descriptor<SecurityRealm> {
 
+    @NonNull
     @Override
-    public hudson.security.GroupDetails loadGroupByGroupname2(String groupname, boolean includeChildren)
-            throws UsernameNotFoundException {
-        return delegate.loadGroupByGroupname2(groupname, true);
+    public String getDisplayName() {
+      return UIConstants.DisplayNames.MFA_SECURITY_REALM;
     }
 
     /**
-     * Custom authentication manager that verifies MFA after successful primary
-     * authentication.
+     * Get the default issuer name (for Jelly views).
      */
-    @Log
-    private static class MFAAuthenticationManager implements AuthenticationManager {
-
-        private final AuthenticationManager delegate;
-        private final boolean requireMFA;
-
-        MFAAuthenticationManager(AuthenticationManager delegate, boolean requireMFA) {
-            this.delegate = delegate;
-            this.requireMFA = requireMFA;
-        }
-
-        @Override
-        public Authentication authenticate(Authentication authentication) throws AuthenticationException {
-            // First, authenticate with the underlying realm (e.g., LDAP)
-            Authentication delegateAuth = delegate.authenticate(authentication);
-
-            if (delegateAuth == null || !delegateAuth.isAuthenticated()) {
-                return delegateAuth;
-            }
-
-            // Check if MFA token is provided
-            if (authentication instanceof MFAAuthenticationToken) {
-                MFAAuthenticationToken mfaToken = (MFAAuthenticationToken) authentication;
-                String totpCode = mfaToken.getTotpCode();
-
-                // Get user and check MFA
-                User user = User.getById(delegateAuth.getName(), false);
-                if (user != null) {
-                    MFAUserProperty mfaProperty = MFAUserProperty.forUser(user);
-
-                    if (mfaProperty != null && mfaProperty.isEnabled() && mfaProperty.isConfigured()) {
-                        // MFA is enabled, verify code
-                        if (totpCode == null || totpCode.isEmpty()) {
-                            log.warning(
-                                    String.format("MFA required but no TOTP code provided for user: %s", user.getId()));
-                            throw new BadCredentialsException("MFA code required");
-                        }
-
-                        if (!mfaProperty.verifyCode(totpCode)) {
-                            log.warning(String.format("Invalid MFA code for user: %s", user.getId()));
-                            throw new BadCredentialsException("Invalid MFA code");
-                        }
-
-                        log.info(String.format("MFA verification successful for user: %s", user.getId()));
-                    } else if (requireMFA) {
-                        // MFA is required but not configured
-                        log.warning(String.format("MFA required but not configured for user: %s", user.getId()));
-                        throw new BadCredentialsException("MFA must be configured");
-                    }
-                }
-            } else {
-                // Not an MFA token, check if MFA is required
-                User user = User.getById(delegateAuth.getName(), false);
-                if (user != null) {
-                    MFAUserProperty mfaProperty = MFAUserProperty.forUser(user);
-                    if ((mfaProperty != null && mfaProperty.isEnabled() && mfaProperty.isConfigured()) || requireMFA) {
-                        throw new BadCredentialsException("MFA code required");
-                    }
-                }
-            }
-
-            return delegateAuth;
-        }
+    public String getDefaultIssuer() {
+      return UIConstants.Defaults.DEFAULT_ISSUER;
     }
 
-    @Extension
-    public static class DescriptorImpl extends Descriptor<SecurityRealm> {
-
-        @NonNull
-        @Override
-        public String getDisplayName() {
-            return UIConstants.DisplayNames.MFA_SECURITY_REALM;
+    /**
+     * Get all available security realm descriptors except this one.
+     */
+    public java.util.List<Descriptor<SecurityRealm>> getAllDescriptors() {
+      java.util.List<Descriptor<SecurityRealm>> descriptors =
+        new java.util.ArrayList<>();
+      for (Descriptor<SecurityRealm> d : SecurityRealm.all()) {
+        if (d != this) {
+          descriptors.add(d);
         }
-
-        /**
-         * Get the default issuer name (for Jelly views).
-         */
-        public String getDefaultIssuer() {
-            return UIConstants.Defaults.DEFAULT_ISSUER;
-        }
-
-        /**
-         * Get all available security realm descriptors except this one.
-         */
-        public java.util.List<Descriptor<SecurityRealm>> getAllDescriptors() {
-            java.util.List<Descriptor<SecurityRealm>> descriptors = new java.util.ArrayList<>();
-            for (Descriptor<SecurityRealm> d : SecurityRealm.all()) {
-                if (d != this) {
-                    descriptors.add(d);
-                }
-            }
-            return descriptors;
-        }
+      }
+      return descriptors;
     }
+  }
 }

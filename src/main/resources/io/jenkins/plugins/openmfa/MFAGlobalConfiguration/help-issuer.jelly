@@ -1,0 +1,7 @@
+<?jelly escape-by-default='true'?>
+<div xmlns:j="jelly:core">
+  <p>
+    The issuer name displayed in authenticator apps (e.g., Google Authenticator, Authy).
+    This helps users identify which service the MFA code is for. Default is "Jenkins".
+  </p>
+</div>

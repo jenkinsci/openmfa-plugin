@@ -1,10 +1,11 @@
 package io.jenkins.plugins.openmfa;
 
-import java.util.Collection;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
+
+import java.util.Collection;
 
 /**
  * Authentication token that includes TOTP code for MFA.
@@ -26,4 +27,5 @@ public class MFAAuthenticationToken extends UsernamePasswordAuthenticationToken 
     super(principal, credentials, authorities);
     this.totpCode = totpCode;
   }
+
 }

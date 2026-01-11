@@ -1,22 +1,6 @@
 <?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler">
 <div>
-    ${%plugin.description}
-    
-    <h2>${%plugin.features.title}</h2>
-    <ul>
-        <li>${%plugin.features.totp}</li>
-        <li>${%plugin.features.peruser}</li>
-        <li>${%plugin.features.qrcode}</li>
-        <li>${%plugin.features.wraps}</li>
-        <li>${%plugin.features.optional}</li>
-    </ul>
-    
-    <h2>${%plugin.setup.title}</h2>
-    <ol>
-        <li>${%plugin.setup.step1}</li>
-        <li>${%plugin.setup.step2}</li>
-        <li>${%plugin.setup.step3}</li>
-        <li>${%plugin.setup.step4}</li>
-        <li>${%plugin.setup.step5}</li>
-    </ol>
+    <p>This plugin allows you to configure Multi-Factor Authentication for Jenkins.</p>
 </div>
+</j:jelly>

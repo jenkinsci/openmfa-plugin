@@ -1,0 +1,7 @@
+<?jelly escape-by-default='true'?>
+<div xmlns:j="jelly:core">
+  <p>
+    When enabled, all users must configure and use Multi-Factor Authentication to access Jenkins.
+    Users without MFA configured will be prompted to set it up during login.
+  </p>
+</div>

@@ -1,0 +1,24 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form">
+  <f:section title="${%config.section.title}">
+    <f:entry title="${%config.requireMFA.title}" field="requireMFA">
+      <f:checkbox />
+    </f:entry>
+
+    <f:entry title="${%config.issuer.title}" field="issuer">
+      <f:textbox default="${instance.defaultIssuer}" />
+    </f:entry>
+
+    <f:entry title="${%config.allowSelfEnrollment.title}" field="allowSelfEnrollment">
+      <f:checkbox />
+    </f:entry>
+
+    <f:entry title="${%config.gracePeriodDays.title}" field="gracePeriodDays">
+      <f:number min="0" max="365" default="7" />
+    </f:entry>
+
+    <f:entry title="${%config.enforceForApiTokens.title}" field="enforceForApiTokens">
+      <f:checkbox />
+    </f:entry>
+  </f:section>
+</j:jelly>

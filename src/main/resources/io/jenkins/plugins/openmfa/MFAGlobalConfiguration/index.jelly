@@ -1,0 +1,77 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
+  <!--
+  | Main layout for the OpenMFA Global Configuration index view.
+  |   - Sets the page title via a localized resource key (%page.title).
+  |   - Restricts access to users with ADMINISTER permission.
+  |
+  | The "app" object references the main Jenkins instance and is used here to:
+  |   - Safeguard this page so only administrators can view or configure settings.
+  |   - Provide access to application-level context within the layout and sidepanel.
+  -->
+  <l:layout title="${%page.title}" permission="${app.ADMINISTER}">
+    <!--
+    | The 'it' attribute in Jelly determines the context object for the included page.
+    | By setting it="${app}", the sidepanel will render with the main Jenkins instance
+    | ("Hudson" or "Jenkins" object) as its context. Jenkins was originally known as "Hudson"
+    | until the project was renamed to "Jenkins" in early 2011 following a community split.
+    |
+    | References for this change:
+    |   - Hudson's future: https://www.jenkins.io/blog/2011/01/11/hudsons-future/
+    |   - Hudson and Jenkins: https://stackoverflow.com/questions/4973981/how-to-choose-between-hudson-and-jenkins
+    |   - Wikipedia: https://en.wikipedia.org/wiki/Jenkins_(software)#History
+    |
+    | Many older core APIs and plugins still use the term "Hudson" for historical reasons.
+    | Modern Jenkins refers to the "Jenkins" object, but both are functionally equivalent
+    | in this context. Standard sidepanel code checks for either type to provide compatibility
+    | with plugins and installations spanning both eras.
+    |
+    | This is typical in Jenkins to ensure the sidepanel links and controls are relevant
+    | to the overall Jenkins instance (like Manage Jenkins, System info, etc).
+    |
+    | If 'it' were not set to "${app}", the default context would be the MFAGlobalConfiguration
+    | instance, which would break or alter standard sidepanel behavior.
+    -->
+    <st:include page="sidepanel.jelly" it="${app}" />
+    <l:main-panel>
+      <h1>${%page.header}</h1>
+      <p>${%page.description}</p>
+
+      <div class="jenkins-section">
+        <h2>${%section.currentSettings}</h2>
+        <table class="jenkins-table">
+          <tr>
+            <th>${%table.setting}</th>
+            <th>${%table.value}</th>
+          </tr>
+          <tr>
+            <td>${%config.requireMFA.title}</td>
+            <td>${it.requireMFA ? 'Yes' : 'No'}</td>
+          </tr>
+          <tr>
+            <td>${%config.issuer.title}</td>
+            <td>${it.issuer}</td>
+          </tr>
+          <tr>
+            <td>${%config.allowSelfEnrollment.title}</td>
+            <td>${it.allowSelfEnrollment ? 'Yes' : 'No'}</td>
+          </tr>
+          <tr>
+            <td>${%config.gracePeriodDays.title}</td>
+            <td>${it.gracePeriodDays}</td>
+          </tr>
+          <tr>
+            <td>${%config.enforceForApiTokens.title}</td>
+            <td>${it.enforceForApiTokens ? 'Yes' : 'No'}</td>
+          </tr>
+        </table>
+      </div>
+
+      <div class="jenkins-section">
+        <p>
+          <a href="${rootURL}/configure" class="jenkins-button">${%button.configure}</a>
+        </p>
+      </div>
+    </l:main-panel>
+  </l:layout>
+</j:jelly>

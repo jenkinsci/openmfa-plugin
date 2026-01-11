@@ -12,9 +12,10 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 public @interface Service {
-    /**
-     * Optional name/identifier for the service.
-     * If not specified, the class name will be used.
-     */
-    String value() default "";
+
+  /**
+   * Optional name/identifier for the service.
+   * If not specified, the class name will be used.
+   */
+  String value() default "";
 }

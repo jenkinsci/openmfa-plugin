@@ -7,8 +7,10 @@ import java.lang.annotation.Target;
 
 /**
  * Annotation to mark fields for automatic dependency injection.
- * Fields annotated with @Inject will be automatically populated with service instances.
+ * Fields annotated with @Inject will be automatically populated with service
+ * instances.
  */
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.FIELD)
-public @interface Inject {}
+public @interface Inject {
+}

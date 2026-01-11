@@ -43,7 +43,8 @@
           <div style="margin-top: 20px;">
             <h2>${%step1.title}</h2>
             <p>${%step1.message}</p>
-            <img src="${qrCode}" alt="${%step1.qrcode.alt}" style="border: 1px solid #ccc; padding: 10px;" />
+            <img src="${qrCode}" alt="${%step1.qrcode.alt}"
+              style="border: 1px solid #ccc; padding: 10px;" />
           </div>
 
           <div style="margin-top: 20px;">
@@ -63,7 +64,8 @@
                 <tr>
                   <td>${%verification.code}</td>
                   <td>
-                    <input type="text" name="${it.formParamCode}" size="${it.totpCodeDigits}" maxlength="${it.totpCodeDigits}" required="true"
+                    <input type="text" name="${it.formParamCode}" size="${it.totpCodeDigits}"
+                      maxlength="${it.totpCodeDigits}" required="true"
                       pattern="[0-9]{${it.totpCodeDigits}}" placeholder="${it.codePlaceholder}" />
                   </td>
                 </tr>

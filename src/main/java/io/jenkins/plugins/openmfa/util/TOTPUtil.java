@@ -2,12 +2,14 @@ package io.jenkins.plugins.openmfa.util;
 
 import io.jenkins.plugins.openmfa.base.MFAException;
 import io.jenkins.plugins.openmfa.constant.TOTPConstants;
-import java.security.SecureRandom;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import lombok.AccessLevel;
 import lombok.NoArgsConstructor;
 import org.apache.commons.codec.binary.Base32;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+
+import java.security.SecureRandom;
 
 /**
  * Utility class for TOTP (Time-based One-Time Password) generation and

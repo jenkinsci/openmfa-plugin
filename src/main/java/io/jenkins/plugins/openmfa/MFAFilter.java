@@ -4,17 +4,18 @@ import hudson.Extension;
 import hudson.model.User;
 import io.jenkins.plugins.openmfa.constant.PluginConstants;
 import io.jenkins.plugins.openmfa.util.JenkinsUtil;
+import jakarta.servlet.Filter;
+import jakarta.servlet.FilterChain;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.java.Log;
+
 import java.io.IOException;
 import java.util.Optional;
-import javax.servlet.Filter;
-import javax.servlet.FilterChain;
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import lombok.extern.java.Log;
 
 /**
  * Filter that intercepts login requests to handle MFA verification.
@@ -49,7 +50,7 @@ public class MFAFilter implements Filter {
 
     if (
       user.isEmpty()
-        || !req.getRequestURI().endsWith(PluginConstants.Urls.SECURITY_CHECK_ENDPOINT)
+        || req.getRequestURI().endsWith(PluginConstants.Urls.SECURITY_CHECK_ENDPOINT)
     ) {
       log.fine("User is anonymous, continuing with normal authentication.");
       chain.doFilter(req, resp);
