@@ -1,5 +1,10 @@
 package io.jenkins.plugins.openmfa;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
+
 import hudson.Extension;
 import hudson.model.User;
 import io.jenkins.plugins.openmfa.constant.PluginConstants;
@@ -14,11 +19,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import lombok.extern.java.Log;
-
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
 
 /**
  * Filter that intercepts requests to handle MFA verification after standard
@@ -75,19 +75,11 @@ public class MFAFilter implements Filter {
     HttpServletRequest req = (HttpServletRequest) request;
     HttpServletResponse resp = (HttpServletResponse) response;
 
-    // Allow certain paths to pass through without MFA check
-    if (shouldAllowPath(req)) {
-      log.fine("Allowing path without MFA check: " + req.getRequestURI());
-      chain.doFilter(req, resp);
-      return;
-    }
-
     Optional<User> user = JenkinsUtil.getCurrentUser();
     log.fine("Current user: " + user.map(User::getId).orElse("<anonymous>"));
 
-    // If user is not authenticated, let them through to login page
-    if (user.isEmpty()) {
-      log.fine("User is anonymous, continuing with normal flow.");
+    if (user.isEmpty() || shouldAllowPath(req)) {
+      log.fine("Allowing path without MFA check: " + req.getRequestURI());
       chain.doFilter(req, resp);
       return;
     }
@@ -124,6 +116,20 @@ public class MFAFilter implements Filter {
       }
     }
 
+    Optional<User> user = JenkinsUtil.getCurrentUser();
+    if (user.isPresent()) {
+      MFAUserProperty mfaProperty = MFAUserProperty.forUser(user.get());
+      if (
+        MFAGlobalConfiguration.get().isRequireMFA()
+          || (mfaProperty != null
+            && mfaProperty.isEnabled()
+            && mfaProperty.isConfigured())
+      ) {
+        // MFA is required or user has MFA configured, block access
+        return false;
+      }
+    }
+
     // Allow user-scoped setup page (/user/<id>/mfa-setup and subpaths) without MFA,
     // otherwise users can get locked out when trying to configure/disable MFA.
     if (
@@ -156,13 +162,21 @@ public class MFAFilter implements Filter {
 
     String username = user.getId();
     MFAUserProperty mfaProperty = MFAUserProperty.forUser(user);
-
-    // If MFA is not enabled or configured for this user, allow access
     if (
       mfaProperty == null || !mfaProperty.isEnabled() || !mfaProperty.isConfigured()
     ) {
-      log.fine(String.format("MFA not required for user: %s", username));
-      return true;
+      MFAGlobalConfiguration globalConfig = MFAGlobalConfiguration.get();
+      if (globalConfig.isRequireMFA()) {
+        resp.sendRedirect(
+          req.getContextPath()
+            + "/user/" + username + "/" + PluginConstants.Urls.SETUP_ACTION_URL
+        );
+        // MFA is required but not enabled or configured, redirect to MFA setup page
+        return false;
+      } else {
+        // MFA is not required, allow access
+        return true;
+      }
     }
 
     HttpSession session = req.getSession(true);
@@ -190,13 +204,11 @@ public class MFAFilter implements Filter {
       } else {
         log.warning(String.format("Invalid MFA code for user: %s", username));
         // Redirect back to MFA page with error
-        // if (!resp.isCommitted()) {
         resp.sendRedirect(
           req.getContextPath()
             + "/" + PluginConstants.Urls.LOGIN_ACTION_URL
             + "?error=invalid"
         );
-        // }
         return false;
       }
     }
@@ -210,11 +222,9 @@ public class MFAFilter implements Filter {
     session.setAttribute(PluginConstants.SessionAttributes.PENDING_AUTH, username);
 
     // Redirect to MFA input page (only if response is not already committed)
-    // if (!resp.isCommitted()) {
     resp.sendRedirect(
       req.getContextPath() + "/" + PluginConstants.Urls.LOGIN_ACTION_URL
     );
-    // }
     return false;
   }
 

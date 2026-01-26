@@ -1,10 +1,23 @@
 package io.jenkins.plugins.openmfa;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Base64;
+import java.util.logging.Level;
+
+import org.kohsuke.stapler.HttpResponse;
+import org.kohsuke.stapler.HttpResponses;
+import org.kohsuke.stapler.HttpResponses.HttpResponseException;
+import org.kohsuke.stapler.Stapler;
+import org.kohsuke.stapler.interceptor.RequirePOST;
+
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.WriterException;
 import com.google.zxing.client.j2se.MatrixToImageWriter;
 import com.google.zxing.common.BitMatrix;
 import com.google.zxing.qrcode.QRCodeWriter;
+
 import hudson.model.Action;
 import hudson.model.User;
 import hudson.util.Secret;
@@ -15,17 +28,6 @@ import io.jenkins.plugins.openmfa.constant.UIConstants;
 import io.jenkins.plugins.openmfa.service.TOTPService;
 import jenkins.model.Jenkins;
 import lombok.extern.java.Log;
-import org.kohsuke.stapler.HttpResponse;
-import org.kohsuke.stapler.HttpResponses;
-import org.kohsuke.stapler.HttpResponses.HttpResponseException;
-import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.interceptor.RequirePOST;
-
-import java.awt.image.BufferedImage;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.Base64;
-import java.util.logging.Level;
 
 /**
  * Action that provides MFA setup interface for users.
@@ -75,7 +77,8 @@ public class MFASetupAction implements Action {
     }
     User current = User.current();
     if (
-      current != null && current.getId() != null
+      current != null
+        && current.getId() != null
         && current.getId().equals(targetUser.getId())
     ) {
       return true;
@@ -102,16 +105,26 @@ public class MFASetupAction implements Action {
 
   /**
    * Generates a new secret for the current user.
+   * Returns the Secret object for secure handling.
    */
-  public String generateSecret() {
+  public Secret generateSecret() {
     TOTPService totpService = MFAContext.i().getService(TOTPService.class);
     return totpService.generateSecret();
   }
 
   /**
+   * Gets the plain text value of a secret for UI display.
+   * This should only be used in the setup flow where the secret
+   * must be shown to the user for manual entry.
+   */
+  public String getSecretPlainText(Secret secret) {
+    return Secret.toString(secret);
+  }
+
+  /**
    * Generates a QR code for the given secret.
    */
-  public String generateQRCode(String username, String secret) {
+  public String generateQRCode(String username, Secret secret) {
     try {
       String issuer = UIConstants.Defaults.DEFAULT_ISSUER;
       Jenkins jenkins = Jenkins.get();
@@ -126,7 +139,9 @@ public class MFASetupAction implements Action {
       QRCodeWriter qrCodeWriter = new QRCodeWriter();
       BitMatrix bitMatrix =
         qrCodeWriter.encode(
-          uri, BarcodeFormat.QR_CODE, UIConstants.QRCode.WIDTH,
+          uri,
+          BarcodeFormat.QR_CODE,
+          UIConstants.QRCode.WIDTH,
           UIConstants.QRCode.HEIGHT
         );
 
@@ -152,18 +167,22 @@ public class MFASetupAction implements Action {
     requireCanConfigureTargetUser();
 
     var req = Stapler.getCurrentRequest2();
-    String secret = req.getParameter(PluginConstants.FormParameters.SECRET);
+    String secretParam = req.getParameter(PluginConstants.FormParameters.SECRET);
     String code = req.getParameter(PluginConstants.FormParameters.CODE);
+
+    // Convert to Secret for secure handling
+    Secret secret = Secret.fromString(secretParam);
 
     // Verify the code before enabling
     TOTPService totpService = MFAContext.i().getService(TOTPService.class);
     if (!totpService.verifyCode(secret, code)) {
-      return HttpResponses
-        .error(UIConstants.HttpStatus.BAD_REQUEST, "Invalid verification code");
+      return HttpResponses.error(
+        UIConstants.HttpStatus.BAD_REQUEST, "Invalid verification code"
+      );
     }
 
     MFAUserProperty property = MFAUserProperty.getOrCreate(targetUser);
-    property.setSecret(Secret.fromString(secret));
+    property.setSecret(secret);
     property.setEnabled(true);
     targetUser.save();
 

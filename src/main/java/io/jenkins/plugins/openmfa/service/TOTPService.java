@@ -1,12 +1,16 @@
 package io.jenkins.plugins.openmfa.service;
 
+import java.security.SecureRandom;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+
+import org.apache.commons.codec.binary.Base32;
+
+import hudson.util.Secret;
 import io.jenkins.plugins.openmfa.base.MFAException;
 import io.jenkins.plugins.openmfa.base.Service;
 import io.jenkins.plugins.openmfa.constant.TOTPConstants;
-import java.security.SecureRandom;
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
-import org.apache.commons.codec.binary.Base32;
 
 /**
  * Service for handling Time-based One-Time Password (TOTP) operations.
@@ -22,23 +26,23 @@ public class TOTPService {
   /**
    * Generates a random secret key for TOTP.
    *
-   * @return Base32-encoded secret key
+   * @return Secret containing Base32-encoded secret key
    */
-  public String generateSecret() {
+  public Secret generateSecret() {
     SecureRandom random = new SecureRandom();
     byte[] bytes = new byte[TOTPConstants.SECRET_KEY_SIZE_BYTES];
     random.nextBytes(bytes);
     Base32 base32 = new Base32();
-    return base32.encodeToString(bytes);
+    return Secret.fromString(base32.encodeToString(bytes));
   }
 
   /**
    * Generates a TOTP code for the given secret at the current time.
    *
-   * @param secret Base32-encoded secret key
+   * @param secret Secret containing Base32-encoded secret key
    * @return 6-digit TOTP code
    */
-  public String generateTOTP(String secret) {
+  public String generateTOTP(Secret secret) {
     return generateTOTP(
       secret,
       System.currentTimeMillis()
@@ -50,13 +54,13 @@ public class TOTPService {
   /**
    * Generates a TOTP code for the given secret and time counter.
    *
-   * @param secret      Base32-encoded secret key
+   * @param secret      Secret containing Base32-encoded secret key
    * @param timeCounter time counter (usually current time / 30)
    * @return 6-digit TOTP code
    */
-  public String generateTOTP(String secret, long timeCounter) {
+  public String generateTOTP(Secret secret, long timeCounter) {
     Base32 base32 = new Base32();
-    byte[] bytes = base32.decode(secret);
+    byte[] bytes = base32.decode(Secret.toString(secret));
     String hexKey = bytesToHex(bytes);
     String hexTime = Long.toHexString(timeCounter);
 
@@ -68,11 +72,11 @@ public class TOTPService {
   /**
    * Verifies a TOTP code against the secret, allowing for time drift.
    *
-   * @param secret Base32-encoded secret key
+   * @param secret Secret containing Base32-encoded secret key
    * @param code   6-digit code to verify
    * @return true if the code is valid
    */
-  public boolean verifyCode(String secret, String code) {
+  public boolean verifyCode(Secret secret, String code) {
     if (code == null || code.length() != TOTPConstants.TOTP_CODE_DIGITS) {
       return false;
     }
@@ -101,11 +105,11 @@ public class TOTPService {
   /**
    * Validates a TOTP code against the given secret.
    *
-   * @param secret the secret key
+   * @param secret Secret containing the secret key
    * @param code   the code to validate
    * @return true if valid, false otherwise
    */
-  public boolean validateTOTP(String secret, String code) {
+  public boolean validateTOTP(Secret secret, String code) {
     return verifyCode(secret, code);
   }
 
@@ -113,16 +117,17 @@ public class TOTPService {
    * Generates the provisioning URI for QR code generation.
    *
    * @param username Jenkins username
-   * @param secret   Base32-encoded secret key
+   * @param secret   Secret containing Base32-encoded secret key
    * @param issuer   Issuer name (e.g., "Jenkins")
    * @return otpauth:// URI
    */
-  public String getProvisioningUri(String username, String secret, String issuer) {
+  public String getProvisioningUri(String username, Secret secret, String issuer) {
+    String secretPlainText = Secret.toString(secret);
     return String.format(
       TOTPConstants.TOTP_URI_FORMAT,
       issuer,
       username,
-      secret.replace("=", ""),
+      secretPlainText.replace("=", ""),
       issuer
     );
   }

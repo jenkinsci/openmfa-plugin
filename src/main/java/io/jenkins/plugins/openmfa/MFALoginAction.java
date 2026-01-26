@@ -1,15 +1,17 @@
 package io.jenkins.plugins.openmfa;
 
+import org.kohsuke.stapler.HttpResponse;
+import org.kohsuke.stapler.HttpResponses;
+import org.kohsuke.stapler.Stapler;
+import org.kohsuke.stapler.interceptor.RequirePOST;
+
 import hudson.Extension;
 import hudson.model.RootAction;
 import hudson.model.User;
 import io.jenkins.plugins.openmfa.constant.PluginConstants;
 import io.jenkins.plugins.openmfa.constant.UIConstants;
+import io.jenkins.plugins.openmfa.util.JenkinsUtil;
 import jakarta.servlet.http.HttpSession;
-import org.kohsuke.stapler.HttpResponse;
-import org.kohsuke.stapler.HttpResponses;
-import org.kohsuke.stapler.Stapler;
-import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
  * Action that provides the MFA login page where users enter their TOTP code.
@@ -36,11 +38,7 @@ public class MFALoginAction implements RootAction {
    * Gets the username from the current user.
    */
   public String getPendingUsername() {
-    User user = User.current();
-    if (user != null) {
-      return user.getId();
-    }
-    return null;
+    return JenkinsUtil.getCurrentUser().map(User::getId).orElse(null);
   }
 
   /**
@@ -79,7 +77,9 @@ public class MFALoginAction implements RootAction {
 
     MFAUserProperty mfaProperty = MFAUserProperty.forUser(user);
     if (mfaProperty == null || !mfaProperty.verifyCode(totpCode)) {
-      return HttpResponses.redirectViaContextPath("/" + PluginConstants.Urls.LOGIN_ACTION_URL + "?error=invalid");
+      return HttpResponses.redirectViaContextPath(
+        "/" + PluginConstants.Urls.LOGIN_ACTION_URL + "?error=invalid"
+      );
     }
 
     // Mark MFA as verified in session

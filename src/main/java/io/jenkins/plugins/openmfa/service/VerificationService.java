@@ -1,5 +1,6 @@
 package io.jenkins.plugins.openmfa.service;
 
+import hudson.util.Secret;
 import io.jenkins.plugins.openmfa.base.Inject;
 import io.jenkins.plugins.openmfa.base.Service;
 
@@ -21,11 +22,11 @@ public class VerificationService {
      * Verifies a user's MFA code.
      *
      * @param username the username
-     * @param secret the user's secret key
+     * @param secret the user's secret key as a Secret
      * @param code the code to verify
      * @return true if verification succeeds, false otherwise
      */
-    public boolean verifyUser(String username, String secret, String code) {
+    public boolean verifyUser(String username, Secret secret, String code) {
         if (username == null || secret == null || code == null) {
             return false;
         }

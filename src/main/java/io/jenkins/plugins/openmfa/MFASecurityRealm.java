@@ -1,5 +1,17 @@
 package io.jenkins.plugins.openmfa;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.model.Descriptor;
@@ -9,14 +21,6 @@ import io.jenkins.plugins.openmfa.constant.UIConstants;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.java.Log;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.AuthenticationException;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 /**
  * Security realm that wraps another realm (like LDAP) and adds MFA support.
@@ -100,7 +104,8 @@ public class MFASecurityRealm extends SecurityRealm {
           MFAUserProperty mfaProperty = MFAUserProperty.forUser(user);
 
           if (
-            mfaProperty != null && mfaProperty.isEnabled()
+            mfaProperty != null
+              && mfaProperty.isEnabled()
               && mfaProperty.isConfigured()
           ) {
             // MFA is enabled, verify code
@@ -126,8 +131,9 @@ public class MFASecurityRealm extends SecurityRealm {
           } else if (requireMFA) {
             // MFA is required but not configured
             log.warning(
-              String
-                .format("MFA required but not configured for user: %s", user.getId())
+              String.format(
+                "MFA required but not configured for user: %s", user.getId()
+              )
             );
             throw new BadCredentialsException("MFA must be configured");
           }
@@ -169,9 +175,8 @@ public class MFASecurityRealm extends SecurityRealm {
     /**
      * Get all available security realm descriptors except this one.
      */
-    public java.util.List<Descriptor<SecurityRealm>> getAllDescriptors() {
-      java.util.List<Descriptor<SecurityRealm>> descriptors =
-        new java.util.ArrayList<>();
+    public List<Descriptor<SecurityRealm>> getAllDescriptors() {
+      List<Descriptor<SecurityRealm>> descriptors = new ArrayList<>();
       for (Descriptor<SecurityRealm> d : SecurityRealm.all()) {
         if (d != this) {
           descriptors.add(d);

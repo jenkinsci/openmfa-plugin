@@ -1,0 +1,86 @@
+/**
+ * OpenMFA Plugin - CSS Custom Properties (Variables)
+ * 
+ * This file defines shared color variables for the MFA plugin.
+ * Using CSS custom properties follows Jenkins' standard theming approach,
+ * enabling compatibility with the Theme Manager plugin.
+ */
+
+:root {
+  /* Primary accent colors */
+  --mfa-primary: #0b5394;
+  --mfa-primary-light: #1a73e8;
+  --mfa-primary-gradient: linear-gradient(135deg, var(--mfa-primary) 0%, var(--mfa-primary-light) 100%);
+  --mfa-primary-shadow: rgba(11, 83, 148, 0.3);
+  --mfa-primary-shadow-light: rgba(11, 83, 148, 0.15);
+  --mfa-primary-shadow-subtle: rgba(11, 83, 148, 0.1);
+
+  /* Secondary colors */
+  --mfa-secondary: #6c757d;
+  --mfa-secondary-dark: #5a6268;
+  --mfa-secondary-gradient: linear-gradient(135deg, var(--mfa-secondary) 0%, var(--mfa-secondary-dark) 100%);
+  --mfa-secondary-shadow: rgba(108, 117, 125, 0.3);
+
+  /* Success colors */
+  --mfa-success: #28a745;
+  --mfa-success-light: #20c997;
+  --mfa-success-gradient: linear-gradient(135deg, var(--mfa-success) 0%, var(--mfa-success-light) 100%);
+  --mfa-success-bg: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+
+  /* Danger colors */
+  --mfa-danger: #dc3545;
+  --mfa-danger-dark: #c82333;
+  --mfa-danger-gradient: linear-gradient(135deg, var(--mfa-danger) 0%, var(--mfa-danger-dark) 100%);
+  --mfa-danger-shadow: rgba(220, 53, 69, 0.3);
+
+  /* Warning/Notes colors */
+  --mfa-warning-bg: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+  --mfa-warning-border: #f59e0b;
+  --mfa-warning-heading: #92400e;
+  --mfa-warning-text: #78350f;
+
+  /* Info colors */
+  --mfa-info-bg: linear-gradient(135deg, #e7f3ff 0%, #cce5ff 100%);
+
+  /* Text colors */
+  --mfa-text-primary: #1a1a2e;
+  --mfa-text-secondary: #4a4a5a;
+  --mfa-text-muted: #5a5a6a;
+  --mfa-text-light: #6b7280;
+  --mfa-text-dark: #1f2937;
+  --mfa-text-code: #2d3748;
+
+  /* Background colors */
+  --mfa-bg-white: #fff;
+  --mfa-bg-light: #f8f9fa;
+  --mfa-bg-subtle: #fafafa;
+  --mfa-bg-muted: #f3f4f6;
+  --mfa-bg-gradient: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+
+  /* Border colors */
+  --mfa-border-light: #e0e0e0;
+  --mfa-border-subtle: #e5e7eb;
+  --mfa-border-medium: #d0d0d0;
+  --mfa-border-input: #dee2e6;
+  --mfa-border-divider: #f3f4f6;
+
+  /* Shadow values */
+  --mfa-shadow-subtle: 0 2px 8px rgba(0, 0, 0, 0.04);
+  --mfa-shadow-medium: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --mfa-shadow-large: 0 4px 32px rgba(0, 0, 0, 0.08);
+
+  /* Typography */
+  --mfa-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  --mfa-font-mono: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+
+  /* Border radius */
+  --mfa-radius-sm: 4px;
+  --mfa-radius-md: 8px;
+  --mfa-radius-lg: 12px;
+  --mfa-radius-xl: 16px;
+  --mfa-radius-full: 50%;
+
+  /* Transitions */
+  --mfa-transition-fast: 0.15s ease;
+  --mfa-transition-normal: 0.2s ease;
+}

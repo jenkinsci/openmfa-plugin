@@ -34,21 +34,21 @@ class MFAUserPropertyTest {
     void testEnableMFA(JenkinsRule j) {
         MFAUserProperty property = new MFAUserProperty();
 
-        String secret = totpService.generateSecret();
-        property.setSecret(Secret.fromString(secret));
+        Secret secret = totpService.generateSecret();
+        property.setSecret(secret);
         property.setEnabled(true);
 
         assertTrue(property.isEnabled());
         assertTrue(property.isConfigured());
-        assertEquals(secret, Secret.toString(property.getSecret()));
+        assertEquals(Secret.toString(secret), Secret.toString(property.getSecret()));
     }
 
     @Test
     void testVerifyCode(JenkinsRule j) {
         MFAUserProperty property = new MFAUserProperty();
 
-        String secret = totpService.generateSecret();
-        property.setSecret(Secret.fromString(secret));
+        Secret secret = totpService.generateSecret();
+        property.setSecret(secret);
         property.setEnabled(true);
 
         String code = totpService.generateTOTP(secret);
@@ -60,8 +60,8 @@ class MFAUserPropertyTest {
     void testVerifyCodeWhenDisabled(JenkinsRule j) {
         MFAUserProperty property = new MFAUserProperty();
 
-        String secret = totpService.generateSecret();
-        property.setSecret(Secret.fromString(secret));
+        Secret secret = totpService.generateSecret();
+        property.setSecret(secret);
         property.setEnabled(false); // MFA is disabled
 
         String code = totpService.generateTOTP(secret);

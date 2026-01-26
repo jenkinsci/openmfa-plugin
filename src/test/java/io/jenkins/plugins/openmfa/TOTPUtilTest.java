@@ -2,6 +2,7 @@ package io.jenkins.plugins.openmfa;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import hudson.util.Secret;
 import io.jenkins.plugins.openmfa.base.MFAContext;
 import io.jenkins.plugins.openmfa.service.TOTPService;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,14 +19,14 @@ class TOTPUtilTest {
 
   @Test
   void testGenerateSecret() {
-    String secret = totpService.generateSecret();
+    Secret secret = totpService.generateSecret();
     assertNotNull(secret);
-    assertTrue(!secret.isEmpty());
+    assertTrue(!Secret.toString(secret).isEmpty());
   }
 
   @Test
   void testGenerateTOTP() {
-    String secret = totpService.generateSecret();
+    Secret secret = totpService.generateSecret();
     String code = totpService.generateTOTP(secret);
     assertNotNull(code);
     assertEquals(6, code.length());
@@ -34,7 +35,7 @@ class TOTPUtilTest {
 
   @Test
   void testVerifyCode() {
-    String secret = totpService.generateSecret();
+    Secret secret = totpService.generateSecret();
     String code = totpService.generateTOTP(secret);
 
     // Should verify current code
@@ -46,7 +47,7 @@ class TOTPUtilTest {
 
   @Test
   void testVerifyCodeWithInvalidInput() {
-    String secret = totpService.generateSecret();
+    Secret secret = totpService.generateSecret();
 
     // Should not verify null code
     assertFalse(totpService.verifyCode(secret, null));
@@ -63,19 +64,20 @@ class TOTPUtilTest {
 
   @Test
   void testGetProvisioningUri() {
-    String secret = totpService.generateSecret();
+    Secret secret = totpService.generateSecret();
+    String secretPlainText = Secret.toString(secret);
     String uri = totpService.getProvisioningUri("testuser", secret, "Jenkins");
 
     assertNotNull(uri);
     assertTrue(uri.startsWith("otpauth://totp/"));
     assertTrue(uri.contains("testuser"));
-    assertTrue(uri.contains("secret=" + secret.replace("=", "")));
+    assertTrue(uri.contains("secret=" + secretPlainText.replace("=", "")));
     assertTrue(uri.contains("issuer=Jenkins"));
   }
 
   @Test
   void testCodeChangesOverTime() {
-    String secret = totpService.generateSecret();
+    Secret secret = totpService.generateSecret();
 
     // Generate code for different time windows
     long currentTime = System.currentTimeMillis() / 1000L / 30;
@@ -88,7 +90,7 @@ class TOTPUtilTest {
 
   @Test
   void testTimeDriftTolerance() {
-    String secret = totpService.generateSecret();
+    Secret secret = totpService.generateSecret();
     long currentTime = System.currentTimeMillis() / 1000L / 30;
 
     // Generate codes for current, previous, and next time windows
@@ -108,7 +110,7 @@ class TOTPUtilTest {
 
   @Test
   void testValidateTOTP() {
-    String secret = totpService.generateSecret();
+    Secret secret = totpService.generateSecret();
     String code = totpService.generateTOTP(secret);
 
     // Should validate current code

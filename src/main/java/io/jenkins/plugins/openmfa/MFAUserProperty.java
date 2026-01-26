@@ -1,5 +1,10 @@
 package io.jenkins.plugins.openmfa;
 
+import java.io.IOException;
+
+import org.kohsuke.stapler.DataBoundConstructor;
+import org.kohsuke.stapler.DataBoundSetter;
+
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.model.User;
@@ -11,10 +16,6 @@ import io.jenkins.plugins.openmfa.constant.UIConstants;
 import io.jenkins.plugins.openmfa.service.TOTPService;
 import lombok.Getter;
 import lombok.Setter;
-import org.kohsuke.stapler.DataBoundConstructor;
-import org.kohsuke.stapler.DataBoundSetter;
-
-import java.io.IOException;
 
 /**
  * User property to store MFA secret and status.
@@ -59,7 +60,7 @@ public class MFAUserProperty extends UserProperty {
       return false;
     }
     TOTPService totpService = MFAContext.i().getService(TOTPService.class);
-    return totpService.verifyCode(Secret.toString(secret), code);
+    return totpService.verifyCode(secret, code);
   }
 
   /**

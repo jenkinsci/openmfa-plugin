@@ -8,6 +8,7 @@
       If none of those files are present for a given adjunct path, a NoSuchAdjunctException occurs.
       The adjunct references below match the available .css and .js assets from your context and will not trigger an error.
     -->
+    <st:adjunct includes="io.jenkins.plugins.openmfa.mfa-variables" />
     <st:adjunct includes="io.jenkins.plugins.openmfa.MFASetupAction.mfa-setup-style" />
     <st:adjunct includes="io.jenkins.plugins.openmfa.MFASetupAction.mfa-setup-script" />
     <l:side-panel>
@@ -53,6 +54,7 @@
             </div>
 
             <j:set var="secret" value="${it.generateSecret()}" />
+            <j:set var="secretPlainText" value="${it.getSecretPlainText(secret)}" />
             <j:set var="user" value="${it.getTargetUser()}" />
             <j:set var="qrCode" value="${it.generateQRCode(user.id, secret)}" />
 
@@ -74,7 +76,7 @@
               </div>
               <p>${%step2.message}</p>
               <div class="mfa-secret-input-wrapper">
-                <input type="text" class="mfa-secret-input" value="${secret}" readonly="readonly" />
+                <input type="text" class="mfa-secret-input" value="${secretPlainText}" readonly="readonly" />
                 <button type="button" class="mfa-copy-btn" onclick="copySecret(this)">Copy</button>
               </div>
             </div>
@@ -87,7 +89,7 @@
               <p>${%step3.message}</p>
 
               <form method="post" action="doEnable">
-                <input type="hidden" name="${it.formParamSecret}" value="${secret}" />
+                <input type="hidden" name="${it.formParamSecret}" value="${secretPlainText}" />
                 <div class="mfa-form-group">
                   <label>${%verification.code}</label>
                   <input type="text" name="${it.formParamCode}" class="mfa-code-input"
