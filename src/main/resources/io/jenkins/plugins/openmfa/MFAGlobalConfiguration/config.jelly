@@ -9,10 +9,6 @@
       <f:textbox default="${instance.defaultIssuer}" />
     </f:entry>
 
-    <f:entry title="${%config.allowSelfEnrollment.title}" field="allowSelfEnrollment">
-      <f:checkbox />
-    </f:entry>
-
     <f:entry title="${%config.gracePeriodDays.title}" field="gracePeriodDays">
       <f:number min="0" max="365" default="7" />
     </f:entry>

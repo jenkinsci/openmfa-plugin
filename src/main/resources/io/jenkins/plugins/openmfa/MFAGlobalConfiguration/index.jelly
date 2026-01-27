@@ -53,10 +53,6 @@
             <td>${it.issuer}</td>
           </tr>
           <tr>
-            <td>${%config.allowSelfEnrollment.title}</td>
-            <td>${it.allowSelfEnrollment ? 'Yes' : 'No'}</td>
-          </tr>
-          <tr>
             <td>${%config.gracePeriodDays.title}</td>
             <td>${it.gracePeriodDays}</td>
           </tr>

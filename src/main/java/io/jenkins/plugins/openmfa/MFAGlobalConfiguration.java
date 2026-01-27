@@ -27,9 +27,6 @@ public class MFAGlobalConfiguration extends GlobalConfiguration {
   /** The issuer name shown in authenticator apps */
   private String issuer = UIConstants.Defaults.DEFAULT_ISSUER;
 
-  /** Whether to allow users to self-enroll in MFA */
-  private boolean allowSelfEnrollment = true;
-
   /** Grace period in days for users to set up MFA after it becomes required */
   private int gracePeriodDays = 7;
 
@@ -82,11 +79,6 @@ public class MFAGlobalConfiguration extends GlobalConfiguration {
         && !issuer.trim().isEmpty()
           ? issuer.trim()
           : UIConstants.Defaults.DEFAULT_ISSUER;
-  }
-
-  @DataBoundSetter
-  public void setAllowSelfEnrollment(boolean allowSelfEnrollment) {
-    this.allowSelfEnrollment = allowSelfEnrollment;
   }
 
   @DataBoundSetter
