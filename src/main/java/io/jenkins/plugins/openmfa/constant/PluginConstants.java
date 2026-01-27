@@ -17,6 +17,7 @@ public final class PluginConstants {
 
     public static final String LOGIN_ACTION_URL = "mfa-login";
     public static final String SETUP_ACTION_URL = "mfa-setup";
+    public static final String MANAGEMENT_ACTION_URL = "mfa-management";
     public static final String SECURITY_CHECK_ENDPOINT =
       "/" + LOGIN_ACTION_URL + "/verify";
 

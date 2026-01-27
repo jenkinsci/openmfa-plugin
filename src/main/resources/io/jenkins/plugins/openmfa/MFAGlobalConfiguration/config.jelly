@@ -16,5 +16,11 @@
     <f:entry title="${%config.enforceForApiTokens.title}" field="enforceForApiTokens">
       <f:checkbox />
     </f:entry>
+
+    <f:entry title="">
+      <div>
+        <a href="${rootURL}/mfa-management/">${%config.mfaManagement.title}</a>
+      </div>
+    </f:entry>
   </f:section>
 </j:jelly>

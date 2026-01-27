@@ -88,7 +88,7 @@
               </div>
               <p>${%step3.message}</p>
 
-              <form method="post" action="doEnable">
+              <form method="post" action="enable">
                 <input type="hidden" name="${it.formParamSecret}" value="${secretPlainText}" />
                 <div class="mfa-form-group">
                   <label>${%verification.code}</label>

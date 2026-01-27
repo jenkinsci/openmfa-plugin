@@ -1,0 +1,117 @@
+<?jelly escape-by-default='true'?>
+<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:f="/lib/form">
+  <l:layout title="${%title}" permission="${app.ADMINISTER}">
+    <st:adjunct includes="io.jenkins.plugins.openmfa.mfa-variables" />
+    <st:adjunct includes="io.jenkins.plugins.openmfa.MFAManagementAction.mfa-management-style" />
+    <st:adjunct includes="io.jenkins.plugins.openmfa.MFAManagementAction.mfa-management-script" />
+    <l:side-panel>
+      <st:include page="sidepanel.jelly" it="${app}" optional="true" />
+    </l:side-panel>
+    <l:main-panel>
+      <div id="mfa-toast" class="mfa-toast mfa-toast-hidden">
+        <span class="mfa-toast-message">${%reset.success}</span>
+      </div>
+
+      <div class="mfa-mgmt-container">
+        <div class="mfa-mgmt-header">
+          <div class="mfa-mgmt-icon-wrapper">
+            <svg class="mfa-mgmt-icon"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+          </div>
+          <div class="mfa-mgmt-header-text">
+            <h1>${%title}</h1>
+            <p class="mfa-mgmt-subtitle">${%subtitle}</p>
+          </div>
+        </div>
+
+        <div class="mfa-mgmt-stats">
+          <div class="mfa-mgmt-stat-card">
+            <div class="mfa-mgmt-stat-value">${it.totalCount}</div>
+            <div class="mfa-mgmt-stat-label">${%stats.total}</div>
+          </div>
+          <div class="mfa-mgmt-stat-card mfa-mgmt-stat-enabled">
+            <div class="mfa-mgmt-stat-value">${it.enabledCount}</div>
+            <div class="mfa-mgmt-stat-label">${%stats.enabled}</div>
+          </div>
+          <div class="mfa-mgmt-stat-card mfa-mgmt-stat-disabled">
+            <div class="mfa-mgmt-stat-value">${it.totalCount - it.enabledCount}</div>
+            <div class="mfa-mgmt-stat-label">${%stats.not.enabled}</div>
+          </div>
+        </div>
+
+        <div class="mfa-mgmt-card">
+          <div class="mfa-mgmt-card-header">
+            <h2>${%users.title}</h2>
+          </div>
+
+          <j:set var="users" value="${it.getAllUsers()}" />
+
+          <j:choose>
+            <j:when test="${empty(users)}">
+              <div class="mfa-mgmt-empty">
+                <p>${%no.users}</p>
+              </div>
+            </j:when>
+            <j:otherwise>
+              <div class="mfa-mgmt-table-wrapper">
+                <table class="mfa-mgmt-table">
+                  <thead>
+                    <tr>
+                      <th>${%table.user}</th>
+                      <th>${%table.fullname}</th>
+                      <th>${%table.status}</th>
+                      <th>${%table.actions}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <j:forEach var="user" items="${users}">
+                      <tr>
+                        <td class="mfa-mgmt-user-cell">
+                          <a href="${rootURL}/user/${user.userId}">${user.userId}</a>
+                        </td>
+                        <td>${user.fullName}</td>
+                        <td>
+                          <span class="mfa-mgmt-status ${user.statusClass}">
+                            ${user.statusText}
+                          </span>
+                        </td>
+                        <td class="mfa-mgmt-actions-cell">
+                          <j:if test="${user.mfaConfigured}">
+                            <form method="post" action="resetMFA" class="mfa-mgmt-reset-form">
+                              <input type="hidden" name="userId" value="${user.userId}" />
+                              <button type="submit" class="mfa-mgmt-btn-reset"
+                                onclick="return confirmReset(this.form.userId.value)">
+                                ${%reset.button}
+                              </button>
+                            </form>
+                          </j:if>
+                          <j:if test="${!user.mfaConfigured}">
+                            <span class="mfa-mgmt-no-action">${%not.configured}</span>
+                          </j:if>
+                        </td>
+                      </tr>
+                    </j:forEach>
+                  </tbody>
+                </table>
+              </div>
+            </j:otherwise>
+          </j:choose>
+        </div>
+
+        <div class="mfa-mgmt-notes">
+          <h3>${%notes.title}</h3>
+          <ul>
+            <li>${%notes.reset.warning}</li>
+            <li>${%notes.user.setup}</li>
+          </ul>
+        </div>
+      </div>
+    </l:main-panel>
+  </l:layout>
+</j:jelly>

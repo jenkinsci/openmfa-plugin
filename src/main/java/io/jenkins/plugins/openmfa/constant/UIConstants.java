@@ -31,6 +31,7 @@ public final class UIConstants {
 
     public static final String MFA_LOGIN = "MFA Login";
     public static final String CONFIGURE_MFA = "Configure MFA";
+    public static final String MFA_MANAGEMENT = "MFA Management";
     public static final String MULTI_FACTOR_AUTHENTICATION =
       "Multi-Factor Authentication";
     public static final String MFA_SECURITY_REALM =
@@ -71,6 +72,8 @@ public final class UIConstants {
   public static final class HttpStatus {
 
     public static final int BAD_REQUEST = 400;
+    public static final int NOT_FOUND = 404;
+    public static final int INTERNAL_SERVER_ERROR = 500;
 
     private HttpStatus() {
     }
