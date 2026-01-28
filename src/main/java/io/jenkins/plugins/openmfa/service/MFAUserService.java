@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Collection;
 
 import hudson.model.User;
+import hudson.security.ACL;
 import io.jenkins.plugins.openmfa.MFAUserProperty;
 import io.jenkins.plugins.openmfa.base.Service;
 import io.jenkins.plugins.openmfa.service.model.UserMFAInfo;
@@ -22,7 +23,9 @@ public class MFAUserService {
    * @return Collection of UserMFAInfo objects for all users
    */
   public Collection<UserMFAInfo> getAllUsersWithMFAStatus() {
-    return User.getAll().stream()
+    return getUsers()
+      .stream()
+      .filter(u -> !ACL.SYSTEM_USERNAME.equals(u.getId()))
       .map(this::getUserMFAInfo)
       .toList();
   }
@@ -76,7 +79,8 @@ public class MFAUserService {
    * @return Number of users with MFA enabled
    */
   public long getEnabledMFACount() {
-    return User.getAll().stream()
+    return getUsers()
+      .stream()
       .filter(this::isMFAEnabled)
       .count();
   }
@@ -87,6 +91,14 @@ public class MFAUserService {
    * @return Total user count
    */
   public long getTotalUserCount() {
-    return User.getAll().size();
+    return getUsers().size();
   }
+
+  private Collection<User> getUsers() {
+    return User.getAll()
+      .stream()
+      .filter(u -> !ACL.SYSTEM_USERNAME.equals(u.getId()))
+      .toList();
+  }
+
 }
