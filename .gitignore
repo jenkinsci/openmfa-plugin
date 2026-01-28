@@ -20,6 +20,10 @@ buildNumber.properties
 work/*
 !work/init.groovy.d
 
+# Environment files
+.env*
+!.env.example
+
 # Java
 *.class
 *.log

@@ -1,15 +1,11 @@
 {
-  "editor.detectIndentation": false,
   "editor.formatOnSave": true,
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "editor.detectIndentation": false,
   "editor.codeActionsOnSave": {
     "source.organizeImports": "always"
   },
-  "java.configuration.runtimes": [
-    {
-      "name": "JavaSE-25",
-      "path": "${env:JAVA_HOME}"
-    }
-  ],
   "java.format.settings.url": "${workspaceFolder}/fmt.xml",
   "java.format.settings.profile": "CodeStyle",
   "files.associations": {

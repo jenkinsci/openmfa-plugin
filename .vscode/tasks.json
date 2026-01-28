@@ -5,7 +5,10 @@
       "label": "maven: hpi:run",
       "type": "shell",
       "command": "./mvnw",
-      "args": ["hpi:run", "-Dhost=0.0.0.0"],
+      "args": [
+        "hpi:run",
+        "-Dhost=0.0.0.0"
+      ],
       "group": {
         "kind": "build",
         "isDefault": true
@@ -21,9 +24,15 @@
       "label": "maven: hpi:run (debug)",
       "type": "shell",
       "command": "./mvnw",
-      "args": ["clean", "-U", "hpi:run", "-Dhost=0.0.0.0"],
+      "args": [
+        "clean",
+        "-U",
+        "hpi:run",
+        "-Dhost=0.0.0.0"
+      ],
       "options": {
         "cwd": "${workspaceFolder}",
+        "envFile": "${workspaceFolder}/.env",
         "env": {
           "JAVA_HOME": "${env:JAVA_HOME}",
           "MAVEN_OPTS": "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
@@ -51,7 +60,12 @@
       "label": "mvnDebug: clean hpi:run",
       "type": "shell",
       "command": "mvnDebug",
-      "args": ["-U", "clean", "hpi:run", "-Dhost=0.0.0.0"],
+      "args": [
+        "-U",
+        "clean",
+        "hpi:run",
+        "-Dhost=0.0.0.0"
+      ],
       "group": "build",
       "presentation": {
         "reveal": "always",
@@ -64,7 +78,9 @@
       "label": "maven: test",
       "type": "shell",
       "command": "./mvnw",
-      "args": ["test"],
+      "args": [
+        "test"
+      ],
       "group": {
         "kind": "test",
         "isDefault": true
@@ -79,7 +95,11 @@
       "label": "maven: clean install",
       "type": "shell",
       "command": "./mvnw",
-      "args": ["clean", "install", "-DskipTests"],
+      "args": [
+        "clean",
+        "install",
+        "-DskipTests"
+      ],
       "group": "build",
       "presentation": {
         "reveal": "always",
@@ -91,7 +111,10 @@
       "label": "maven: clean install (with tests)",
       "type": "shell",
       "command": "./mvnw",
-      "args": ["clean", "install"],
+      "args": [
+        "clean",
+        "install"
+      ],
       "group": "build",
       "presentation": {
         "reveal": "always",
