@@ -54,7 +54,6 @@
             </div>
 
             <j:set var="secret" value="${it.generateSecret()}" />
-            <j:set var="secretPlainText" value="${it.getSecretPlainText(secret)}" />
             <j:set var="user" value="${it.getTargetUser()}" />
             <j:set var="qrCode" value="${it.generateQRCode(user.id, secret)}" />
 
@@ -75,21 +74,9 @@
                 <h2>${%step2.title}</h2>
               </div>
               <p>${%step2.message}</p>
-              <div class="mfa-secret-input-wrapper">
-                <input type="text" class="mfa-secret-input" value="${secretPlainText}" readonly="readonly" />
-                <button type="button" class="mfa-copy-btn" onclick="copySecret(this)">Copy</button>
-              </div>
-            </div>
-
-            <div class="mfa-card">
-              <div class="mfa-step-header">
-                <div class="mfa-step-number">3</div>
-                <h2>${%step3.title}</h2>
-              </div>
-              <p>${%step3.message}</p>
 
               <form method="post" action="enable">
-                <input type="hidden" name="${it.formParamSecret}" value="${secretPlainText}" />
+                <input type="hidden" name="${it.formParamSecret}" value="${secret}" />
                 <div class="mfa-form-group">
                   <label>${%verification.code}</label>
                   <input type="text" name="${it.formParamCode}" class="mfa-code-input"

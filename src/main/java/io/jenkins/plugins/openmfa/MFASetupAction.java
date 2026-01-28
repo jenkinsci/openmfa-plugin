@@ -113,15 +113,6 @@ public class MFASetupAction implements Action {
   }
 
   /**
-   * Gets the plain text value of a secret for UI display.
-   * This should only be used in the setup flow where the secret
-   * must be shown to the user for manual entry.
-   */
-  public String getSecretPlainText(Secret secret) {
-    return Secret.toString(secret);
-  }
-
-  /**
    * Generates a QR code for the given secret.
    */
   public String generateQRCode(String username, Secret secret) {
