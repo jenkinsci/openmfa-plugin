@@ -1,8 +1,22 @@
 package io.jenkins.plugins.openmfa.service;
 
+import static io.jenkins.plugins.openmfa.constant.TOTPConstants.BINARY_FIRST_BYTE_MASK;
+import static io.jenkins.plugins.openmfa.constant.TOTPConstants.BINARY_OTHER_BYTE_MASK;
+import static io.jenkins.plugins.openmfa.constant.TOTPConstants.DIGITS_POWER;
+import static io.jenkins.plugins.openmfa.constant.TOTPConstants.HEX_CHARS_PER_BYTE;
+import static io.jenkins.plugins.openmfa.constant.TOTPConstants.HEX_RADIX;
+import static io.jenkins.plugins.openmfa.constant.TOTPConstants.HEX_TIME_PADDING_LENGTH;
+import static io.jenkins.plugins.openmfa.constant.TOTPConstants.HMAC_ALGORITHM;
+import static io.jenkins.plugins.openmfa.constant.TOTPConstants.MAC_KEY_ALGORITHM;
 import static io.jenkins.plugins.openmfa.constant.TOTPConstants.MILLIS_TO_SECONDS;
+import static io.jenkins.plugins.openmfa.constant.TOTPConstants.OFFSET_MASK;
+import static io.jenkins.plugins.openmfa.constant.TOTPConstants.PADDING_ZERO;
+import static io.jenkins.plugins.openmfa.constant.TOTPConstants.SHIFT_16_BITS;
+import static io.jenkins.plugins.openmfa.constant.TOTPConstants.SHIFT_24_BITS;
+import static io.jenkins.plugins.openmfa.constant.TOTPConstants.SHIFT_8_BITS;
 import static io.jenkins.plugins.openmfa.constant.TOTPConstants.TIME_STEP_SECONDS;
 import static io.jenkins.plugins.openmfa.constant.TOTPConstants.TIME_WINDOW_TOLERANCE;
+import static io.jenkins.plugins.openmfa.constant.TOTPConstants.TOTP_CODE_DIGITS;
 
 import java.security.SecureRandom;
 
@@ -58,21 +72,19 @@ public class TOTPService {
   }
 
   /**
-   * Generates a TOTP code for the given secret and time counter.
+   * Generates a TOTP code for the given secret and step.
    *
-   * @param secret      Secret containing Base32-encoded secret key
-   * @param timeCounter time counter (usually current time / 30)
+   * @param secret Secret containing Base32-encoded secret key
+   * @param step   step (usually current time / 30)
    * @return 6-digit TOTP code
    */
-  public String generateTOTP(Secret secret, long timeCounter) {
+  public String generateTOTP(Secret secret, long step) {
     Base32 base32 = new Base32();
     byte[] bytes = base32.decode(Secret.toString(secret));
     String hexKey = bytesToHex(bytes);
-    String hexTime = Long.toHexString(timeCounter);
+    String hexTime = Long.toHexString(step);
 
-    return generateTOTP(
-      hexKey, hexTime, String.valueOf(TOTPConstants.TOTP_CODE_DIGITS)
-    );
+    return generateTOTP(hexKey, hexTime, TOTP_CODE_DIGITS);
   }
 
   /**
@@ -83,17 +95,17 @@ public class TOTPService {
    * @return true if the code is valid
    */
   public boolean verifyCode(Secret secret, String code) {
-    if (code == null || code.length() != TOTPConstants.TOTP_CODE_DIGITS) {
+    if (code == null || code.length() != TOTP_CODE_DIGITS) {
       return false;
     }
 
     try {
-      long currentTimeCounter =
+      long currentStep =
         System.currentTimeMillis() / MILLIS_TO_SECONDS / TIME_STEP_SECONDS;
 
       // Check current time window and ±1 window (90 seconds total)
       for (int i = -TIME_WINDOW_TOLERANCE; i <= TIME_WINDOW_TOLERANCE; i++) {
-        String generatedCode = generateTOTP(secret, currentTimeCounter + i);
+        String generatedCode = generateTOTP(secret, currentStep + i);
         if (generatedCode.equals(code)) {
           return true;
         }
@@ -135,39 +147,37 @@ public class TOTPService {
     );
   }
 
-  private String generateTOTP(String key, String time, String returnDigits) {
+  private String generateTOTP(String key, String step, int len) {
     try {
-      StringBuilder paddedTime = new StringBuilder();
-      while (paddedTime.length() < TOTPConstants.HEX_TIME_PADDING_LENGTH) {
-        paddedTime.append(TOTPConstants.PADDING_ZERO);
+      // First 8 bytes are for the movingFactor
+      // Compliant with base RFC 4226 (HOTP)
+      StringBuilder paddedStep = new StringBuilder(step);
+      while (paddedStep.length() < HEX_TIME_PADDING_LENGTH) {
+        paddedStep.insert(0, PADDING_ZERO);
       }
-      paddedTime.append(time);
 
-      byte[] msg = hexStringToByteArray(paddedTime.toString());
+      log.fine("Padded step: " + paddedStep.toString());
+
+      byte[] msg = hexStringToByteArray(paddedStep.toString());
       byte[] k = hexStringToByteArray(key);
 
-      byte[] hash = hmacSha(TOTPConstants.HMAC_ALGORITHM, k, msg);
+      byte[] hash = hmacSha(HMAC_ALGORITHM, k, msg);
 
-      int offset = hash[hash.length - 1] & TOTPConstants.OFFSET_MASK;
+      int offset = hash[hash.length - 1] & OFFSET_MASK;
 
       int binary =
-        ((hash[offset]
-          & TOTPConstants.BINARY_FIRST_BYTE_MASK) << TOTPConstants.SHIFT_24_BITS)
-          | ((hash[offset + 1]
-            & TOTPConstants.BINARY_OTHER_BYTE_MASK) << TOTPConstants.SHIFT_16_BITS)
-          | ((hash[offset + 2]
-            & TOTPConstants.BINARY_OTHER_BYTE_MASK) << TOTPConstants.SHIFT_8_BITS)
-          | (hash[offset + 3] & TOTPConstants.BINARY_OTHER_BYTE_MASK);
+        ((hash[offset] & BINARY_FIRST_BYTE_MASK) << SHIFT_24_BITS)
+          | ((hash[offset + 1] & BINARY_OTHER_BYTE_MASK) << SHIFT_16_BITS)
+          | ((hash[offset + 2] & BINARY_OTHER_BYTE_MASK) << SHIFT_8_BITS)
+          | (hash[offset + 3] & BINARY_OTHER_BYTE_MASK);
 
-      int otp =
-        binary % ((int) Math
-          .pow(TOTPConstants.DECIMAL_BASE, Integer.parseInt(returnDigits)));
+      int otp = binary % DIGITS_POWER[len];
 
-      String result = Integer.toString(otp);
-      while (result.length() < Integer.parseInt(returnDigits)) {
-        result = TOTPConstants.PADDING_ZERO + result;
+      StringBuilder result = new StringBuilder(Integer.toString(otp));
+      while (result.length() < len) {
+        result.insert(0, PADDING_ZERO);
       }
-      return result;
+      return result.toString();
     } catch (Exception e) {
       throw new MFAException("Error generating TOTP", e);
     }
@@ -176,8 +186,7 @@ public class TOTPService {
   private byte[] hmacSha(String crypto, byte[] keyBytes, byte[] text) {
     try {
       Mac hmac = Mac.getInstance(crypto);
-      SecretKeySpec macKey =
-        new SecretKeySpec(keyBytes, TOTPConstants.MAC_KEY_ALGORITHM);
+      SecretKeySpec macKey = new SecretKeySpec(keyBytes, MAC_KEY_ALGORITHM);
       hmac.init(macKey);
       return hmac.doFinal(text);
     } catch (Exception e) {
@@ -188,16 +197,16 @@ public class TOTPService {
   private byte[] hexStringToByteArray(String s) {
     // Ensure even length by padding with leading zero if needed
     String hexString = s;
-    if (s.length() % 2 != 0) {
-      hexString = TOTPConstants.PADDING_ZERO + s;
+    if (s.length() % HEX_CHARS_PER_BYTE != 0) {
+      hexString = PADDING_ZERO + s;
     }
 
     int len = hexString.length();
-    byte[] data = new byte[len / TOTPConstants.HEX_CHARS_PER_BYTE];
-    for (int i = 0; i < len; i += TOTPConstants.HEX_CHARS_PER_BYTE) {
-      data[i / TOTPConstants.HEX_CHARS_PER_BYTE] =
-        (byte) ((Character.digit(hexString.charAt(i), TOTPConstants.HEX_RADIX) << 4)
-          + Character.digit(hexString.charAt(i + 1), TOTPConstants.HEX_RADIX));
+    byte[] data = new byte[len / HEX_CHARS_PER_BYTE];
+    for (int i = 0; i < len; i += HEX_CHARS_PER_BYTE) {
+      data[i / HEX_CHARS_PER_BYTE] =
+        (byte) ((Character.digit(hexString.charAt(i), HEX_RADIX) << 4)
+          + Character.digit(hexString.charAt(i + 1), HEX_RADIX));
     }
     return data;
   }

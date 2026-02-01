@@ -1,6 +1,11 @@
 package io.jenkins.plugins.openmfa;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Collection;
 
@@ -14,9 +19,9 @@ import org.springframework.security.access.AccessDeniedException;
 import hudson.model.User;
 import hudson.security.ACL;
 import io.jenkins.plugins.openmfa.base.MFAContext;
-import io.jenkins.plugins.openmfa.service.MFAUserService;
+import io.jenkins.plugins.openmfa.service.UserService;
 import io.jenkins.plugins.openmfa.service.TOTPService;
-import io.jenkins.plugins.openmfa.service.model.UserMFAInfo;
+import io.jenkins.plugins.openmfa.service.model.UserInfo;
 import jenkins.model.Jenkins;
 
 @WithJenkins
@@ -24,13 +29,13 @@ class MFAManagementActionTest {
 
   private MFAManagementAction action;
   private TOTPService totpService;
-  private MFAUserService userService;
+  private UserService userService;
 
   @BeforeEach
   void setUp() {
     action = new MFAManagementAction();
     totpService = MFAContext.i().getService(TOTPService.class);
-    userService = MFAContext.i().getService(MFAUserService.class);
+    userService = MFAContext.i().getService(UserService.class);
   }
 
   @Test
@@ -52,7 +57,6 @@ class MFAManagementActionTest {
     // Set up MFA for testuser
     MFAUserProperty prop = MFAUserProperty.getOrCreate(testUser);
     prop.setSecret(totpService.generateSecret());
-    prop.setEnabled(true);
     testUser.save();
 
     // Configure admin authorization
@@ -64,19 +68,19 @@ class MFAManagementActionTest {
 
     // Get all users as admin
     try (var ctx = ACL.as2(adminUser.impersonate2())) {
-      Collection<UserMFAInfo> users = action.getAllUsers();
+      Collection<UserInfo> users = action.getAllUsers();
       assertNotNull(users);
       assertTrue(users.size() >= 2);
 
       // Find testuser in the list
-      UserMFAInfo testUserInfo = users.stream()
-        .filter(u -> "testuser".equals(u.getUserId()))
-        .findFirst()
-        .orElse(null);
+      UserInfo testUserInfo =
+        users.stream()
+          .filter(u -> "testuser".equals(u.getUserId()))
+          .findFirst()
+          .orElse(null);
 
       assertNotNull(testUserInfo);
       assertTrue(testUserInfo.isMfaEnabled());
-      assertTrue(testUserInfo.isMfaConfigured());
     }
   }
 
@@ -103,19 +107,15 @@ class MFAManagementActionTest {
   @Test
   void testUserMFAInfoStatusText(JenkinsRule j) {
     // Test enabled status
-    UserMFAInfo enabledUser = new UserMFAInfo("user1", "User One", true, true);
+    UserInfo enabledUser = new UserInfo("user1", "User One", true);
     assertEquals("Enabled", enabledUser.getStatusText());
     assertEquals("mfa-status-enabled", enabledUser.getStatusClass());
 
-    // Test configured but disabled
-    UserMFAInfo configuredUser = new UserMFAInfo("user2", "User Two", false, true);
-    assertEquals("Configured (Disabled)", configuredUser.getStatusText());
-    assertEquals("mfa-status-configured", configuredUser.getStatusClass());
-
-    // Test not configured
-    UserMFAInfo notConfiguredUser = new UserMFAInfo("user3", "User Three", false, false);
-    assertEquals("Not Configured", notConfiguredUser.getStatusText());
-    assertEquals("mfa-status-disabled", notConfiguredUser.getStatusClass());
+    // Test disabled status
+    UserInfo disabledUser =
+      new UserInfo("user2", "User Two", false);
+    assertEquals("Disabled", disabledUser.getStatusText());
+    assertEquals("mfa-status-disabled", disabledUser.getStatusClass());
   }
 
   @Test
@@ -124,7 +124,6 @@ class MFAManagementActionTest {
     User user = User.getById("resetuser", true);
     MFAUserProperty prop = MFAUserProperty.getOrCreate(user);
     prop.setSecret(totpService.generateSecret());
-    prop.setEnabled(true);
     user.save();
 
     // Verify MFA is enabled
@@ -140,7 +139,6 @@ class MFAManagementActionTest {
     MFAUserProperty updatedProp = MFAUserProperty.forUser(user);
     assertNotNull(updatedProp);
     assertFalse(updatedProp.isEnabled());
-    assertFalse(updatedProp.isConfigured());
   }
 
   @Test
@@ -149,7 +147,6 @@ class MFAManagementActionTest {
     User enabledUser = User.getById("enabled_user", true);
     MFAUserProperty enabledProp = MFAUserProperty.getOrCreate(enabledUser);
     enabledProp.setSecret(totpService.generateSecret());
-    enabledProp.setEnabled(true);
     enabledUser.save();
 
     // Create another user without MFA configured

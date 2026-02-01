@@ -1,6 +1,6 @@
 /**
  * OpenMFA Plugin - CSS Custom Properties (Variables)
- * 
+ *
  * This file defines shared color variables for the MFA plugin.
  * Using CSS custom properties follows Jenkins' standard theming approach,
  * enabling compatibility with the Theme Manager plugin.
@@ -10,7 +10,7 @@
   /* Primary accent colors */
   --mfa-primary: #0b5394;
   --mfa-primary-light: #1a73e8;
-  --mfa-primary-gradient: linear-gradient(135deg, var(--mfa-primary) 0%, var(--mfa-primary-light) 100%);
+  --mfa-primary-gradient: linear-gradient(135deg, var(--mfa-primary) 100%, var(--mfa-primary-light) 100%);
   --mfa-primary-shadow: rgba(11, 83, 148, 0.3);
   --mfa-primary-shadow-light: rgba(11, 83, 148, 0.15);
   --mfa-primary-shadow-subtle: rgba(11, 83, 148, 0.1);

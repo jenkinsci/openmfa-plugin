@@ -7,7 +7,9 @@ import hudson.model.User;
 import hudson.security.ACL;
 import io.jenkins.plugins.openmfa.MFAUserProperty;
 import io.jenkins.plugins.openmfa.base.Service;
-import io.jenkins.plugins.openmfa.service.model.UserMFAInfo;
+import io.jenkins.plugins.openmfa.service.model.UserInfo;
+import io.jenkins.plugins.openmfa.util.JenkinsUtil;
+import io.jenkins.plugins.openmfa.util.TOTPUtil;
 import lombok.extern.java.Log;
 
 /**
@@ -15,14 +17,14 @@ import lombok.extern.java.Log;
  */
 @Log
 @Service
-public class MFAUserService {
+public class UserService {
 
   /**
    * Gets all users with their MFA status information.
    *
    * @return Collection of UserMFAInfo objects for all users
    */
-  public Collection<UserMFAInfo> getAllUsersWithMFAStatus() {
+  public Collection<UserInfo> getAllUsersWithMFAStatus() {
     return getUsers()
       .stream()
       .filter(u -> !ACL.SYSTEM_USERNAME.equals(u.getId()))
@@ -36,13 +38,11 @@ public class MFAUserService {
    * @param user The user to get MFA info for
    * @return UserMFAInfo containing the user's MFA status
    */
-  public UserMFAInfo getUserMFAInfo(User user) {
-    MFAUserProperty prop = MFAUserProperty.forUser(user);
-    return new UserMFAInfo(
+  public UserInfo getUserMFAInfo(User user) {
+    return new UserInfo(
       user.getId(),
       user.getFullName(),
-      prop != null && prop.isEnabled(),
-      prop != null && prop.isConfigured()
+      TOTPUtil.isMFAEnabled()
     );
   }
 
@@ -53,10 +53,11 @@ public class MFAUserService {
    * @throws IOException if saving the user fails
    */
   public void resetMFA(User user) throws IOException {
+    JenkinsUtil.checkAdminPermission();
+
     MFAUserProperty property = MFAUserProperty.forUser(user);
     if (property != null) {
       property.setSecret(null);
-      property.setEnabled(false);
       user.save();
       log.info(String.format("MFA reset for user: %s by admin", user.getId()));
     }
@@ -69,8 +70,7 @@ public class MFAUserService {
    * @return true if MFA is enabled, false otherwise
    */
   public boolean isMFAEnabled(User user) {
-    MFAUserProperty prop = MFAUserProperty.forUser(user);
-    return prop != null && prop.isEnabled() && prop.isConfigured();
+    return TOTPUtil.isMFAEnabled(user);
   }
 
   /**

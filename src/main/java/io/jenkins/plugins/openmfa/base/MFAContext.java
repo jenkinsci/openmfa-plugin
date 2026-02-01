@@ -305,5 +305,5 @@ public class MFAContext {
   public boolean isInitialized() {
     return initialized;
   }
-  
+
 }

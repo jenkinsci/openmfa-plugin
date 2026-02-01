@@ -1,5 +1,7 @@
 package io.jenkins.plugins.openmfa;
 
+import static io.jenkins.plugins.openmfa.util.JenkinsUtil.isAdmin;
+
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -25,6 +27,7 @@ import io.jenkins.plugins.openmfa.base.MFAContext;
 import io.jenkins.plugins.openmfa.constant.PluginConstants;
 import io.jenkins.plugins.openmfa.constant.TOTPConstants;
 import io.jenkins.plugins.openmfa.constant.UIConstants;
+import io.jenkins.plugins.openmfa.service.SessionService;
 import io.jenkins.plugins.openmfa.service.TOTPService;
 import jenkins.model.Jenkins;
 import lombok.extern.java.Log;
@@ -83,7 +86,7 @@ public class MFASetupAction implements Action {
     ) {
       return true;
     }
-    return Jenkins.get().hasPermission(Jenkins.ADMINISTER);
+    return isAdmin();
   }
 
   private void requireCanConfigureTargetUser() throws HttpResponseException {
@@ -167,19 +170,21 @@ public class MFASetupAction implements Action {
     // Verify the code before enabling
     TOTPService totpService = MFAContext.i().getService(TOTPService.class);
     if (!totpService.verifyCode(secret, code)) {
-      return HttpResponses.error(
-        UIConstants.HttpStatus.BAD_REQUEST, "Invalid verification code"
-      );
+      return HttpResponses.redirectTo("?error=invalid_code");
     }
 
     MFAUserProperty property = MFAUserProperty.getOrCreate(targetUser);
     property.setSecret(secret);
-    property.setEnabled(true);
     targetUser.save();
 
     log.info(String.format("MFA enabled for user: %s", targetUser.getId()));
 
-    return HttpResponses.redirectToDot();
+    // Mark the user doesn't need to re-verify
+    MFAContext.i()
+      .getService(SessionService.class)
+      .isVerifiedSession(req.getSession(true));
+
+    return HttpResponses.redirectTo("?success=enabled");
   }
 
   /**
@@ -188,32 +193,18 @@ public class MFASetupAction implements Action {
   @RequirePOST
   public HttpResponse doDisable() throws IOException {
     requireCanConfigureTargetUser();
+    if (MFAGlobalConfiguration.get().isRequireMFA()) {
+      return HttpResponses.redirectTo("?error=require_mfa");
+    }
 
     MFAUserProperty property = MFAUserProperty.forUser(targetUser);
     if (property != null) {
-      property.setEnabled(false);
+      property.setSecret(null);
       targetUser.save();
       log.info(String.format("MFA disabled for user: %s", targetUser.getId()));
     }
 
-    return HttpResponses.redirectToDot();
-  }
-
-  /**
-   * Resets MFA for the current user (generates new secret).
-   */
-  @RequirePOST
-  public HttpResponse doReset() throws IOException {
-    requireCanConfigureTargetUser();
-
-    MFAUserProperty property = MFAUserProperty.getOrCreate(targetUser);
-    property.setSecret(null);
-    property.setEnabled(false);
-    targetUser.save();
-
-    log.info(String.format("MFA reset for user: %s", targetUser.getId()));
-
-    return HttpResponses.redirectToDot();
+    return HttpResponses.redirectTo("?success=disabled");
   }
 
   /**

@@ -2,60 +2,85 @@
  * MFA Management Dashboard Scripts
  */
 
+var _pendingResetForm = null;
+
 /**
- * Confirmation dialog before resetting MFA for a user.
+ * Shows the reset MFA confirmation dialog.
  * @param {string} userId - The ID of the user to reset
- * @returns {boolean} - Whether to proceed with the reset
+ * @param {HTMLFormElement} form - The form to submit on confirm
  */
-function confirmReset(userId) {
-  return confirm(
-    'Are you sure you want to reset MFA for user "' + userId + '"?\n\n' +
-    'This will remove their current MFA configuration and they will need to set up MFA again.'
-  );
+function showResetConfirm(userId, form) {
+  var dialog = document.getElementById('mfa-reset-confirm-dialog');
+  var userEl = document.getElementById('mfa-reset-confirm-user');
+  if (!dialog || !userEl) return;
+
+  userEl.textContent = userId;
+  _pendingResetForm = form;
+  dialog.setAttribute('aria-hidden', 'false');
+
+  var confirmBtn = document.getElementById('mfa-reset-confirm-submit');
+  if (confirmBtn && !confirmBtn._bound) {
+    confirmBtn._bound = true;
+    confirmBtn.addEventListener('click', function() {
+      if (_pendingResetForm) {
+        _pendingResetForm.submit();
+        _pendingResetForm = null;
+      }
+      closeResetConfirm();
+    });
+  }
+
+  document.addEventListener('keydown', _resetConfirmEscape);
 }
 
 /**
- * Shows a toast notification with the given message.
- * @param {string} message - The message to display
- * @param {string} type - The type of toast ('success' or 'error')
+ * Closes the reset MFA confirmation dialog.
  */
-function showToast(message, type) {
-  var toast = document.getElementById('mfa-toast');
-  if (!toast) return;
-
-  var messageSpan = toast.querySelector('.mfa-toast-message');
-  if (messageSpan) {
-    messageSpan.textContent = message;
+function closeResetConfirm() {
+  var dialog = document.getElementById('mfa-reset-confirm-dialog');
+  if (dialog) {
+    dialog.setAttribute('aria-hidden', 'true');
   }
+  _pendingResetForm = null;
+  document.removeEventListener('keydown', _resetConfirmEscape);
+}
 
-  // Update toast styling based on type
-  if (type === 'error') {
-    toast.style.background = 'var(--mfa-danger)';
-  } else {
-    toast.style.background = 'var(--mfa-success)';
+function _resetConfirmEscape(e) {
+  if (e.key === 'Escape') {
+    closeResetConfirm();
   }
+}
 
-  toast.classList.remove('mfa-toast-hidden');
-  toast.classList.add('mfa-toast-visible');
-
-  setTimeout(function() {
-    toast.classList.remove('mfa-toast-visible');
-    toast.classList.add('mfa-toast-hidden');
-  }, 4000);
+/**
+ * Dismisses the toast (used when success=reset_mfa is shown server-side).
+ * @param {HTMLElement} button - The close button element
+ */
+function dismissToast(button) {
+  var toast = button.closest('.mfa-toast');
+  if (toast) {
+    toast.classList.add('mfa-toast-hiding');
+    setTimeout(function() {
+      toast.remove();
+      if (window.history && window.history.replaceState) {
+        var url = new URL(window.location.href);
+        url.searchParams.delete('success');
+        window.history.replaceState({}, document.title, url.pathname + (url.search || ''));
+      }
+    }, 300);
+  }
 }
 
 /**
  * Initialize page functionality on load.
  */
 (function() {
-  // Check URL for success parameter
-  var urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('reset') === 'success') {
-    showToast('MFA has been reset successfully', 'success');
-    // Clean up URL
-    if (window.history.replaceState) {
-      var cleanUrl = window.location.pathname;
-      window.history.replaceState({}, document.title, cleanUrl);
-    }
+  var toast = document.querySelector('.mfa-toast');
+  if (toast) {
+    setTimeout(function() {
+      if (toast.parentNode) {
+        var closeBtn = toast.querySelector('.mfa-toast-close');
+        if (closeBtn) dismissToast(closeBtn);
+      }
+    }, 5000);
   }
 })();

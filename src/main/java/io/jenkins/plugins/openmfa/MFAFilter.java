@@ -7,8 +7,11 @@ import java.util.Optional;
 
 import hudson.Extension;
 import hudson.model.User;
+import io.jenkins.plugins.openmfa.base.MFAContext;
 import io.jenkins.plugins.openmfa.constant.PluginConstants;
+import io.jenkins.plugins.openmfa.service.SessionService;
 import io.jenkins.plugins.openmfa.util.JenkinsUtil;
+import io.jenkins.plugins.openmfa.util.TOTPUtil;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.FilterConfig;
@@ -116,18 +119,8 @@ public class MFAFilter implements Filter {
       }
     }
 
-    Optional<User> user = JenkinsUtil.getCurrentUser();
-    if (user.isPresent()) {
-      MFAUserProperty mfaProperty = MFAUserProperty.forUser(user.get());
-      if (
-        MFAGlobalConfiguration.get().isRequireMFA()
-          || (mfaProperty != null
-            && mfaProperty.isEnabled()
-            && mfaProperty.isConfigured())
-      ) {
-        // MFA is required or user has MFA configured, block access
-        return false;
-      }
+    if (TOTPUtil.isMFARequired()) {
+      return false;
     }
 
     // Allow user-scoped setup page (/user/<id>/mfa-setup and subpaths) without MFA,
@@ -162,16 +155,13 @@ public class MFAFilter implements Filter {
 
     String username = user.getId();
     MFAUserProperty mfaProperty = MFAUserProperty.forUser(user);
-    if (
-      mfaProperty == null || !mfaProperty.isEnabled() || !mfaProperty.isConfigured()
-    ) {
-      MFAGlobalConfiguration globalConfig = MFAGlobalConfiguration.get();
-      if (globalConfig.isRequireMFA()) {
+    if (!TOTPUtil.isMFAEnabled()) {
+      if (TOTPUtil.isMFARequired()) {
         resp.sendRedirect(
           req.getContextPath()
             + "/user/" + username + "/" + PluginConstants.Urls.SETUP_ACTION_URL
         );
-        // MFA is required but not enabled or configured, redirect to MFA setup page
+        // MFA is required but not enabled, redirect to MFA setup page
         return false;
       } else {
         // MFA is not required, allow access
@@ -180,13 +170,13 @@ public class MFAFilter implements Filter {
     }
 
     HttpSession session = req.getSession(true);
-    Boolean mfaVerified =
-      (Boolean) session.getAttribute(
-        PluginConstants.SessionAttributes.MFA_VERIFIED
-      );
 
     // Check if MFA is already verified in this session
-    if (Boolean.TRUE.equals(mfaVerified)) {
+    if (
+      MFAContext.i()
+        .getService(SessionService.class)
+        .isVerifiedSession(session)
+    ) {
       log.fine(String.format("MFA already verified for user: %s", username));
       return true;
     }
@@ -199,7 +189,9 @@ public class MFAFilter implements Filter {
       if (mfaProperty.verifyCode(totpCode)) {
         log.info(String.format("MFA verification successful for user: %s", username));
         // Mark MFA as verified in the session
-        session.setAttribute(PluginConstants.SessionAttributes.MFA_VERIFIED, true);
+        MFAContext.i()
+          .getService(SessionService.class)
+          .verifySession(session);
         return true;
       } else {
         log.warning(String.format("Invalid MFA code for user: %s", username));
@@ -215,7 +207,11 @@ public class MFAFilter implements Filter {
 
     // MFA is required but not yet verified, redirect to MFA page
     log.info(
-      String.format("MFA required for user: %s, redirecting to MFA page", username)
+      String.format(
+        "MFA required for user: %s, current path: %s, redirecting to MFA page",
+        username,
+        req.getRequestURI()
+      )
     );
 
     // Store pending authentication state

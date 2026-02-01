@@ -1,5 +1,5 @@
 .mfa-container {
-  max-width: 640px;
+  max-width: 860px;
   font-family: var(--mfa-font-family);
 }
 
@@ -42,7 +42,6 @@
 
 .mfa-alert-success {
   background: var(--mfa-success-bg);
-  border-left: 4px solid var(--mfa-success);
 }
 
 .mfa-alert-info {
@@ -252,23 +251,6 @@
   box-shadow: 0 4px 12px var(--mfa-danger-shadow);
 }
 
-.mfa-btn-secondary {
-  background: var(--mfa-secondary-gradient);
-  color: var(--mfa-bg-white);
-  border: none;
-  padding: 10px 24px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  border-radius: var(--mfa-radius-md);
-  cursor: pointer;
-  transition: transform var(--mfa-transition-fast), box-shadow var(--mfa-transition-fast);
-}
-
-.mfa-btn-secondary:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px var(--mfa-secondary-shadow);
-}
-
 .mfa-actions {
   display: flex;
   gap: 12px;
@@ -306,4 +288,88 @@
 
 .mfa-notes li:last-child {
   margin-bottom: 0;
+}
+
+/* Success Toast Notification */
+.mfa-toast {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: var(--mfa-success-gradient);
+  color: var(--mfa-bg-white);
+  padding: 16px 24px;
+  border-radius: var(--mfa-radius-md);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 9999;
+  animation: mfa-toast-slide-in 0.4s ease-out;
+}
+
+.mfa-toast.mfa-toast-error {
+  background: var(--mfa-danger-gradient);
+}
+
+.mfa-toast.mfa-toast-hiding {
+  animation: mfa-toast-slide-out 0.3s ease-in forwards;
+}
+
+.mfa-toast-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.mfa-toast-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mfa-toast-title {
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.mfa-toast-message {
+  font-size: 0.875rem;
+  opacity: 0.9;
+}
+
+.mfa-toast-close {
+  background: transparent;
+  border: none;
+  color: var(--mfa-bg-white);
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px 8px;
+  margin-left: 8px;
+  opacity: 0.7;
+  transition: opacity var(--mfa-transition-fast);
+}
+
+.mfa-toast-close:hover {
+  opacity: 1;
+}
+
+@keyframes mfa-toast-slide-in {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes mfa-toast-slide-out {
+  from {
+    transform: translateX(0);
+    opacity: 1;
+  }
+  to {
+    transform: translateX(100%);
+    opacity: 0;
+  }
 }

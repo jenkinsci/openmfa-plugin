@@ -99,6 +99,15 @@ public final class TOTPConstants {
   public static final int SHIFT_8_BITS = 8;
 
   /**
+   * Digits power array
+   * 10^1, 10^2, 10^3, 10^4, 10^5, 10^6, 10^7, 10^8
+   *
+   * @see <a href="https://tools.ietf.org/html/rfc4226#section-5.3">RFC 4226</a>
+   */
+  public static final int[] DIGITS_POWER =
+    { 1, 10, 100, 1000, 10000, 100000, 1000000, 10000000, 100000000 };
+
+  /**
    * Divisor for calculating time counter from milliseconds
    */
   public static final long MILLIS_TO_SECONDS = 1000L;
@@ -117,4 +126,5 @@ public final class TOTPConstants {
    * Characters per hex byte
    */
   public static final int HEX_CHARS_PER_BYTE = 2;
+
 }

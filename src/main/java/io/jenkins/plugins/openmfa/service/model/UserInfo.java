@@ -8,7 +8,7 @@ import lombok.Getter;
  */
 @Getter
 @AllArgsConstructor
-public class UserMFAInfo {
+public class UserInfo {
 
   /** The user's unique identifier */
   private final String userId;
@@ -19,32 +19,22 @@ public class UserMFAInfo {
   /** Whether MFA is currently enabled for this user */
   private final boolean mfaEnabled;
 
-  /** Whether MFA has been configured (secret exists) for this user */
-  private final boolean mfaConfigured;
+  public boolean isMfaEnabled() {
+    return mfaEnabled;
+  }
 
   /**
    * Returns a human-readable status string for the MFA state.
    */
   public String getStatusText() {
-    if (mfaEnabled && mfaConfigured) {
-      return "Enabled";
-    } else if (mfaConfigured) {
-      return "Configured (Disabled)";
-    } else {
-      return "Not Configured";
-    }
+    return mfaEnabled ? "Enabled" : "Disabled";
   }
 
   /**
    * Returns the CSS class to use for the status badge.
    */
   public String getStatusClass() {
-    if (mfaEnabled && mfaConfigured) {
-      return "mfa-status-enabled";
-    } else if (mfaConfigured) {
-      return "mfa-status-configured";
-    } else {
-      return "mfa-status-disabled";
-    }
+    return mfaEnabled ? "mfa-status-enabled" : "mfa-status-disabled";
   }
+
 }

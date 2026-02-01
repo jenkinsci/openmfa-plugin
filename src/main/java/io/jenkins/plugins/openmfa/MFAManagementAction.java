@@ -14,8 +14,9 @@ import hudson.model.User;
 import io.jenkins.plugins.openmfa.base.MFAContext;
 import io.jenkins.plugins.openmfa.constant.PluginConstants;
 import io.jenkins.plugins.openmfa.constant.UIConstants;
-import io.jenkins.plugins.openmfa.service.MFAUserService;
-import io.jenkins.plugins.openmfa.service.model.UserMFAInfo;
+import io.jenkins.plugins.openmfa.service.UserService;
+import io.jenkins.plugins.openmfa.service.model.UserInfo;
+import io.jenkins.plugins.openmfa.util.JenkinsUtil;
 import jenkins.model.Jenkins;
 import lombok.extern.java.Log;
 
@@ -51,7 +52,7 @@ public class MFAManagementAction implements RootAction {
    * Throws AccessDeniedException if not.
    */
   private void checkAdminPermission() {
-    Jenkins.get().checkPermission(Jenkins.ADMINISTER);
+    JenkinsUtil.checkAdminPermission();
   }
 
   /**
@@ -60,9 +61,9 @@ public class MFAManagementAction implements RootAction {
    *
    * @return Collection of UserMFAInfo objects
    */
-  public Collection<UserMFAInfo> getAllUsers() {
+  public Collection<UserInfo> getAllUsers() {
     checkAdminPermission();
-    MFAUserService userService = MFAContext.i().getService(MFAUserService.class);
+    UserService userService = MFAContext.i().getService(UserService.class);
     return userService.getAllUsersWithMFAStatus();
   }
 
@@ -73,7 +74,7 @@ public class MFAManagementAction implements RootAction {
    */
   public long getEnabledCount() {
     checkAdminPermission();
-    MFAUserService userService = MFAContext.i().getService(MFAUserService.class);
+    UserService userService = MFAContext.i().getService(UserService.class);
     return userService.getEnabledMFACount();
   }
 
@@ -84,7 +85,7 @@ public class MFAManagementAction implements RootAction {
    */
   public long getTotalCount() {
     checkAdminPermission();
-    MFAUserService userService = MFAContext.i().getService(MFAUserService.class);
+    UserService userService = MFAContext.i().getService(UserService.class);
     return userService.getTotalUserCount();
   }
 
@@ -114,10 +115,10 @@ public class MFAManagementAction implements RootAction {
     }
 
     try {
-      MFAUserService userService = MFAContext.i().getService(MFAUserService.class);
+      UserService userService = MFAContext.i().getService(UserService.class);
       userService.resetMFA(user);
       log.info(String.format("Admin reset MFA for user: %s", userId));
-      return HttpResponses.redirectToDot();
+      return HttpResponses.redirectTo(".?success=reset_mfa");
     } catch (IOException e) {
       log.severe(
         String.format("Failed to reset MFA for user %s: %s", userId, e.getMessage())

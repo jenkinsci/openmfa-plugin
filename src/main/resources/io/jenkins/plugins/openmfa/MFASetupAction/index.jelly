@@ -2,11 +2,13 @@
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form" xmlns:l="/lib/layout">
   <l:layout title="${%title}" permission="${app.READ}">
     <j:set var="instance" value="${it}" />
-    <j:set var="descriptor" value="${it.descriptor}"/>
+    <j:set var="descriptor" value="${it.descriptor}" />
     <!--
-      When referencing frontend assets with <st:adjunct>, Jenkins first tries to resolve .css, then .js, .html, and .jelly extensions for the given name.
+      When referencing frontend assets with <st:adjunct>, Jenkins first tries to resolve .css, then .js,
+    .html, and .jelly extensions for the given name.
       If none of those files are present for a given adjunct path, a NoSuchAdjunctException occurs.
-      The adjunct references below match the available .css and .js assets from your context and will not trigger an error.
+      The adjunct references below match the available .css and .js assets from your context and will not
+    trigger an error.
     -->
     <st:adjunct includes="io.jenkins.plugins.openmfa.mfa-variables" />
     <st:adjunct includes="io.jenkins.plugins.openmfa.MFASetupAction.mfa-setup-style" />
@@ -15,6 +17,58 @@
       <st:include page="sidepanel.jelly" it="${app}" optional="true" />
     </l:side-panel>
     <l:main-panel>
+      <!-- Success Toast: MFA enabled -->
+      <j:if test="${request.getParameter('success') == 'enabled'}">
+        <div class="mfa-toast">
+          <span class="mfa-toast-icon">&#127881;</span>
+          <div class="mfa-toast-content">
+            <span class="mfa-toast-title">${%success.toast.title}</span>
+            <span class="mfa-toast-message">${%success.toast.message}</span>
+          </div>
+          <button type="button" class="mfa-toast-close" onclick="dismissToast(this)"
+            aria-label="Close">&#10005;</button>
+        </div>
+      </j:if>
+
+      <!-- Success Toast: MFA disabled -->
+      <j:if test="${request.getParameter('success') == 'disabled'}">
+        <div class="mfa-toast">
+          <span class="mfa-toast-icon">&#127881;</span>
+          <div class="mfa-toast-content">
+            <span class="mfa-toast-title">${%success.toast.disabled.title}</span>
+            <span class="mfa-toast-message">${%success.toast.disabled.message}</span>
+          </div>
+          <button type="button" class="mfa-toast-close" onclick="dismissToast(this)"
+            aria-label="Close">&#10005;</button>
+        </div>
+      </j:if>
+
+      <!-- Failure Toast: invalid code -->
+      <j:if test="${request.getParameter('error') == 'invalid_code'}">
+        <div class="mfa-toast mfa-toast-error">
+          <span class="mfa-toast-icon">&#9888;</span>
+          <div class="mfa-toast-content">
+            <span class="mfa-toast-title">${%error.toast.invalid_code.title}</span>
+            <span class="mfa-toast-message">${%error.toast.invalid_code.message}</span>
+          </div>
+          <button type="button" class="mfa-toast-close" onclick="dismissToast(this)"
+            aria-label="Close">&#10005;</button>
+        </div>
+      </j:if>
+
+      <!-- Failure Toast: MFA required -->
+      <j:if test="${request.getParameter('error') == 'require_mfa'}">
+        <div class="mfa-toast mfa-toast-error">
+          <span class="mfa-toast-icon">&#9888;</span>
+          <div class="mfa-toast-content">
+            <span class="mfa-toast-title">${%error.toast.require_mfa.title}</span>
+            <span class="mfa-toast-message">${%error.toast.require_mfa.message}</span>
+          </div>
+          <button type="button" class="mfa-toast-close" onclick="dismissToast(this)"
+            aria-label="Close">&#10005;</button>
+        </div>
+      </j:if>
+
       <div class="mfa-container">
         <div class="mfa-header">
           <div class="mfa-shield-icon">&#128274;</div>
@@ -24,7 +78,7 @@
         <j:set var="mfaProperty" value="${it.getMFAProperty()}" />
 
         <j:choose>
-          <j:when test="${mfaProperty != null and mfaProperty.enabled and mfaProperty.configured}">
+          <j:when test="${mfaProperty != null and mfaProperty.enabled}">
             <!-- MFA is enabled -->
             <div class="mfa-alert mfa-alert-success">
               <span class="mfa-alert-icon">&#9989;</span>
@@ -35,11 +89,8 @@
             </div>
 
             <div class="mfa-actions">
-              <form method="post" action="doDisable">
+              <form method="post" action="disable">
                 <button type="submit" class="mfa-btn-danger">${%disable.button}</button>
-              </form>
-              <form method="post" action="doReset">
-                <button type="submit" class="mfa-btn-secondary">${%reset.button}</button>
               </form>
             </div>
           </j:when>

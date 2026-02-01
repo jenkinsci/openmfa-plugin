@@ -18,6 +18,7 @@ import hudson.model.Descriptor;
 import hudson.model.User;
 import hudson.security.SecurityRealm;
 import io.jenkins.plugins.openmfa.constant.UIConstants;
+import io.jenkins.plugins.openmfa.util.TOTPUtil;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.java.Log;
@@ -33,7 +34,7 @@ public class MFASecurityRealm extends SecurityRealm {
   private SecurityRealm delegate;
 
   @DataBoundSetter
-  private boolean requireMFA = UIConstants.Defaults.DEFAULT_REQUIRE_MFA;
+  private boolean requireMFA = TOTPUtil.isMFARequired();
 
   @DataBoundSetter
   private String issuer = UIConstants.Defaults.DEFAULT_ISSUER;
@@ -103,11 +104,7 @@ public class MFASecurityRealm extends SecurityRealm {
         if (user != null) {
           MFAUserProperty mfaProperty = MFAUserProperty.forUser(user);
 
-          if (
-            mfaProperty != null
-              && mfaProperty.isEnabled()
-              && mfaProperty.isConfigured()
-          ) {
+          if (TOTPUtil.isMFAEnabled()) {
             // MFA is enabled, verify code
             if (totpCode == null || totpCode.isEmpty()) {
               log.warning(
@@ -140,15 +137,8 @@ public class MFASecurityRealm extends SecurityRealm {
         }
       } else {
         // Not an MFA token, check if MFA is required
-        User user = User.getById(delegateAuth.getName(), false);
-        if (user != null) {
-          MFAUserProperty mfaProperty = MFAUserProperty.forUser(user);
-          if (
-            (mfaProperty != null && mfaProperty.isEnabled()
-              && mfaProperty.isConfigured()) || requireMFA
-          ) {
-            throw new BadCredentialsException("MFA code required");
-          }
+        if (requireMFA) {
+          throw new BadCredentialsException("MFA code required");
         }
       }
 

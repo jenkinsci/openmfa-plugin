@@ -7,12 +7,12 @@ import org.kohsuke.stapler.DataBoundSetter;
 
 import edu.umd.cs.findbugs.annotations.CheckForNull;
 import edu.umd.cs.findbugs.annotations.NonNull;
+import edu.umd.cs.findbugs.annotations.Nullable;
 import hudson.model.User;
 import hudson.model.UserProperty;
 import hudson.util.Secret;
 import io.jenkins.plugins.openmfa.base.MFAContext;
 import io.jenkins.plugins.openmfa.constant.PluginConstants;
-import io.jenkins.plugins.openmfa.constant.UIConstants;
 import io.jenkins.plugins.openmfa.service.TOTPService;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,17 +28,12 @@ public class MFAUserProperty extends UserProperty {
   @DataBoundSetter
   private Secret secret;
 
-  @DataBoundSetter
-  private boolean enabled = UIConstants.Defaults.DEFAULT_MFA_ENABLED;
-
   @DataBoundConstructor
   public MFAUserProperty() {
-    this.enabled = UIConstants.Defaults.DEFAULT_MFA_ENABLED;
   }
 
-  public MFAUserProperty(Secret secret, boolean enabled) {
+  public MFAUserProperty(Secret secret) {
     this.secret = secret;
-    this.enabled = enabled;
   }
 
   public User getUser() {
@@ -46,9 +41,9 @@ public class MFAUserProperty extends UserProperty {
   }
 
   /**
-   * Check if MFA is configured for this user.
+   * Check if MFA is enabled for this user.
    */
-  public boolean isConfigured() {
+  public boolean isEnabled() {
     return secret != null && !Secret.toString(secret).isEmpty();
   }
 
@@ -56,18 +51,25 @@ public class MFAUserProperty extends UserProperty {
    * Verify a TOTP code for this user.
    */
   public boolean verifyCode(String code) {
-    if (!isConfigured() || !enabled) {
+    if (!isEnabled()) {
       return false;
     }
-    TOTPService totpService = MFAContext.i().getService(TOTPService.class);
-    return totpService.verifyCode(secret, code);
+    return MFAContext.i()
+      .getService(TOTPService.class)
+      .verifyCode(secret, code);
   }
 
   /**
-   * Gets the MFA property for a user, or null if not found.
+   * Gets the MFA property for a user.
+   *
+   * @param user The user to get the property for.
+   * @return The MFA property for the user, or null if not found.
    */
   @CheckForNull
-  public static MFAUserProperty forUser(User user) {
+  public static MFAUserProperty forUser(@Nullable User user) {
+    if (user == null) {
+      return null;
+    }
     return user.getProperty(MFAUserProperty.class);
   }
 

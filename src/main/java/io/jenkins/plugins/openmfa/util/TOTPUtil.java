@@ -1,15 +1,20 @@
 package io.jenkins.plugins.openmfa.util;
 
-import io.jenkins.plugins.openmfa.base.MFAException;
-import io.jenkins.plugins.openmfa.constant.TOTPConstants;
-import lombok.AccessLevel;
-import lombok.NoArgsConstructor;
-import org.apache.commons.codec.binary.Base32;
+import java.security.SecureRandom;
+import java.util.Optional;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
-import java.security.SecureRandom;
+import org.apache.commons.codec.binary.Base32;
+
+import hudson.model.User;
+import io.jenkins.plugins.openmfa.MFAGlobalConfiguration;
+import io.jenkins.plugins.openmfa.MFAUserProperty;
+import io.jenkins.plugins.openmfa.base.MFAException;
+import io.jenkins.plugins.openmfa.constant.TOTPConstants;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 
 /**
  * Utility class for TOTP (Time-based One-Time Password) generation and
@@ -17,6 +22,43 @@ import java.security.SecureRandom;
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TOTPUtil {
+
+  /**
+   * Checks if MFA is required for the current user.
+   *
+   * @return true if MFA is required, false otherwise
+   */
+  public static boolean isMFARequired() {
+    Optional<User> user = JenkinsUtil.getCurrentUser();
+    if (user.isPresent()) {
+      MFAUserProperty property = MFAUserProperty.forUser(user.get());
+      return MFAGlobalConfiguration.get().isRequireMFA()
+        || (property != null && property.isEnabled());
+    }
+    return false;
+  }
+
+  /**
+   * Checks if MFA is enabled for the current user.
+   *
+   * @return true if MFA is enabled, false otherwise
+   */
+  public static boolean isMFAEnabled() {
+    return JenkinsUtil.getCurrentUser()
+      .map(TOTPUtil::isMFAEnabled)
+      .orElse(false);
+  }
+
+  /**
+   * Checks if MFA is enabled for the given user.
+   *
+   * @param user the user to check
+   * @return true if MFA is enabled, false otherwise
+   */
+  public static boolean isMFAEnabled(User user) {
+    MFAUserProperty property = MFAUserProperty.forUser(user);
+    return property != null && property.isEnabled();
+  }
 
   /**
    * Generates a random secret key for TOTP.
