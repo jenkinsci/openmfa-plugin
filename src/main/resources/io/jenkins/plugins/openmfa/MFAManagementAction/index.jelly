@@ -75,6 +75,16 @@
         <div class="mfa-mgmt-card">
           <div class="mfa-mgmt-card-header">
             <h2>${%users.title}</h2>
+            <div class="mfa-mgmt-page-size">
+              <label for="mfa-page-size">${%pagination.show}</label>
+              <select id="mfa-page-size" onchange="changePageSize(this.value)">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+              <span>${%pagination.entries}</span>
+            </div>
           </div>
 
           <j:set var="users" value="${it.getAllUsers()}" />
@@ -87,7 +97,7 @@
             </j:when>
             <j:otherwise>
               <div class="mfa-mgmt-table-wrapper">
-                <table class="mfa-mgmt-table">
+                <table class="mfa-mgmt-table" id="mfa-users-table">
                   <thead>
                     <tr>
                       <th>${%table.user}</th>
@@ -98,7 +108,7 @@
                   </thead>
                   <tbody>
                     <j:forEach var="user" items="${users}">
-                      <tr>
+                      <tr class="mfa-user-row">
                         <td class="mfa-mgmt-user-cell">
                           <a href="${rootURL}/user/${user.userId}">${user.userId}</a>
                         </td>
@@ -127,6 +137,32 @@
                   </tbody>
                 </table>
               </div>
+
+              <!-- Pagination controls -->
+              <div class="mfa-mgmt-pagination" id="mfa-pagination">
+                <div class="mfa-mgmt-pagination-info">
+                  <span id="mfa-pagination-info"></span>
+                </div>
+                <div class="mfa-mgmt-pagination-controls">
+                  <button type="button" class="mfa-mgmt-pagination-btn" id="mfa-page-first"
+                    onclick="goToPage(1)" title="${%pagination.first}">&#171;</button>
+                  <button type="button" class="mfa-mgmt-pagination-btn" id="mfa-page-prev"
+                    onclick="goToPage(currentPage - 1)" title="${%pagination.previous}">&#8249;</button>
+                  <span class="mfa-mgmt-pagination-pages" id="mfa-page-numbers"></span>
+                  <button type="button" class="mfa-mgmt-pagination-btn" id="mfa-page-next"
+                    onclick="goToPage(currentPage + 1)" title="${%pagination.next}">&#8250;</button>
+                  <button type="button" class="mfa-mgmt-pagination-btn" id="mfa-page-last"
+                    onclick="goToPage(totalPages)" title="${%pagination.last}">&#187;</button>
+                </div>
+              </div>
+
+              <!-- Hidden data for pagination info text -->
+              <script type="text/javascript">
+                var paginationShowingText = "${%pagination.showing}";
+                var paginationToText = "${%pagination.to}";
+                var paginationOfText = "${%pagination.of}";
+                var paginationEntriesText = "${%pagination.entries.label}";
+              </script>
             </j:otherwise>
           </j:choose>
         </div>

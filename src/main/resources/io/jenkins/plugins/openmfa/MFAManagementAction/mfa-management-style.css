@@ -110,6 +110,42 @@
   color: var(--mfa-text-primary);
 }
 
+.mfa-mgmt-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.mfa-mgmt-page-size {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  color: var(--mfa-text-secondary);
+}
+
+.mfa-mgmt-page-size select {
+  padding: 4px 8px;
+  border: 1px solid var(--mfa-border-medium);
+  border-radius: var(--mfa-radius-sm);
+  background: var(--mfa-bg-white);
+  color: var(--mfa-text-primary);
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.mfa-mgmt-page-size select:hover {
+  border-color: var(--mfa-primary);
+}
+
+.mfa-mgmt-page-size select:focus {
+  outline: none;
+  border-color: var(--mfa-primary);
+  box-shadow: 0 0 0 2px var(--mfa-primary-light);
+}
+
 /* Table styles */
 .mfa-mgmt-table-wrapper {
   overflow-x: auto;
@@ -146,6 +182,72 @@
 
 .mfa-mgmt-table tbody tr:last-child td {
   border-bottom: none;
+}
+
+/* Pagination styles */
+.mfa-mgmt-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  border-top: 1px solid var(--mfa-border-divider);
+  background: var(--mfa-bg-subtle);
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.mfa-mgmt-pagination-info {
+  font-size: 0.875rem;
+  color: var(--mfa-text-secondary);
+}
+
+.mfa-mgmt-pagination-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.mfa-mgmt-pagination-btn {
+  background: var(--mfa-bg-white);
+  border: 1px solid var(--mfa-border-medium);
+  color: var(--mfa-text-primary);
+  padding: 6px 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border-radius: var(--mfa-radius-sm);
+  cursor: pointer;
+  transition: background var(--mfa-transition-fast), border-color var(--mfa-transition-fast);
+  min-width: 36px;
+}
+
+.mfa-mgmt-pagination-btn:hover:not(:disabled) {
+  background: var(--mfa-bg-muted);
+  border-color: var(--mfa-primary);
+}
+
+.mfa-mgmt-pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.mfa-mgmt-pagination-btn.mfa-mgmt-pagination-active {
+  background: var(--mfa-primary);
+  border-color: var(--mfa-primary);
+  color: var(--mfa-bg-white);
+}
+
+.mfa-mgmt-pagination-btn.mfa-mgmt-pagination-active:hover {
+  background: var(--mfa-primary-hover);
+}
+
+.mfa-mgmt-pagination-pages {
+  display: flex;
+  gap: 4px;
+}
+
+.mfa-mgmt-pagination-num {
+  min-width: 36px;
+  padding: 6px 10px;
 }
 
 .mfa-mgmt-user-cell a {
