@@ -24,6 +24,24 @@ public final class PluginConstants {
   }
 
   /**
+   * Rate limiting constants
+   */
+  public static final class RateLimit {
+
+    /** Time window for counting attempts in milliseconds (5 minutes) */
+    public static final long ATTEMPT_WINDOW_MS = 5 * 60 * 1000L;
+
+    /** Lockout duration in milliseconds (5 minutes) */
+    public static final long LOCKOUT_DURATION_MS = 5 * 60 * 1000L;
+
+    /** Maximum failed TOTP attempts before lockout */
+    public static final int MAX_ATTEMPTS = 5;
+
+    private RateLimit() {
+    }
+  }
+
+  /**
    * Session attribute constants
    */
   public static final class SessionAttributes {

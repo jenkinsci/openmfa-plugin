@@ -23,6 +23,9 @@ import io.jenkins.plugins.openmfa.base.MFAException;
 import io.jenkins.plugins.openmfa.base.Service;
 import io.jenkins.plugins.openmfa.constant.TOTPConstants;
 import java.security.SecureRandom;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import lombok.extern.java.Log;
@@ -35,6 +38,18 @@ import org.apache.commons.codec.binary.Base32;
 @Log
 @Service
 public class TOTPService {
+
+  /** Cleanup interval - run cleanup every 100 verifications */
+  private static final int CLEANUP_INTERVAL = 100;
+
+  /**
+   * Cache of used TOTP codes to prevent replay attacks.
+   * Key: secret hash + code, Value: expiry timestamp (when code becomes invalid)
+   */
+  private final Map<String, Long> usedCodes = new ConcurrentHashMap<>();
+
+  /** Counter for triggering periodic cleanup */
+  private int verificationCount = 0;
 
   public TOTPService() {
     // Default constructor for service instantiation
@@ -124,16 +139,22 @@ public class TOTPService {
 
   /**
    * Verifies a TOTP code against the secret, allowing for time drift.
+   * Includes replay protection to prevent the same code from being used twice.
    *
    * @param secret
    *          Secret containing Base32-encoded secret key
    * @param code
    *          6-digit code to verify
-   * @return true if the code is valid
+   * @return true if the code is valid and has not been used before
    */
   public boolean verifyCode(Secret secret, String code) {
     if (code == null || code.length() != TOTP_CODE_DIGITS) {
       return false;
+    }
+
+    // Periodic cleanup of expired codes
+    if (++verificationCount % CLEANUP_INTERVAL == 0) {
+      cleanupExpiredCodes();
     }
 
     try {
@@ -144,6 +165,25 @@ public class TOTPService {
       for (int i = -TIME_WINDOW_TOLERANCE; i <= TIME_WINDOW_TOLERANCE; i++) {
         String generatedCode = generateTOTP(secret, currentStep + i);
         if (generatedCode.equals(code)) {
+          // Check for replay attack - has this code been used before?
+          String cacheKey = generateCacheKey(secret, code);
+          Long existingExpiry = usedCodes.get(cacheKey);
+
+          if (existingExpiry != null && System.currentTimeMillis() < existingExpiry) {
+            log.warning("TOTP replay attack detected - code already used");
+            return false;
+          }
+
+          // Mark code as used - expires after the time window passes
+          // Code is valid for current step ± tolerance, so expire after (tolerance +
+          // 1) steps
+          long expiryTime =
+            (currentStep + TIME_WINDOW_TOLERANCE + 1)
+              * TIME_STEP_SECONDS
+              * MILLIS_TO_SECONDS;
+          usedCodes.put(cacheKey, expiryTime);
+
+          log.fine("TOTP code verified and marked as used");
           return true;
         }
       }
@@ -160,6 +200,31 @@ public class TOTPService {
       sb.append(String.format(TOTPConstants.HEX_FORMAT, b));
     }
     return sb.toString();
+  }
+
+  /**
+   * Removes expired entries from the used codes cache.
+   */
+  private void cleanupExpiredCodes() {
+    long now = System.currentTimeMillis();
+    Iterator<Map.Entry<String, Long>> iterator = usedCodes.entrySet().iterator();
+    while (iterator.hasNext()) {
+      Map.Entry<String, Long> entry = iterator.next();
+      if (entry.getValue() < now) {
+        iterator.remove();
+      }
+    }
+    log.fine(
+      String.format("Cleaned up expired TOTP codes, remaining: %d", usedCodes.size())
+    );
+  }
+
+  /**
+   * Generates a cache key for tracking used codes.
+   * Uses a hash of the secret to avoid storing the actual secret.
+   */
+  private String generateCacheKey(Secret secret, String code) {
+    return Secret.toString(secret).hashCode() + ":" + code;
   }
 
   private String generateTOTP(String key, String step, int len) {

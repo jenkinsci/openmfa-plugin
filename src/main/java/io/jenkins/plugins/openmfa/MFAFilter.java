@@ -4,6 +4,7 @@ import hudson.Extension;
 import hudson.model.User;
 import io.jenkins.plugins.openmfa.base.MFAContext;
 import io.jenkins.plugins.openmfa.constant.PluginConstants;
+import io.jenkins.plugins.openmfa.service.RateLimitService;
 import io.jenkins.plugins.openmfa.service.SessionService;
 import io.jenkins.plugins.openmfa.util.JenkinsUtil;
 import io.jenkins.plugins.openmfa.util.TOTPUtil;
@@ -17,6 +18,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -117,7 +120,8 @@ public class MFAFilter implements Filter {
       if (TOTPUtil.isMFARequired()) {
         resp.sendRedirect(
           req.getContextPath()
-            + "/user/" + username + "/" + PluginConstants.Urls.SETUP_ACTION_URL
+            + "/user/" + URLEncoder.encode(username, StandardCharsets.UTF_8)
+            + "/" + PluginConstants.Urls.SETUP_ACTION_URL
         );
         // MFA is required but not enabled, redirect to MFA setup page
         return false;
@@ -143,15 +147,40 @@ public class MFAFilter implements Filter {
     String totpCode = req.getParameter(PluginConstants.FormParameters.TOTP_CODE);
 
     if (totpCode != null && !totpCode.isEmpty()) {
+      RateLimitService rateLimitService =
+        MFAContext.i().getService(RateLimitService.class);
+
+      // Check if user is locked out due to too many failed attempts
+      if (rateLimitService.isLockedOut(username)) {
+        long remainingSeconds = rateLimitService.getRemainingLockoutSeconds(username);
+        log.warning(
+          String.format(
+            "User %s is locked out, %d seconds remaining", username, remainingSeconds
+          )
+        );
+        resp.sendRedirect(
+          req.getContextPath()
+            + "/" + PluginConstants.Urls.LOGIN_ACTION_URL
+            + "?error=locked&remaining=" + remainingSeconds
+        );
+        return false;
+      }
+
       // Verify the TOTP code
       if (mfaProperty.verifyCode(totpCode)) {
         log.info(String.format("MFA verification successful for user: %s", username));
-        // Mark MFA as verified in the session
-        MFAContext.i()
-          .getService(SessionService.class)
-          .verifySession(session);
+        // Clear any failed attempts on success
+        rateLimitService.clearFailedAttempts(username);
+        // Regenerate session to prevent session fixation attacks
+        SessionService sessionService =
+          MFAContext.i().getService(SessionService.class);
+        HttpSession newSession = sessionService.regenerateSession(req);
+        // Mark MFA as verified in the new session
+        sessionService.verifySession(newSession);
         return true;
       } else {
+        // Record failed attempt for rate limiting
+        rateLimitService.recordFailedAttempt(username);
         log.warning(String.format("Invalid MFA code for user: %s", username));
         // Redirect back to MFA page with error
         resp.sendRedirect(
@@ -198,14 +227,25 @@ public class MFAFilter implements Filter {
     }
 
     // Check if path matches any allowed pattern
+    // Use strict matching to prevent path bypass attacks (e.g., /loginEvil matching
+    // /login)
     for (String allowedPath : ALLOWED_PATHS) {
-      if (relativePath.equals(allowedPath) || relativePath.startsWith(allowedPath)) {
+      if (relativePath.equals(allowedPath)) {
         return true;
       }
-    }
-
-    if (TOTPUtil.isMFARequired()) {
-      return false;
+      // Only allow prefix matching for directory-style paths (ending with /)
+      if (allowedPath.endsWith("/") && relativePath.startsWith(allowedPath)) {
+        return true;
+      }
+      // For non-directory paths, also allow if followed by / or ? (subpaths/query
+      // strings)
+      if (
+        !allowedPath.endsWith("/")
+          && (relativePath.startsWith(allowedPath + "/")
+            || relativePath.startsWith(allowedPath + "?"))
+      ) {
+        return true;
+      }
     }
 
     // Allow user-scoped setup page (/user/<id>/mfa-setup and subpaths) without MFA,
@@ -215,13 +255,6 @@ public class MFAFilter implements Filter {
         "^/user/[^/]+/" + PluginConstants.Urls.SETUP_ACTION_URL + "($|/.*)"
       )
     ) {
-      return true;
-    }
-
-    // Allow user-scoped security page (/user/<id>/security and subpaths) without
-    // MFA,
-    // otherwise users cannot access their security configuration page.
-    if (relativePath.matches("^/user/[^/]+/security($|/.*)")) {
       return true;
     }
 

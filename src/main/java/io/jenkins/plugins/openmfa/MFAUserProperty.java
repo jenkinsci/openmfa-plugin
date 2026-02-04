@@ -41,7 +41,7 @@ public class MFAUserProperty extends UserProperty {
    * Gets or creates the MFA property for a user.
    */
   @NonNull
-  public static MFAUserProperty getOrCreate(@NonNull User user) throws IOException {
+  public static MFAUserProperty getOrCreate(User user) throws IOException {
     MFAUserProperty property = forUser(user);
     if (property == null) {
       property = new MFAUserProperty();

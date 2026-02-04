@@ -6,15 +6,34 @@
     <l:main-panel>
       <j:choose>
         <j:when test="${it.hasPendingAuth()}">
+          <!-- Toast for invalid code error -->
           <div id="mfa-toast" class="mfa-toast mfa-toast-hidden">
             <span class="mfa-toast-message">${%error.invalid.code}</span>
+          </div>
+
+          <!-- Lockout banner -->
+          <div id="mfa-lockout-banner" class="mfa-lockout-banner mfa-lockout-hidden">
+            <div class="mfa-lockout-content">
+              <svg class="mfa-lockout-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2">
+                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+              </svg>
+              <div class="mfa-lockout-text">
+                <span class="mfa-lockout-title">${%error.locked.title}</span>
+                <span class="mfa-lockout-message"> ${%error.locked.message} <span
+                    id="mfa-lockout-countdown" class="mfa-lockout-countdown"></span>
+                </span>
+              </div>
+            </div>
           </div>
 
           <div class="mfa-login-container">
             <div class="mfa-login-card">
               <div class="mfa-login-icon-wrapper">
-                <svg class="mfa-login-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round"/>
+                <svg class="mfa-login-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2">
+                  <path d="M20 6L9 17l-5-5" stroke-linecap="round" stroke-linejoin="round" />
                 </svg>
               </div>
 
@@ -24,12 +43,18 @@
               <form method="post" action="${rootURL}${it.securityCheckEndpoint}">
                 <div class="mfa-login-code-wrapper">
                   <div class="mfa-login-code-boxes">
-                    <input type="text" class="mfa-login-digit" maxlength="1" data-index="0" inputmode="numeric" pattern="[0-9]" />
-                    <input type="text" class="mfa-login-digit" maxlength="1" data-index="1" inputmode="numeric" pattern="[0-9]" />
-                    <input type="text" class="mfa-login-digit" maxlength="1" data-index="2" inputmode="numeric" pattern="[0-9]" />
-                    <input type="text" class="mfa-login-digit" maxlength="1" data-index="3" inputmode="numeric" pattern="[0-9]" />
-                    <input type="text" class="mfa-login-digit" maxlength="1" data-index="4" inputmode="numeric" pattern="[0-9]" />
-                    <input type="text" class="mfa-login-digit" maxlength="1" data-index="5" inputmode="numeric" pattern="[0-9]" />
+                    <input type="text" class="mfa-login-digit" maxlength="1" data-index="0"
+                      inputmode="numeric" pattern="[0-9]" />
+                    <input type="text" class="mfa-login-digit" maxlength="1" data-index="1"
+                      inputmode="numeric" pattern="[0-9]" />
+                    <input type="text" class="mfa-login-digit" maxlength="1" data-index="2"
+                      inputmode="numeric" pattern="[0-9]" />
+                    <input type="text" class="mfa-login-digit" maxlength="1" data-index="3"
+                      inputmode="numeric" pattern="[0-9]" />
+                    <input type="text" class="mfa-login-digit" maxlength="1" data-index="4"
+                      inputmode="numeric" pattern="[0-9]" />
+                    <input type="text" class="mfa-login-digit" maxlength="1" data-index="5"
+                      inputmode="numeric" pattern="[0-9]" />
                   </div>
                   <input type="hidden" name="${it.formParamTotpCode}" id="mfa-login-code-hidden" />
                 </div>
@@ -43,57 +68,7 @@
             </div>
           </div>
 
-          <script>
-            (function() {
-              var digits = document.querySelectorAll('.mfa-login-digit');
-              var hidden = document.getElementById('mfa-login-code-hidden');
-
-              function updateHidden() {
-                var code = '';
-                digits.forEach(function(d) { code += d.value; });
-                hidden.value = code;
-              }
-
-              digits.forEach(function(input, idx) {
-                input.addEventListener('input', function(e) {
-                  var val = e.target.value.replace(/[^0-9]/g, '');
-                  e.target.value = val.slice(-1);
-                  updateHidden();
-                  if (val &amp;&amp; idx &lt; 5) digits[idx + 1].focus();
-                });
-                input.addEventListener('keydown', function(e) {
-                  if (e.key === 'Backspace' &amp;&amp; !e.target.value &amp;&amp; idx > 0) {
-                    digits[idx - 1].focus();
-                  }
-                });
-                input.addEventListener('paste', function(e) {
-                  e.preventDefault();
-                  var paste = (e.clipboardData || window.clipboardData).getData('text').replace(/[^0-9]/g, '').slice(0, 6);
-                  for (var i = 0; i &lt; paste.length; i++) {
-                    if (digits[i]) digits[i].value = paste[i];
-                  }
-                  updateHidden();
-                  if (digits[Math.min(paste.length, 5)]) digits[Math.min(paste.length, 5)].focus();
-                });
-              });
-
-              if (digits[0]) digits[0].focus();
-
-              // Show toast if error=invalid in URL
-              var urlParams = new URLSearchParams(window.location.search);
-              if (urlParams.get('error') === 'invalid') {
-                var toast = document.getElementById('mfa-toast');
-                if (toast) {
-                  toast.classList.remove('mfa-toast-hidden');
-                  toast.classList.add('mfa-toast-visible');
-                  setTimeout(function() {
-                    toast.classList.remove('mfa-toast-visible');
-                    toast.classList.add('mfa-toast-hidden');
-                  }, 4000);
-                }
-              }
-            })();
-          </script>
+          <st:adjunct includes="io.jenkins.plugins.openmfa.MFALoginAction.mfa-login-script" />
         </j:when>
         <j:otherwise>
           <div class="mfa-login-container">

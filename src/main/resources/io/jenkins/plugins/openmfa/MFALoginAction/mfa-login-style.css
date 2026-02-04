@@ -176,3 +176,88 @@
   transform: translateX(-50%) translateY(-100px);
   opacity: 0;
 }
+
+/* Lockout banner */
+.mfa-lockout-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background: var(--mfa-warning-bg);
+  border-bottom: 2px solid var(--mfa-warning-border);
+  padding: 16px 24px;
+  z-index: 9998;
+  transform: translateY(-100%);
+  opacity: 0;
+  transition: transform var(--mfa-transition-normal), opacity var(--mfa-transition-normal);
+}
+
+.mfa-lockout-visible {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+.mfa-lockout-hidden {
+  transform: translateY(-100%);
+  opacity: 0;
+}
+
+.mfa-lockout-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.mfa-lockout-icon {
+  width: 24px;
+  height: 24px;
+  color: var(--mfa-warning-heading);
+  flex-shrink: 0;
+}
+
+.mfa-lockout-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.mfa-lockout-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--mfa-warning-heading);
+}
+
+.mfa-lockout-message {
+  font-size: 0.875rem;
+  color: var(--mfa-warning-text);
+}
+
+.mfa-lockout-countdown {
+  font-weight: 700;
+  font-family: var(--mfa-font-mono);
+  margin-left: 4px;
+}
+
+/* Disabled state for inputs */
+.mfa-login-digit-disabled {
+  background: var(--mfa-bg-muted) !important;
+  color: var(--mfa-text-light) !important;
+  cursor: not-allowed !important;
+  border-color: var(--mfa-border-light) !important;
+}
+
+.mfa-login-digit-disabled:focus {
+  border-color: var(--mfa-border-light) !important;
+  box-shadow: none !important;
+}
+
+/* Disabled state for button */
+.mfa-login-btn-disabled {
+  background: var(--mfa-secondary) !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
