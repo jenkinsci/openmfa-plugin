@@ -144,7 +144,6 @@
         <div class="mfa-notes">
           <h3>&#9888; ${%notes.title}</h3>
           <ul>
-            <li>${%notes.backup}</li>
             <li>${%notes.required}</li>
             <li>${%notes.lost}</li>
             <li>${%notes.expiry}</li>

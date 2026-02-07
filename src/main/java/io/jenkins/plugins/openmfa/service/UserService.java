@@ -63,7 +63,7 @@ public class UserService {
     return new UserInfo(
       user.getId(),
       user.getFullName(),
-      TOTPUtil.isMFAEnabled()
+      TOTPUtil.isMFAEnabled(user)
     );
   }
 

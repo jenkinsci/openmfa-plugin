@@ -13,7 +13,7 @@
             <!-- Setup page link -->
             <j:choose>
               <j:when test="${instance.enabled}">
-                <a href="${rootURL}/user/${instance.user.id}/mfa-setup/" class="mfa-setup-link mfa-status-badge"
+                <a href="${instance.setupActionUrl}" class="mfa-setup-link mfa-status-badge"
                   tooltip="${%config.setup.linkHelp}" title="${%config.setup.linkHelp}">
                   <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd"
@@ -23,7 +23,7 @@
                 </a>
               </j:when>
               <j:otherwise>
-                <a href="${rootURL}/user/${instance.user.id}/mfa-setup/" class="mfa-setup-link mfa-status-badge"
+                <a href="${instance.setupActionUrl}" class="mfa-setup-link mfa-status-badge"
                   tooltip="${%config.setup.linkHelpNotEnabled}" title="${%config.setup.linkHelpNotEnabled}">
                   <svg width="16" height="16" viewBox="0 0 20 20" fill="currentColor">
                     <path fill-rule="evenodd"

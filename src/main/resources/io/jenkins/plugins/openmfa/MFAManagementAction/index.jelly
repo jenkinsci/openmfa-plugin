@@ -14,7 +14,8 @@
           <span class="mfa-toast-icon">&#127881;</span>
           <div class="mfa-toast-content">
             <span class="mfa-toast-title">${%reset.toast.title}</span>
-            <span class="mfa-toast-message">${%reset.success}</span>
+            <span class="mfa-toast-message"> The user <strong>${request.getParameter('user_id')}</strong>'s
+              ${%reset.success} </span>
           </div>
           <button type="button" class="mfa-toast-close" onclick="dismissToast(this)"
             aria-label="Close">&#10005;</button>
@@ -28,7 +29,7 @@
         <div class="mfa-mgmt-modal-dialog">
           <div class="mfa-mgmt-modal-icon">&#9888;</div>
           <h2 id="mfa-reset-confirm-title" class="mfa-mgmt-modal-title">${%reset.confirm.title}</h2>
-          <p class="mfa-mgmt-modal-message"> ${%reset.confirm.messagePrefix}<strong
+          <p class="mfa-mgmt-modal-message"> ${%reset.confirm.messagePrefix} <strong
               id="mfa-reset-confirm-user"></strong>${%reset.confirm.messageSuffix} </p>
           <div class="mfa-mgmt-modal-actions">
             <button type="button" class="mfa-mgmt-modal-btn-cancel" onclick="closeResetConfirm()">
@@ -100,7 +101,7 @@
                     <j:forEach var="user" items="${users}">
                       <tr>
                         <td class="mfa-mgmt-user-cell">
-                          <a href="${rootURL}/user/${user.userId}">${user.userId}</a>
+                          <a href="${it.getSetupUri(user.userId)}">${user.userId}</a>
                         </td>
                         <td>${user.fullName}</td>
                         <td>
@@ -119,7 +120,12 @@
                             </form>
                           </j:if>
                           <j:if test="${!user.mfaEnabled}">
-                            <span class="mfa-mgmt-no-action">${%not.configured}</span>
+                            <form method="post" action="setMFA" class="mfa-mgmt-set-form">
+                              <input type="hidden" name="userId" value="${user.userId}" />
+                              <button type="submit" class="mfa-mgmt-btn-reset">
+                                ${%set.button}
+                              </button>
+                            </form>
                           </j:if>
                         </td>
                       </tr>

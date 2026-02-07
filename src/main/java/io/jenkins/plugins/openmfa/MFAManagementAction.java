@@ -9,6 +9,7 @@ import io.jenkins.plugins.openmfa.constant.UIConstants;
 import io.jenkins.plugins.openmfa.service.UserService;
 import io.jenkins.plugins.openmfa.service.model.UserInfo;
 import io.jenkins.plugins.openmfa.util.JenkinsUtil;
+import io.jenkins.plugins.openmfa.util.SecurityUtil;
 import java.io.IOException;
 import java.util.Collection;
 import jenkins.model.Jenkins;
@@ -16,6 +17,7 @@ import lombok.extern.java.Log;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.HttpResponses;
 import org.kohsuke.stapler.QueryParameter;
+import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
@@ -56,7 +58,7 @@ public class MFAManagementAction implements RootAction {
       UserService userService = MFAContext.i().getService(UserService.class);
       userService.resetMFA(user);
       log.info(String.format("Admin reset MFA for user: %s", userId));
-      return HttpResponses.redirectTo(".?success=reset_mfa");
+      return HttpResponses.redirectTo(".?success=reset_mfa&user_id=" + userId);
     } catch (IOException e) {
       log.severe(
         String.format("Failed to reset MFA for user %s: %s", userId, e.getMessage())
@@ -66,6 +68,43 @@ public class MFAManagementAction implements RootAction {
         "Failed to reset MFA: " + e.getMessage()
       );
     }
+  }
+
+  /**
+   * Redirects to the user's MFA setup page.
+   *
+   * @param userId
+   *          The ID of the user to modify MFA for
+   * @param enable
+   *          ignored, present for API symmetry
+   * @return HTTP response to redirect to user's MFA setup page
+   */
+  @RequirePOST
+  public HttpResponse doSetMFA(@QueryParameter String userId) {
+    checkAdminPermission();
+
+    if (userId == null || userId.trim().isEmpty()) {
+      return HttpResponses.error(
+        UIConstants.HttpStatus.BAD_REQUEST,
+        "User ID is required"
+      );
+    }
+
+    User user = User.getById(userId, false);
+    if (user == null) {
+      return HttpResponses.error(
+        UIConstants.HttpStatus.NOT_FOUND,
+        "User not found: " + userId
+      );
+    }
+
+    // Redirect to the user's MFA setup page
+    return HttpResponses.redirectTo(
+      SecurityUtil.buildSetupURI(
+        Stapler.getCurrentRequest2().getContextPath(),
+        userId
+      )
+    );
   }
 
   /**
@@ -103,6 +142,20 @@ public class MFAManagementAction implements RootAction {
       return "symbol-lock-closed";
     }
     return null;
+  }
+
+  /**
+   * Builds the MFA setup URI for a user.
+   *
+   * @param userId
+   *          The user ID.
+   * @return The setup URI for the user.
+   */
+  public String getSetupUri(String userId) {
+    return SecurityUtil.buildSetupURI(
+      Stapler.getCurrentRequest2().getContextPath(),
+      userId
+    );
   }
 
   /**

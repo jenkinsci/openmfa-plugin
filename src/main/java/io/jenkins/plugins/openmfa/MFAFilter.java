@@ -7,6 +7,7 @@ import io.jenkins.plugins.openmfa.constant.PluginConstants;
 import io.jenkins.plugins.openmfa.service.RateLimitService;
 import io.jenkins.plugins.openmfa.service.SessionService;
 import io.jenkins.plugins.openmfa.util.JenkinsUtil;
+import io.jenkins.plugins.openmfa.util.SecurityUtil;
 import io.jenkins.plugins.openmfa.util.TOTPUtil;
 import jakarta.servlet.Filter;
 import jakarta.servlet.FilterChain;
@@ -18,8 +19,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -128,10 +127,12 @@ public class MFAFilter implements Filter {
     if (!TOTPUtil.isMFAEnabled()) {
       if (TOTPUtil.isMFARequired()) {
         resp.sendRedirect(
-          req.getContextPath()
-            + "/user/" + URLEncoder.encode(username, StandardCharsets.UTF_8)
-            + "/" + PluginConstants.Urls.SETUP_ACTION_URL
+          SecurityUtil.buildSetupURI(
+            req.getContextPath(),
+            username
+          )
         );
+
         // MFA is required but not enabled, redirect to MFA setup page
         return false;
       } else {

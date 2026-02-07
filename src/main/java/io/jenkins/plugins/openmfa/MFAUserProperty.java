@@ -7,13 +7,14 @@ import hudson.model.User;
 import hudson.model.UserProperty;
 import hudson.util.Secret;
 import io.jenkins.plugins.openmfa.base.MFAContext;
-import io.jenkins.plugins.openmfa.constant.PluginConstants;
 import io.jenkins.plugins.openmfa.service.TOTPService;
+import io.jenkins.plugins.openmfa.util.SecurityUtil;
 import java.io.IOException;
 import lombok.Getter;
 import lombok.Setter;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
+import org.kohsuke.stapler.Stapler;
 
 /**
  * User property to store MFA secret and status.
@@ -65,7 +66,10 @@ public class MFAUserProperty extends UserProperty {
 
   @NonNull
   public String getSetupActionUrl() {
-    return PluginConstants.Urls.SETUP_ACTION_URL;
+    return SecurityUtil.buildSetupURI(
+      Stapler.getCurrentRequest2().getContextPath(),
+      getUser().getId()
+    );
   }
 
   public User getUser() {
