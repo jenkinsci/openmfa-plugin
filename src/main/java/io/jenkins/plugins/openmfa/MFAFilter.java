@@ -59,6 +59,9 @@ public class MFAFilter implements Filter {
       PluginConstants.Urls.SECURITY_CHECK_ENDPOINT
     );
 
+  private SessionService sessionService =
+    MFAContext.i().getService(SessionService.class);
+
   @Override
   public void destroy() {
     // No cleanup needed
@@ -85,6 +88,12 @@ public class MFAFilter implements Filter {
 
     if (user.isEmpty() || shouldAllowPath(req)) {
       log.fine("Allowing path without MFA check: " + req.getRequestURI());
+      chain.doFilter(req, resp);
+      return;
+    }
+
+    if (sessionService.isVerifiedSession(req.getSession(false))) {
+      log.fine("Session already verified, allowing access");
       chain.doFilter(req, resp);
       return;
     }
@@ -171,12 +180,9 @@ public class MFAFilter implements Filter {
         log.info(String.format("MFA verification successful for user: %s", username));
         // Clear any failed attempts on success
         rateLimitService.clearFailedAttempts(username);
-        // Regenerate session to prevent session fixation attacks
-        SessionService sessionService =
-          MFAContext.i().getService(SessionService.class);
-        HttpSession newSession = sessionService.regenerateSession(req);
         // Mark MFA as verified in the new session
-        sessionService.verifySession(newSession);
+        sessionService.verifySession(req);
+
         return true;
       } else {
         // Record failed attempt for rate limiting
@@ -188,6 +194,7 @@ public class MFAFilter implements Filter {
             + "/" + PluginConstants.Urls.LOGIN_ACTION_URL
             + "?error=invalid"
         );
+
         return false;
       }
     }

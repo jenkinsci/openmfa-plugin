@@ -33,6 +33,20 @@ public class SessionService {
   }
 
   /**
+   * Marks the session as MFA-verified.
+   *
+   * @param request
+   *          the HTTP request
+   */
+  public void verifySession(HttpServletRequest request) {
+    // Regenerate session to prevent session fixation attacks
+    HttpSession session = regenerateSession(request);
+    if (session != null) {
+      session.setAttribute(MFA_VERIFIED, true);
+    }
+  }
+
+  /**
    * Regenerates the session to prevent session fixation attacks.
    * Copies all existing session attributes to the new session.
    *
@@ -40,7 +54,7 @@ public class SessionService {
    *          the HTTP request
    * @return the new session, or null if no session existed
    */
-  public HttpSession regenerateSession(HttpServletRequest request) {
+  private HttpSession regenerateSession(HttpServletRequest request) {
     HttpSession oldSession = request.getSession(false);
     Map<String, Object> attrs = new HashMap<>();
 
@@ -57,17 +71,5 @@ public class SessionService {
     attrs.forEach(newSession::setAttribute);
     log.fine("Session regenerated for security");
     return newSession;
-  }
-
-  /**
-   * Marks the session as MFA-verified.
-   *
-   * @param session
-   *          the HTTP session
-   */
-  public void verifySession(HttpSession session) {
-    if (session != null) {
-      session.setAttribute(MFA_VERIFIED, true);
-    }
   }
 }

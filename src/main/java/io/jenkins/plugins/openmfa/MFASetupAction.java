@@ -90,7 +90,7 @@ public class MFASetupAction implements Action {
     // Mark the user doesn't need to re-verify
     MFAContext.i()
       .getService(SessionService.class)
-      .isVerifiedSession(req.getSession(true));
+      .verifySession(req);
 
     return HttpResponses.redirectTo("?success=enabled");
   }
@@ -98,8 +98,10 @@ public class MFASetupAction implements Action {
   /**
    * Generates a QR code for the given secret.
    */
-  public String generateQRCode(String username, Secret secret) {
+  public String generateQRCode(String username, String encryptedSecret) {
     try {
+      Secret secret = Secret.fromString(encryptedSecret);
+
       String issuer = UIConstants.Defaults.DEFAULT_ISSUER;
       Jenkins jenkins = Jenkins.get();
       if (jenkins.getSecurityRealm() instanceof MFASecurityRealm) {
@@ -137,9 +139,9 @@ public class MFASetupAction implements Action {
    * Generates a new secret for the current user.
    * Returns the Secret object for secure handling.
    */
-  public Secret generateSecret() {
+  public String generateSecret() {
     TOTPService totpService = MFAContext.i().getService(TOTPService.class);
-    return totpService.generateSecret();
+    return totpService.generateSecret().getEncryptedValue();
   }
 
   /**
