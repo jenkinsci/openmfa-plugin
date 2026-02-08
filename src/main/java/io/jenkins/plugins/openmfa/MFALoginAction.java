@@ -3,10 +3,11 @@ package io.jenkins.plugins.openmfa;
 import hudson.Extension;
 import hudson.model.RootAction;
 import hudson.model.User;
+import io.jenkins.plugins.openmfa.base.MFAContext;
 import io.jenkins.plugins.openmfa.constant.PluginConstants;
 import io.jenkins.plugins.openmfa.constant.UIConstants;
+import io.jenkins.plugins.openmfa.service.SessionService;
 import io.jenkins.plugins.openmfa.util.JenkinsUtil;
-import jakarta.servlet.http.HttpSession;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.HttpResponses;
 import org.kohsuke.stapler.Stapler;
@@ -22,6 +23,7 @@ public class MFALoginAction implements RootAction {
    * Handles TOTP code verification via POST.
    */
   @RequirePOST
+  @SuppressWarnings("lgtm[jenkins/no-permission-check]")
   public HttpResponse doVerify() {
     User user = User.current();
     if (user == null) {
@@ -39,8 +41,9 @@ public class MFALoginAction implements RootAction {
     }
 
     // Mark MFA as verified in session
-    HttpSession session = req.getSession(true);
-    session.setAttribute(PluginConstants.SessionAttributes.MFA_VERIFIED, true);
+    MFAContext.i()
+      .getService(SessionService.class)
+      .verifySession(req);
 
     // Redirect to root
     return HttpResponses.redirectViaContextPath("/");
