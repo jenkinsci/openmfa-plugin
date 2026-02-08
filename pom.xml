@@ -30,6 +30,7 @@
   </scm>
 
   <properties>
+    <bom.version>6040.v20da_0b_1245d3</bom.version>
     <changelist>999999-SNAPSHOT</changelist>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
     <jenkins.baseline>2.528</jenkins.baseline>
@@ -47,7 +48,6 @@
     -->
     <hpi.bundledArtifacts>commons-codec,core,jai-imageio-core,javase,jcommander</hpi.bundledArtifacts>
     <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
-    <bom.version>6040.v20da_0b_1245d3</bom.version>
     <lombok.version>1.18.42</lombok.version>
     <zxing.version>3.5.3</zxing.version>
     <!--
