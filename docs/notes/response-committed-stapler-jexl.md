@@ -65,7 +65,7 @@ For `/user/dev/security/` before the fix, here's what happened:
 1. **Request arrives**: `/user/dev/security/`
 2. **Filter checks `shouldAllowPath()`**: Returns `false` (path not in allowed list)
 3. **Filter proceeds**: User is authenticated, so filter continues to MFA verification logic
-4. **Stapler starts processing**: 
+4. **Stapler starts processing**:
    - Routes to the `User` object for `/user/dev/security/`
    - Begins rendering the Jelly view (`/user/security/config.jelly` or similar)
 5. **JEXL evaluation begins**:
@@ -156,8 +156,8 @@ This provides a safety check to prevent attempting redirects after the response 
 ## Error Message
 
 ```
-WARNING h.ExpressionFactory2$JexlExpression#evaluate: Caught exception evaluating: 
-instance.protectedPassword in /jenkins/user/dev/security/. 
+WARNING h.ExpressionFactory2$JexlExpression#evaluate: Caught exception evaluating:
+instance.protectedPassword in /jenkins/user/dev/security/.
 Reason: java.lang.reflect.InvocationTargetException
 java.lang.IllegalStateException: Response is committed
 ```

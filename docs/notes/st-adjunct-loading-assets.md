@@ -55,10 +55,10 @@ src/main/resources/
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form" xmlns:l="/lib/layout">
   <l:layout title="${%title}" permission="${app.READ}">
     <!--
-      When referencing frontend assets with <st:adjunct>, Jenkins first tries to resolve 
+      When referencing frontend assets with <st:adjunct>, Jenkins first tries to resolve
       .css, then .js, .html, and .jelly extensions for the given name.
       If none of those files are present for a given adjunct path, a NoSuchAdjunctException occurs.
-      The adjunct references below match the available .css and .js assets from your context 
+      The adjunct references below match the available .css and .js assets from your context
       and will not trigger an error.
     -->
     <st:adjunct includes="io.jenkins.plugins.openmfa.MFASetupAction.mfa-setup-style" />
