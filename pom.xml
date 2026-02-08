@@ -5,7 +5,7 @@
   <parent>
     <groupId>org.jenkins-ci.plugins</groupId>
     <artifactId>plugin</artifactId>
-    <version>5.2099.v68c2f5e27299</version>
+    <version>6.2116.v7501b_67dc517</version>
     <relativePath></relativePath>
   </parent>
 
@@ -33,7 +33,7 @@
     <revision>1.0</revision>
     <changelist>-SNAPSHOT</changelist>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
-    <jenkins.baseline>2.516</jenkins.baseline>
+    <jenkins.baseline>2.528</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
     <gitHubRepo>jenkinsci/${project.artifactId}-plugin</gitHubRepo>
 
@@ -49,7 +49,12 @@
     <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
     <lombok.version>1.18.42</lombok.version>
     <zxing.version>3.5.3</zxing.version>
-    <bom.version>5804.v80587a_38d937</bom.version>
+    <bom.version>6040.v20da_0b_1245d3</bom.version>
+    <!--
+    | help prevent accidental usage of the deprecated commons-lang-2 library
+    | that is included in core.
+    -->
+    <ban-commons-lang-2.skip>false</ban-commons-lang-2.skip>
   </properties>
 
   <dependencyManagement>
@@ -209,4 +214,18 @@
       </plugin>
     </plugins>
   </build>
+
+  <profiles>
+    <profile>
+      <id>cd</id>
+      <activation>
+        <property>
+          <name>env.BUILD_NUMBER</name>
+        </property>
+      </activation>
+      <properties>
+        <changelist>999999-SNAPSHOT</changelist>
+      </properties>
+    </profile>
+  </profiles>
 </project>
