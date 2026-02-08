@@ -43,6 +43,12 @@ public class TOTPService {
   private static final int CLEANUP_INTERVAL = 100;
 
   /**
+   * Shared SecureRandom for secret generation; thread-safe, do not allocate per
+   * call
+   */
+  private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
+  /**
    * Cache of used TOTP codes to prevent replay attacks.
    * Key: secret hash + code, Value: expiry timestamp (when code becomes invalid)
    */
@@ -61,9 +67,8 @@ public class TOTPService {
    * @return Secret containing Base32-encoded secret key
    */
   public Secret generateSecret() {
-    SecureRandom random = new SecureRandom();
     byte[] bytes = new byte[TOTPConstants.SECRET_KEY_SIZE_BYTES];
-    random.nextBytes(bytes);
+    SECURE_RANDOM.nextBytes(bytes);
     Base32 base32 = new Base32();
     return Secret.fromString(base32.encodeToString(bytes));
   }
@@ -251,7 +256,7 @@ public class TOTPService {
           | ((hash[offset + 2] & BINARY_OTHER_BYTE_MASK) << SHIFT_8_BITS)
           | (hash[offset + 3] & BINARY_OTHER_BYTE_MASK);
 
-      int otp = binary % DIGITS_POWER[len];
+      int otp = binary % DIGITS_POWER.get(len);
 
       StringBuilder result = new StringBuilder(Integer.toString(otp));
       while (result.length() < len) {

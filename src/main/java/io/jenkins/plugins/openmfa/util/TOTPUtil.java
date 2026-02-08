@@ -5,7 +5,6 @@ import io.jenkins.plugins.openmfa.MFAGlobalConfiguration;
 import io.jenkins.plugins.openmfa.MFAUserProperty;
 import io.jenkins.plugins.openmfa.base.MFAException;
 import io.jenkins.plugins.openmfa.constant.TOTPConstants;
-import java.security.SecureRandom;
 import java.util.Optional;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -19,19 +18,6 @@ import org.apache.commons.codec.binary.Base32;
  */
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class TOTPUtil {
-
-  /**
-   * Generates a random secret key for TOTP.
-   *
-   * @return Base32-encoded secret key
-   */
-  public static String generateSecret() {
-    SecureRandom random = new SecureRandom();
-    byte[] bytes = new byte[TOTPConstants.SECRET_KEY_SIZE_BYTES];
-    random.nextBytes(bytes);
-    Base32 base32 = new Base32();
-    return base32.encodeToString(bytes);
-  }
 
   /**
    * Generates a TOTP code for the given secret at the current time.

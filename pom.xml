@@ -45,10 +45,11 @@
     | unwanted libraries from being packaged, resulting in leaner,
     | safer plugins.
     -->
+    <hpi.bundledArtifacts>commons-codec,core,jai-imageio-core,javase,jcommander</hpi.bundledArtifacts>
     <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
+    <bom.version>6040.v20da_0b_1245d3</bom.version>
     <lombok.version>1.18.42</lombok.version>
     <zxing.version>3.5.3</zxing.version>
-    <bom.version>6040.v20da_0b_1245d3</bom.version>
     <!--
     | help prevent accidental usage of the deprecated commons-lang-2 library
     | that is included in core.
