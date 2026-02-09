@@ -72,15 +72,51 @@ function dismissToast(button) {
 
 /**
  * Initialize page functionality on load.
+ * Wires up event handlers without using inline JavaScript.
  */
 (function() {
-  var toast = document.querySelector('.mfa-toast');
-  if (toast) {
-    setTimeout(function() {
-      if (toast.parentNode) {
-        var closeBtn = toast.querySelector('.mfa-toast-close');
-        if (closeBtn) dismissToast(closeBtn);
+  // Wire up toast close buttons
+  var closeButtons = document.querySelectorAll('.mfa-toast-close');
+  for (var i = 0; i < closeButtons.length; i++) {
+    (function(button) {
+      button.addEventListener('click', function() {
+        dismissToast(button);
+      });
+    })(closeButtons[i]);
+  }
+
+  // Auto-dismiss the first toast after 5 seconds, if present
+  setTimeout(function() {
+    var toast = document.querySelector('.mfa-toast');
+    if (toast && toast.parentNode) {
+      var closeBtn = toast.querySelector('.mfa-toast-close');
+      if (closeBtn) {
+        dismissToast(closeBtn);
       }
-    }, 5000);
+    }
+  }, 5000);
+
+  // Wire up reset confirmation modal buttons and reset buttons
+  var cancelBtn = document.querySelector('.mfa-mgmt-modal-btn-cancel');
+  if (cancelBtn) {
+    cancelBtn.addEventListener('click', function() {
+      closeResetConfirm();
+    });
+  }
+
+  // Attach click handlers to all reset buttons to show confirm dialog
+  var resetForms = document.querySelectorAll('.mfa-mgmt-reset-form');
+  for (var j = 0; j < resetForms.length; j++) {
+    (function(form) {
+      var resetBtn = form.querySelector('.mfa-mgmt-btn-reset');
+      if (resetBtn) {
+        resetBtn.addEventListener('click', function() {
+          var userIdInput = form.querySelector('input[name="userId"]');
+          if (userIdInput) {
+            showResetConfirm(userIdInput.value, form);
+          }
+        });
+      }
+    })(resetForms[j]);
   }
 })();

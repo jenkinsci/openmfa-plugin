@@ -25,8 +25,7 @@
             <span class="mfa-toast-title">${%success.toast.title}</span>
             <span class="mfa-toast-message">${%success.toast.message}</span>
           </div>
-          <button type="button" class="mfa-toast-close" onclick="dismissToast(this)"
-            aria-label="Close">&#10005;</button>
+          <button type="button" class="mfa-toast-close" aria-label="Close">&#10005;</button>
         </div>
       </j:if>
 
@@ -38,8 +37,7 @@
             <span class="mfa-toast-title">${%success.toast.disabled.title}</span>
             <span class="mfa-toast-message">${%success.toast.disabled.message}</span>
           </div>
-          <button type="button" class="mfa-toast-close" onclick="dismissToast(this)"
-            aria-label="Close">&#10005;</button>
+          <button type="button" class="mfa-toast-close" aria-label="Close">&#10005;</button>
         </div>
       </j:if>
 
@@ -51,8 +49,7 @@
             <span class="mfa-toast-title">${%error.toast.invalid_code.title}</span>
             <span class="mfa-toast-message">${%error.toast.invalid_code.message}</span>
           </div>
-          <button type="button" class="mfa-toast-close" onclick="dismissToast(this)"
-            aria-label="Close">&#10005;</button>
+          <button type="button" class="mfa-toast-close" aria-label="Close">&#10005;</button>
         </div>
       </j:if>
 
@@ -64,8 +61,7 @@
             <span class="mfa-toast-title">${%error.toast.require_mfa.title}</span>
             <span class="mfa-toast-message">${%error.toast.require_mfa.message}</span>
           </div>
-          <button type="button" class="mfa-toast-close" onclick="dismissToast(this)"
-            aria-label="Close">&#10005;</button>
+          <button type="button" class="mfa-toast-close" aria-label="Close">&#10005;</button>
         </div>
       </j:if>
 

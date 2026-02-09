@@ -17,8 +17,7 @@
             <span class="mfa-toast-message"> The user <strong>${request.getParameter('user_id')}</strong>'s
               ${%reset.success} </span>
           </div>
-          <button type="button" class="mfa-toast-close" onclick="dismissToast(this)"
-            aria-label="Close">&#10005;</button>
+          <button type="button" class="mfa-toast-close" aria-label="Close">&#10005;</button>
         </div>
       </j:if>
 
@@ -32,7 +31,7 @@
           <p class="mfa-mgmt-modal-message"> ${%reset.confirm.messagePrefix} <strong
               id="mfa-reset-confirm-user"></strong>${%reset.confirm.messageSuffix} </p>
           <div class="mfa-mgmt-modal-actions">
-            <button type="button" class="mfa-mgmt-modal-btn-cancel" onclick="closeResetConfirm()">
+            <button type="button" class="mfa-mgmt-modal-btn-cancel">
               ${%reset.confirm.cancel}</button>
             <button type="button" class="mfa-mgmt-modal-btn-confirm" id="mfa-reset-confirm-submit">
               ${%reset.button}</button>
@@ -113,8 +112,7 @@
                           <j:if test="${user.mfaEnabled}">
                             <form method="post" action="resetMFA" class="mfa-mgmt-reset-form">
                               <input type="hidden" name="userId" value="${user.userId}" />
-                              <button type="button" class="mfa-mgmt-btn-reset"
-                                onclick="showResetConfirm(this.form.userId.value, this.form)">
+                              <button type="button" class="mfa-mgmt-btn-reset">
                                 ${%reset.button}
                               </button>
                             </form>

@@ -36,15 +36,26 @@ function copySecret(button) {
   }
 
   function initToast() {
-    var toast = document.querySelector('.mfa-toast');
-    if (toast) {
-      // Auto-dismiss after 5 seconds
-      setTimeout(function() {
-        if (toast && document.body.contains(toast)) {
-          dismissToast(toast.querySelector('.mfa-toast-close'));
-        }
-      }, 5000);
+    // Attach click handlers to all toast close buttons
+    var closeButtons = document.querySelectorAll('.mfa-toast-close');
+    for (var i = 0; i < closeButtons.length; i++) {
+      (function(button) {
+        button.addEventListener('click', function() {
+          dismissToast(button);
+        });
+      })(closeButtons[i]);
     }
+
+    // Auto-dismiss the first toast after 5 seconds, if present
+    setTimeout(function() {
+      var toast = document.querySelector('.mfa-toast');
+      if (toast && document.body.contains(toast)) {
+        var closeButton = toast.querySelector('.mfa-toast-close');
+        if (closeButton) {
+          dismissToast(closeButton);
+        }
+      }
+    }, 5000);
   }
 
   // Initialize toast on page load
