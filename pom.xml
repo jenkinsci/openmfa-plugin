@@ -30,7 +30,6 @@
   </scm>
 
   <properties>
-    <bom.version>6040.v20da_0b_1245d3</bom.version>
     <changelist>999999-SNAPSHOT</changelist>
     <!-- https://www.jenkins.io/doc/developer/plugin-development/choosing-jenkins-baseline/ -->
     <jenkins.baseline>2.528</jenkins.baseline>
@@ -62,7 +61,7 @@
       <dependency>
         <groupId>io.jenkins.tools.bom</groupId>
         <artifactId>bom-${jenkins.baseline}.x</artifactId>
-        <version>${bom.version}</version>
+        <version>6040.v20da_0b_1245d3</version>
         <type>pom</type>
         <scope>import</scope>
       </dependency>
