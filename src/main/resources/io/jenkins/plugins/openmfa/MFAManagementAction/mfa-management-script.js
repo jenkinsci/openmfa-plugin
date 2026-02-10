@@ -104,6 +104,14 @@ function dismissToast(button) {
     });
   }
 
+  // Wire up modal backdrop to close dialog on click
+  var backdrop = document.querySelector('.mfa-mgmt-modal-backdrop');
+  if (backdrop) {
+    backdrop.addEventListener('click', function() {
+      closeResetConfirm();
+    });
+  }
+
   // Attach click handlers to all reset buttons to show confirm dialog
   var resetForms = document.querySelectorAll('.mfa-mgmt-reset-form');
   for (var j = 0; j < resetForms.length; j++) {

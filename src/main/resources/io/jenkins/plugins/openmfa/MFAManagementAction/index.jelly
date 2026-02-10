@@ -24,7 +24,7 @@
       <!-- Reset MFA confirm dialog -->
       <div id="mfa-reset-confirm-dialog" class="mfa-mgmt-modal" role="dialog" aria-modal="true"
         aria-labelledby="mfa-reset-confirm-title" aria-hidden="true">
-        <div class="mfa-mgmt-modal-backdrop" onclick="closeResetConfirm()"></div>
+        <div class="mfa-mgmt-modal-backdrop"></div>
         <div class="mfa-mgmt-modal-dialog">
           <div class="mfa-mgmt-modal-icon">&#9888;</div>
           <h2 id="mfa-reset-confirm-title" class="mfa-mgmt-modal-title">${%reset.confirm.title}</h2>
