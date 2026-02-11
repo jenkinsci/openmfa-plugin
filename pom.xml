@@ -82,12 +82,6 @@
       <version>${zxing.version}</version>
     </dependency>
 
-    <!-- Commons Codec for Base32 encoding -->
-    <dependency>
-      <groupId>commons-codec</groupId>
-      <artifactId>commons-codec</artifactId>
-    </dependency>
-
     <!-- Lombok -->
     <dependency>
       <groupId>org.projectlombok</groupId>
