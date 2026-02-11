@@ -2,41 +2,8 @@
  * MFAGlobalConfiguration config styles (standalone)
  */
 
-.mfa-status-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--mfa-border-divider, #f3f4f6);
-  margin-bottom: 16px;
-}
-
 .mfa-status-label {
   font-weight: 500;
   color: var(--mfa-text-secondary, #4a4a5a);
   font-size: 14px;
-}
-
-.mfa-status-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 4px 12px;
-  border-radius: var(--mfa-radius-lg, 50px);
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.mfa-setup-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  color: var(--mfa-link-color, #1a73e8);
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.mfa-setup-link:hover {
-  text-decoration: underline;
 }
