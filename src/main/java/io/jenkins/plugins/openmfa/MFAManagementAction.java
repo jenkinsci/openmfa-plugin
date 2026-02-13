@@ -1,8 +1,9 @@
 package io.jenkins.plugins.openmfa;
 
 import hudson.Extension;
-import hudson.model.RootAction;
+import hudson.model.ManagementLink;
 import hudson.model.User;
+import hudson.security.Permission;
 import io.jenkins.plugins.openmfa.base.MFAContext;
 import io.jenkins.plugins.openmfa.constant.PluginConstants;
 import io.jenkins.plugins.openmfa.constant.UIConstants;
@@ -21,12 +22,13 @@ import org.kohsuke.stapler.Stapler;
 import org.kohsuke.stapler.interceptor.RequirePOST;
 
 /**
- * Root action providing the MFA Management dashboard for administrators.
+ * Management link providing the MFA Management dashboard on the Manage Jenkins
+ * page.
  * Allows admins to view all users' MFA status and reset MFA for users.
  */
 @Log
 @Extension
-public class MFAManagementAction implements RootAction {
+public class MFAManagementAction extends ManagementLink {
 
   /**
    * Resets MFA for a specific user.
@@ -120,8 +122,18 @@ public class MFAManagementAction implements RootAction {
   }
 
   @Override
+  public Category getCategory() {
+    return Category.SECURITY;
+  }
+
+  @Override
+  public String getDescription() {
+    return "View and manage MFA status for all users";
+  }
+
+  @Override
   public String getDisplayName() {
-    return UIConstants.DisplayNames.MFA_MANAGEMENT;
+    return UIConstants.DisplayNames.MFA_USER_MANAGEMENT;
   }
 
   /**
@@ -137,11 +149,12 @@ public class MFAManagementAction implements RootAction {
 
   @Override
   public String getIconFileName() {
-    // Only show in sidebar for admins
-    if (Jenkins.get().hasPermission(Jenkins.ADMINISTER)) {
-      return "symbol-lock-closed";
-    }
-    return null;
+    return "symbol-browsers";
+  }
+
+  @Override
+  public Permission getRequiredPermission() {
+    return Jenkins.ADMINISTER;
   }
 
   /**

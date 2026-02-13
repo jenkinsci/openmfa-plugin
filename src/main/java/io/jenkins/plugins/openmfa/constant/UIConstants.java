@@ -30,7 +30,7 @@ public final class UIConstants {
 
     public static final String CONFIGURE_MFA = "Configure MFA";
     public static final String MFA_LOGIN = "MFA Login";
-    public static final String MFA_MANAGEMENT = "MFA Management";
+    public static final String MFA_USER_MANAGEMENT = "MFA User Management";
     public static final String MFA_SECURITY_REALM =
       "MFA Security Realm (wraps existing realm)";
     public static final String MULTI_FACTOR_AUTHENTICATION =

@@ -3,10 +3,10 @@ package io.jenkins.plugins.openmfa;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import hudson.model.ManagementLink;
 import hudson.model.User;
 import hudson.security.ACL;
 import io.jenkins.plugins.openmfa.base.MFAContext;
@@ -103,26 +103,9 @@ class MFAManagementActionTest {
   }
 
   @Test
-  void testIconVisibleOnlyForAdmins(JenkinsRule j) throws Exception {
-    // Configure authorization
-    j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
-    j.jenkins.setAuthorizationStrategy(
-      new MockAuthorizationStrategy()
-        .grant(Jenkins.ADMINISTER).everywhere().to("admin")
-        .grant(Jenkins.READ).everywhere().to("regularuser")
-    );
-
-    // As admin, icon should be visible
-    User admin = User.getById("admin", true);
-    try (var ctx = ACL.as2(admin.impersonate2())) {
-      assertNotNull(action.getIconFileName());
-    }
-
-    // As regular user, icon should be null
-    User regular = User.getById("regularuser", true);
-    try (var ctx = ACL.as2(regular.impersonate2())) {
-      assertNull(action.getIconFileName());
-    }
+  void testIconAndCategory(JenkinsRule j) {
+    assertNotNull(action.getIconFileName());
+    assertEquals(ManagementLink.Category.SECURITY, action.getCategory());
   }
 
   @Test
@@ -166,6 +149,18 @@ class MFAManagementActionTest {
     MFAUserProperty updatedProp = MFAUserProperty.forUser(user);
     assertNotNull(updatedProp);
     assertFalse(updatedProp.isEnabled());
+  }
+
+  @Test
+  void testManagementLinkRegistration(JenkinsRule j) {
+    assertTrue(
+      ManagementLink.all().stream().anyMatch(MFAManagementAction.class::isInstance)
+    );
+  }
+
+  @Test
+  void testRequiredPermissionIsAdminister(JenkinsRule j) {
+    assertEquals(Jenkins.ADMINISTER, action.getRequiredPermission());
   }
 
   @Test

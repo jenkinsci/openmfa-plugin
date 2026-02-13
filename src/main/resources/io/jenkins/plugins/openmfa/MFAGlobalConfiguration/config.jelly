@@ -10,10 +10,8 @@
     </f:entry>
 
     <f:entry>
-      <a href="${rootURL}/mfa-management/" class="jenkins-button">
-        <l:icon src="symbol-settings" class="icon-sm" />
-        ${%config.mfaManagement.title}
-      </a>
+      <a href="${rootURL}/manage/mfa-management" class="jenkins-button">
+        <l:icon src="symbol-settings" class="icon-sm" /> ${%config.mfaManagement.title} </a>
     </f:entry>
   </f:section>
 </j:jelly>

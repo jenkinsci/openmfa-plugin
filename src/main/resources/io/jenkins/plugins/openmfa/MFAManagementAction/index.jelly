@@ -32,6 +32,8 @@
               ${%subtitle}
             </p>
           </div>
+          <a href="${rootURL}/configureSecurity" class="jenkins-button mfa-mgmt-config-link">
+            <l:icon src="symbol-settings" class="icon-sm" /> ${%config.link} </a>
         </div>
 
         <div class="mfa-mgmt-stats">

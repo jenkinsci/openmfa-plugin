@@ -17,6 +17,10 @@
   border-bottom: 2px solid var(--emphasis-color, #0b5394);
 }
 
+.mfa-mgmt-config-link {
+  margin-left: auto;
+}
+
 .mfa-mgmt-stats {
   display: flex;
   gap: 16px;
