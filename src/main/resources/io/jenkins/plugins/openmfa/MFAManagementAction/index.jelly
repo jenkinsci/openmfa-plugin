@@ -1,8 +1,8 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:f="/lib/form">
   <l:layout title="${%title}" permission="${app.ADMINISTER}">
-    <st:adjunct includes="io.jenkins.plugins.openmfa.MFAManagementAction.mfa-management-style" />
-    <st:adjunct includes="io.jenkins.plugins.openmfa.MFAManagementAction.mfa-management-script" />
+    <st:adjunct
+      includes="io.jenkins.plugins.openmfa.MFAManagementAction.mfa-management-style,io.jenkins.plugins.openmfa.MFAManagementAction.mfa-management-script" />
     <l:side-panel>
       <st:include page="sidepanel.jelly" it="${app}" optional="true" />
     </l:side-panel>
