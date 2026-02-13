@@ -16,6 +16,14 @@
   margin-bottom: 24px;
 }
 
+.mfa-login-icon {
+  display: inline-block;
+  padding: 16px;
+  background: light-dark(var(--light-grey, #6b7280), var(--text-color-secondary, #d0d0d0));
+  border: 2px solid light-dark(var(--light-blue, #0b5394), var(--blue, #0b5394));
+  border-radius: 50%;
+}
+
 /* 6-digit OTP input - no Design Library equivalent */
 .mfa-login-code-boxes {
   display: flex;

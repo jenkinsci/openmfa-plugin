@@ -23,12 +23,16 @@
           <div class="mfa-login-container">
             <div class="jenkins-card jenkins-!-margin-bottom-4"
               style="max-width: 400px; width: 100%; text-align: center;">
-              <div class="jenkins-card__content">
-                <l:icon src="symbol-lock-closed" class="icon-xl jenkins-!-margin-bottom-4"
-                  style="display: block;" />
-                <h1 class="jenkins-!-margin-bottom-2">${%title}</h1>
-                <p class="jenkins-!-margin-bottom-6" style="color: var(--text-color-secondary);">
-                  ${%prompt}</p>
+              <div class="jenkins-!-padding-6">
+                <div class="jenkins-!-text-center">
+                  <div class="mfa-login-icon jenkins-!-margin-bottom-4">
+                    <l:icon src="symbol-lock-closed" class="icon-lg" />
+                  </div>
+                  <h1 class="jenkins-!-margin-bottom-2">${%title}</h1>
+                  <p class="jenkins-!-margin-bottom-6" style="color: var(--text-color-secondary);">
+                    ${%prompt}
+                  </p>
+                </div>
 
                 <form method="post" action="${rootURL}${it.securityCheckEndpoint}">
                   <div class="mfa-login-code-wrapper">
