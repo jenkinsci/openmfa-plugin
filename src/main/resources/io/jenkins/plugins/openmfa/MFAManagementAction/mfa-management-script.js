@@ -2,13 +2,13 @@
  * MFA Management Dashboard Scripts
  */
 
-var _pendingResetForm = null;
+let _pendingResetForm = null;
 
 /**
  * Get localized labels and messages for the reset dialog from the DOM.
  */
 function _getResetDialogLabels() {
-  var el = document.getElementById("mfa-reset-dialog-messages");
+  const el = document.getElementById("mfa-reset-dialog-messages");
   if (!el) return null;
   return {
     title: el.getAttribute("data-title") || "",
@@ -26,8 +26,8 @@ function _getResetDialogLabels() {
  * @param {HTMLFormElement} form - The form to submit on confirm
  */
 function showResetConfirm(userId, form) {
-  var labels = _getResetDialogLabels();
-  var message =
+  const labels = _getResetDialogLabels();
+  const message =
     (labels ? labels.messagePrefix : "") +
     " " +
     "👤(<strong>" +
@@ -64,12 +64,12 @@ function showResetConfirm(userId, form) {
  * Show notificationBar if server rendered notification data is present.
  */
 function initNotification() {
-  var el = document.getElementById("mfa-notification-data");
+  const el = document.getElementById("mfa-notification-data");
   if (!el || typeof notificationBar === "undefined") return;
-  var msg = el.getAttribute("data-msg");
-  var type = el.getAttribute("data-type");
+  const msg = el.getAttribute("data-msg");
+  const type = el.getAttribute("data-type");
   if (!msg) return;
-  var barType =
+  const barType =
     type === "error" ? notificationBar.ERROR : notificationBar.SUCCESS;
   notificationBar.show(msg, barType);
 }
@@ -82,13 +82,13 @@ function initNotification() {
   function init() {
     initNotification();
 
-    var resetForms = document.querySelectorAll(".mfa-mgmt-reset-form");
-    for (var j = 0; j < resetForms.length; j++) {
+    const resetForms = document.querySelectorAll(".mfa-mgmt-reset-form");
+    for (let j = 0; j < resetForms.length; j++) {
       (function (form) {
-        var resetBtn = form.querySelector("button");
+        const resetBtn = form.querySelector("button");
         if (resetBtn) {
           resetBtn.addEventListener("click", function () {
-            var userIdInput = form.querySelector('input[name="userId"]');
+            const userIdInput = form.querySelector('input[name="userId"]');
             if (userIdInput) {
               showResetConfirm(userIdInput.value, form);
             }

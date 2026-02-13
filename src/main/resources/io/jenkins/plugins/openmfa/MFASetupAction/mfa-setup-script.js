@@ -1,10 +1,10 @@
 function initNotification() {
-  var el = document.getElementById('mfa-notification-data');
+  const el = document.getElementById('mfa-notification-data');
   if (!el || typeof notificationBar === 'undefined') return;
-  var msg = el.getAttribute('data-msg');
-  var type = el.getAttribute('data-type');
+  const msg = el.getAttribute('data-msg');
+  const type = el.getAttribute('data-type');
   if (!msg) return;
-  var barType = type === 'error' ? notificationBar.ERROR : notificationBar.SUCCESS;
+  const barType = type === 'error' ? notificationBar.ERROR : notificationBar.SUCCESS;
   notificationBar.show(msg, barType);
 }
 

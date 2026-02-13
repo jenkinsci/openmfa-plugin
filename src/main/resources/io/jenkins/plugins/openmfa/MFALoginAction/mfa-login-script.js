@@ -5,16 +5,16 @@
 (function () {
   "use strict";
 
-  var digits = document.querySelectorAll(".mfa-login-digit");
-  var hidden = document.getElementById("mfa-login-code-hidden");
-  var form = document.querySelector(".mfa-login-container form");
-  var submitBtn = form ? form.querySelector('button[type="submit"]') : null;
+  const digits = document.querySelectorAll(".mfa-login-digit");
+  const hidden = document.getElementById("mfa-login-code-hidden");
+  const form = document.querySelector(".mfa-login-container form");
+  const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
 
   /**
    * Updates the hidden input with the combined digit values.
    */
   function updateHidden() {
-    var code = "";
+    let code = "";
     digits.forEach(function (d) {
       code += d.value;
     });
@@ -29,7 +29,7 @@
   function initDigitInputs() {
     digits.forEach(function (input, idx) {
       input.addEventListener("input", function (e) {
-        var val = e.target.value.replace(/[^0-9]/g, "");
+        const val = e.target.value.replace(/[^0-9]/g, "");
         e.target.value = val.slice(-1);
         updateHidden();
         if (val && idx < 5) {
@@ -45,11 +45,11 @@
 
       input.addEventListener("paste", function (e) {
         e.preventDefault();
-        var paste = (e.clipboardData || window.clipboardData)
+        const paste = (e.clipboardData || window.clipboardData)
           .getData("text")
           .replace(/[^0-9]/g, "")
           .slice(0, 6);
-        for (var i = 0; i < paste.length; i++) {
+        for (let i = 0; i < paste.length; i++) {
           if (digits[i]) {
             digits[i].value = paste[i];
           }
@@ -76,8 +76,8 @@
     if (seconds < 60) {
       return seconds + "s";
     }
-    var mins = Math.floor(seconds / 60);
-    var secs = seconds % 60;
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
     return mins + ":" + (secs < 10 ? "0" : "") + secs;
   }
 
@@ -115,8 +115,8 @@
    * @param {number} remainingSeconds - Seconds remaining in lockout
    */
   function handleLockout(remainingSeconds) {
-    var lockoutBanner = document.getElementById("mfa-lockout-banner");
-    var countdownEl = document.getElementById("mfa-lockout-countdown");
+    const lockoutBanner = document.getElementById("mfa-lockout-banner");
+    const countdownEl = document.getElementById("mfa-lockout-countdown");
 
     if (!lockoutBanner || !countdownEl) return;
 
@@ -124,7 +124,7 @@
     lockoutBanner.classList.remove("mfa-lockout-hidden");
     lockoutBanner.classList.add("mfa-lockout-visible");
 
-    var remaining = remainingSeconds;
+    let remaining = remainingSeconds;
 
     function updateCountdown() {
       countdownEl.textContent = formatTime(remaining);
@@ -134,7 +134,7 @@
         lockoutBanner.classList.add("mfa-lockout-hidden");
         enableForm();
         // Remove error params from URL without reload
-        var url = new URL(window.location.href);
+        const url = new URL(window.location.href);
         url.searchParams.delete("error");
         url.searchParams.delete("remaining");
         window.history.replaceState(
@@ -156,15 +156,15 @@
    * Initializes error handling based on URL parameters.
    */
   function initErrorHandling() {
-    var urlParams = new URLSearchParams(window.location.search);
-    var error = urlParams.get("error");
+    const urlParams = new URLSearchParams(window.location.search);
+    const error = urlParams.get("error");
 
     if (error === "invalid" && typeof notificationBar !== "undefined") {
-      var msgEl = document.getElementById("mfa-invalid-code-msg");
-      var msg = msgEl ? msgEl.textContent : "Invalid verification code.";
+      const msgEl = document.getElementById("mfa-invalid-code-msg");
+      const msg = msgEl ? msgEl.textContent : "Invalid verification code.";
       notificationBar.show(msg, notificationBar.ERROR);
     } else if (error === "locked") {
-      var remaining = parseInt(urlParams.get("remaining"), 10);
+      const remaining = parseInt(urlParams.get("remaining"), 10);
       if (!isNaN(remaining) && remaining > 0) {
         handleLockout(remaining);
       }
