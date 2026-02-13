@@ -6,7 +6,7 @@
     <st:adjunct includes="io.jenkins.plugins.openmfa.MFASetupAction.mfa-setup-style" />
     <st:adjunct includes="io.jenkins.plugins.openmfa.MFASetupAction.mfa-setup-script" />
     <l:side-panel>
-      <st:include page="sidepanel.jelly" it="${app}" optional="true" />
+      <st:include page="sidepanel.jelly" it="${it.targetUser}" optional="true" />
     </l:side-panel>
     <l:main-panel>
       <j:if test="${request.getParameter('success') == 'enabled'}">
