@@ -1,19 +1,10 @@
 /**
  * MFA User Property - Design Library overrides.
- * Uses jenkins-card. Minimal overrides for status badge layout.
+ * Minimal overrides for status badge layout.
  */
 
-.mfa-config-card {
+.mfa-config-container {
   max-width: 500px;
-}
-
-.mfa-status-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-bottom: 16px;
-  border-bottom: 1px solid var(--table-border-color, #e0e0e0);
-  margin-bottom: 16px;
 }
 
 .mfa-status-label {
