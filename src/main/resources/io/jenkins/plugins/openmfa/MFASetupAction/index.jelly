@@ -51,7 +51,9 @@
           <j:otherwise>
             <div class="jenkins-banner jenkins-banner--info jenkins-!-margin-bottom-6">
               <strong>${%setup.title}</strong>
-              <p class="jenkins-!-margin-top-2 jenkins-!-margin-bottom-0">${%setup.message}</p>
+              <p class="jenkins-!-margin-top-2 jenkins-!-margin-bottom-0">
+                ${%setup.message}
+              </p>
             </div>
 
             <j:set var="secret" value="${it.generateSecret()}" />
@@ -59,11 +61,13 @@
             <j:set var="qrCode" value="${it.generateQRCode(user.id, secret)}" />
 
             <div
-              class="jenkins-card jenkins-!-margin-bottom-6 jenkins-!-margin-top-6 jenkins-!-padding-top-3">
+              class="jenkins-card jenkins-!-margin-bottom-6 jenkins-!-margin-top-6 jenkins-!-padding-6">
               <div>
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
                   <span class="jenkins-button jenkins-button--primary"
-                    style="pointer-events: none; min-width: 32px;">1</span>
+                    style="pointer-events: none; min-width: 32px;">
+                    1
+                  </span>
                   <h2 style="margin: 0;">${%step1.title}</h2>
                 </div>
                 <p class="jenkins-!-margin-bottom-4">${%step1.message}</p>
@@ -73,11 +77,13 @@
               </div>
             </div>
 
-            <div class="jenkins-card jenkins-!-margin-bottom-6 jenkins-!-padding-top-3">
+            <div class="jenkins-card jenkins-!-margin-bottom-6 jenkins-!-padding-6">
               <div>
                 <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
                   <span class="jenkins-button jenkins-button--primary"
-                    style="pointer-events: none; min-width: 32px;">2</span>
+                    style="pointer-events: none; min-width: 32px;">
+                    2
+                  </span>
                   <h2 style="margin: 0;">${%step2.title}</h2>
                 </div>
                 <p class="jenkins-!-margin-bottom-4">${%step2.message}</p>
@@ -85,14 +91,27 @@
                 <form method="post" action="enable">
                   <input type="hidden" name="${it.formParamSecret}" value="${secret}" />
                   <div class="mfa-form-group">
-                    <label>${%verification.code}</label>
-                    <input type="text" name="${it.formParamCode}" class="mfa-code-input"
-                      maxlength="${it.totpCodeDigits}" required="true"
-                      pattern="[0-9]{${it.totpCodeDigits}}" placeholder="${it.codePlaceholder}"
-                      autocomplete="off" />
-                    <button type="submit" class="jenkins-button jenkins-button--primary">
-                      ${%enable.button}
-                    </button>
+                    <ul>
+                      <li>
+                        <label>${%verification.code}</label>
+                      </li>
+                      <li>
+                        <input type="text"
+                          name="${it.formParamCode}"
+                          class="mfa-code-input"
+                          maxlength="${it.totpCodeDigits}"
+                          required="true"
+                          style="margin-bottom: 0;"
+                          pattern="[0-9]{${it.totpCodeDigits}}"
+                          placeholder="${it.codePlaceholder}"
+                          autocomplete="off" />
+                      </li>
+                      <li class="jenkins-!-margin-top-4">
+                        <button type="submit" class="jenkins-button jenkins-button--primary">
+                          ${%enable.button}
+                        </button>
+                      </li>
+                    </ul>
                   </div>
                 </form>
               </div>

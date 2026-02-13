@@ -50,6 +50,17 @@
   min-width: 120px;
 }
 
+.mfa-form-group ul {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+
+.mfa-form-group ul li {
+  margin: 0;
+  padding: 5px 0px;
+}
+
 .mfa-actions {
   display: flex;
   gap: 12px;
