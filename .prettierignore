@@ -1,4 +1,4 @@
 # Build / generated
 target/
-work/
+work*/
 *.jpi

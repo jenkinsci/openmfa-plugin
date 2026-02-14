@@ -17,8 +17,8 @@ buildNumber.properties
 .m2/
 
 # Maven hpi:run
-work/
-work/*
+work*/
+work*/*
 
 # Environment files
 .env*
@@ -74,6 +74,7 @@ build/
 !.vscode/extensions.json
 !.vscode/launch.json
 !.vscode/tasks.json
+!run.sh
 *.code-workspace
 .history/
 

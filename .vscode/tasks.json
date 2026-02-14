@@ -20,13 +20,11 @@
     {
       "label": "maven: hpi:run (debug)",
       "type": "shell",
-      "command": "./mvnw",
-      "args": ["clean", "-U", "hpi:run", "-Dhost=0.0.0.0"],
+      "command": "./.vscode/run.sh",
+      "args": ["./mvnw", "clean", "-U", "hpi:run", "-Dhost=0.0.0.0"],
       "options": {
         "cwd": "${workspaceFolder}",
-        "envFile": "${workspaceFolder}/.env",
         "env": {
-          "JAVA_HOME": "${env:JAVA_HOME}",
           "MAVEN_OPTS": "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005"
         }
       },
