@@ -23,7 +23,6 @@
     var(--light-grey, #6b7280),
     var(--text-color-secondary, #d0d0d0)
   );
-  border: 2px solid light-dark(var(--light-blue, #0b5394), var(--blue, #0b5394));
   border-radius: 50%;
 }
 
