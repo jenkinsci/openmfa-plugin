@@ -1,29 +1,55 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:f="/lib/form" xmlns:l="/lib/layout">
+<j:jelly
+  xmlns:j="jelly:core"
+  xmlns:st="jelly:stapler"
+  xmlns:f="/lib/form"
+  xmlns:l="/lib/layout"
+>
   <l:layout title="${%title}" permission="${app.READ}">
     <j:set var="instance" value="${it}" />
     <j:set var="descriptor" value="${it.descriptor}" />
     <st:adjunct
-      includes="io.jenkins.plugins.openmfa.MFASetupAction.mfa-setup-style,io.jenkins.plugins.openmfa.MFASetupAction.mfa-setup-script" />
+      includes="io.jenkins.plugins.openmfa.MFASetupAction.mfa-setup-style,io.jenkins.plugins.openmfa.MFASetupAction.mfa-setup-script"
+    />
     <l:side-panel>
-      <st:include page="sidepanel.jelly" it="${it.targetUser}" optional="true" />
+      <st:include
+        page="sidepanel.jelly"
+        it="${it.targetUser}"
+        optional="true"
+      />
     </l:side-panel>
     <l:main-panel>
       <j:if test="${request.getParameter('success') == 'enabled'}">
-        <span id="mfa-notification-data" data-type="success" data-msg="${%success.toast.message}"
-          style="display:none"></span>
+        <span
+          id="mfa-notification-data"
+          data-type="success"
+          data-msg="${%success.toast.message}"
+          style="display: none"
+        ></span>
       </j:if>
       <j:if test="${request.getParameter('success') == 'disabled'}">
-        <span id="mfa-notification-data" data-type="success"
-          data-msg="${%success.toast.disabled.message}" style="display:none"></span>
+        <span
+          id="mfa-notification-data"
+          data-type="success"
+          data-msg="${%success.toast.disabled.message}"
+          style="display: none"
+        ></span>
       </j:if>
       <j:if test="${request.getParameter('error') == 'invalid_code'}">
-        <span id="mfa-notification-data" data-type="error"
-          data-msg="${%error.toast.invalid_code.message}" style="display:none"></span>
+        <span
+          id="mfa-notification-data"
+          data-type="error"
+          data-msg="${%error.toast.invalid_code.message}"
+          style="display: none"
+        ></span>
       </j:if>
       <j:if test="${request.getParameter('error') == 'require_mfa'}">
-        <span id="mfa-notification-data" data-type="error"
-          data-msg="${%error.toast.require_mfa.message}" style="display:none"></span>
+        <span
+          id="mfa-notification-data"
+          data-type="error"
+          data-msg="${%error.toast.require_mfa.message}"
+          style="display: none"
+        ></span>
       </j:if>
 
       <div class="mfa-container">
@@ -37,19 +63,26 @@
           <j:when test="${mfaProperty != null and mfaProperty.enabled}">
             <div class="jenkins-banner jenkins-banner--success">
               <strong>${%enabled.title}</strong>
-              <p class="jenkins-!-margin-top-2 jenkins-!-margin-bottom-0">${%enabled.message}</p>
+              <p class="jenkins-!-margin-top-2 jenkins-!-margin-bottom-0">
+                ${%enabled.message}
+              </p>
             </div>
 
             <div class="mfa-actions jenkins-!-margin-bottom-6">
               <form method="post" action="disable">
-                <button type="submit" class="jenkins-button jenkins-!-destructive-color">
+                <button
+                  type="submit"
+                  class="jenkins-button jenkins-!-destructive-color"
+                >
                   ${%disable.button}
                 </button>
               </form>
             </div>
           </j:when>
           <j:otherwise>
-            <div class="jenkins-banner jenkins-banner--info jenkins-!-margin-bottom-6">
+            <div
+              class="jenkins-banner jenkins-banner--info jenkins-!-margin-bottom-6"
+            >
               <strong>${%setup.title}</strong>
               <p class="jenkins-!-margin-top-2 jenkins-!-margin-bottom-0">
                 ${%setup.message}
@@ -61,14 +94,24 @@
             <j:set var="qrCode" value="${it.generateQRCode(user.id, secret)}" />
 
             <div
-              class="jenkins-card jenkins-!-margin-bottom-6 jenkins-!-margin-top-6 jenkins-!-padding-6">
+              class="jenkins-card jenkins-!-margin-bottom-6 jenkins-!-margin-top-6 jenkins-!-padding-6"
+            >
               <div>
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
-                  <span class="jenkins-button jenkins-button--primary"
-                    style="pointer-events: none; min-width: 32px;">
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    margin-bottom: 16px;
+                  "
+                >
+                  <span
+                    class="jenkins-button jenkins-button--primary"
+                    style="pointer-events: none; min-width: 32px"
+                  >
                     1
                   </span>
-                  <h2 style="margin: 0;">${%step1.title}</h2>
+                  <h2 style="margin: 0">${%step1.title}</h2>
                 </div>
                 <p class="jenkins-!-margin-bottom-4">${%step1.message}</p>
                 <div class="mfa-qr-wrapper">
@@ -77,37 +120,57 @@
               </div>
             </div>
 
-            <div class="jenkins-card jenkins-!-margin-bottom-6 jenkins-!-padding-6">
+            <div
+              class="jenkins-card jenkins-!-margin-bottom-6 jenkins-!-padding-6"
+            >
               <div>
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
-                  <span class="jenkins-button jenkins-button--primary"
-                    style="pointer-events: none; min-width: 32px;">
+                <div
+                  style="
+                    display: flex;
+                    align-items: center;
+                    gap: 8px;
+                    margin-bottom: 16px;
+                  "
+                >
+                  <span
+                    class="jenkins-button jenkins-button--primary"
+                    style="pointer-events: none; min-width: 32px"
+                  >
                     2
                   </span>
-                  <h2 style="margin: 0;">${%step2.title}</h2>
+                  <h2 style="margin: 0">${%step2.title}</h2>
                 </div>
                 <p class="jenkins-!-margin-bottom-4">${%step2.message}</p>
 
                 <form method="post" action="enable">
-                  <input type="hidden" name="${it.formParamSecret}" value="${secret}" />
+                  <input
+                    type="hidden"
+                    name="${it.formParamSecret}"
+                    value="${secret}"
+                  />
                   <div class="mfa-form-group">
                     <ul>
                       <li>
                         <label>${%verification.code}</label>
                       </li>
                       <li>
-                        <input type="text"
+                        <input
+                          type="text"
                           name="${it.formParamCode}"
                           class="mfa-code-input"
                           maxlength="${it.totpCodeDigits}"
                           required="true"
-                          style="margin-bottom: 0;"
+                          style="margin-bottom: 0"
                           pattern="[0-9]{${it.totpCodeDigits}}"
                           placeholder="${it.codePlaceholder}"
-                          autocomplete="off" />
+                          autocomplete="off"
+                        />
                       </li>
                       <li class="jenkins-!-margin-top-4">
-                        <button type="submit" class="jenkins-button jenkins-button--primary">
+                        <button
+                          type="submit"
+                          class="jenkins-button jenkins-button--primary"
+                        >
                           ${%enable.button}
                         </button>
                       </li>

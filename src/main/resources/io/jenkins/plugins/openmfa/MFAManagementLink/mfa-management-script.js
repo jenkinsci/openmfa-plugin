@@ -8,14 +8,14 @@ let _pendingResetForm = null;
  * Get localized labels and messages for the reset dialog from the DOM.
  */
 function _getResetDialogLabels() {
-  const el = document.getElementById("mfa-reset-dialog-messages");
+  const el = document.getElementById('mfa-reset-dialog-messages');
   if (!el) return null;
   return {
-    title: el.getAttribute("data-title") || "",
-    messagePrefix: el.getAttribute("data-message-prefix") || "",
-    messageSuffix: el.getAttribute("data-message-suffix") || "",
-    okText: el.getAttribute("data-ok-text") || "",
-    cancelText: el.getAttribute("data-cancel-text") || "",
+    title: el.getAttribute('data-title') || '',
+    messagePrefix: el.getAttribute('data-message-prefix') || '',
+    messageSuffix: el.getAttribute('data-message-suffix') || '',
+    okText: el.getAttribute('data-ok-text') || '',
+    cancelText: el.getAttribute('data-cancel-text') || '',
   };
 }
 
@@ -28,15 +28,15 @@ function _getResetDialogLabels() {
 function showResetConfirm(userId, form) {
   const labels = _getResetDialogLabels();
   const message =
-    (labels ? labels.messagePrefix : "") +
-    " " +
-    "👤(" +
+    (labels ? labels.messagePrefix : '') +
+    ' ' +
+    '👤(' +
     userId +
-    ")" +
-    (labels ? labels.messageSuffix : "");
+    ')' +
+    (labels ? labels.messageSuffix : '');
 
   // Fallback if the Design Library dialog API is not available
-  if (typeof dialog === "undefined") {
+  if (typeof dialog === 'undefined') {
     if (window.confirm(message)) {
       form.submit();
     }
@@ -46,11 +46,11 @@ function showResetConfirm(userId, form) {
   _pendingResetForm = form;
 
   dialog
-    .confirm(labels ? labels.title : "", {
+    .confirm(labels ? labels.title : '', {
       message: message,
       okText: labels ? labels.okText : undefined,
       cancelText: labels ? labels.cancelText : undefined,
-      type: "destructive",
+      type: 'destructive',
     })
     .then(function (confirmed) {
       if (confirmed && _pendingResetForm) {
@@ -64,13 +64,13 @@ function showResetConfirm(userId, form) {
  * Show notificationBar if server rendered notification data is present.
  */
 function initNotification() {
-  const el = document.getElementById("mfa-notification-data");
-  if (!el || typeof notificationBar === "undefined") return;
-  const msg = el.getAttribute("data-msg");
-  const type = el.getAttribute("data-type");
+  const el = document.getElementById('mfa-notification-data');
+  if (!el || typeof notificationBar === 'undefined') return;
+  const msg = el.getAttribute('data-msg');
+  const type = el.getAttribute('data-type');
   if (!msg) return;
   const barType =
-    type === "error" ? notificationBar.ERROR : notificationBar.SUCCESS;
+    type === 'error' ? notificationBar.ERROR : notificationBar.SUCCESS;
   notificationBar.show(msg, barType);
 }
 
@@ -82,12 +82,12 @@ function initNotification() {
   function init() {
     initNotification();
 
-    const resetForms = document.querySelectorAll(".mfa-mgmt-reset-form");
+    const resetForms = document.querySelectorAll('.mfa-mgmt-reset-form');
     for (let j = 0; j < resetForms.length; j++) {
       (function (form) {
-        const resetBtn = form.querySelector("button");
+        const resetBtn = form.querySelector('button');
         if (resetBtn) {
-          resetBtn.addEventListener("click", function () {
+          resetBtn.addEventListener('click', function () {
             const userIdInput = form.querySelector('input[name="userId"]');
             if (userIdInput) {
               showResetConfirm(userIdInput.value, form);
@@ -98,8 +98,8 @@ function initNotification() {
     }
   }
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init);
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
   }

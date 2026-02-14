@@ -1,7 +1,8 @@
 <?jelly escape-by-default='true'?>
 <div xmlns:j="jelly:core">
   <p>
-    When enabled, users can voluntarily set up MFA for their accounts even if it's not required.
-    Disable this if you want only administrators to manage MFA enrollment.
+    When enabled, users can voluntarily set up MFA for their accounts even if
+    it's not required. Disable this if you want only administrators to manage
+    MFA enrollment.
   </p>
 </div>

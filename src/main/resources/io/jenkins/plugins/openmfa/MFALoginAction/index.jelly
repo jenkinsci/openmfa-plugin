@@ -1,35 +1,54 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:f="/lib/form">
+<j:jelly
+  xmlns:j="jelly:core"
+  xmlns:st="jelly:stapler"
+  xmlns:l="/lib/layout"
+  xmlns:f="/lib/form"
+>
   <l:layout title="${%title}" norefresh="true">
-    <st:adjunct includes="io.jenkins.plugins.openmfa.MFALoginAction.mfa-login-style" />
+    <st:adjunct
+      includes="io.jenkins.plugins.openmfa.MFALoginAction.mfa-login-style"
+    />
     <l:main-panel>
       <j:choose>
         <j:when test="${it.hasPendingAuth() and it.isSessionMFAVerified()}">
           <div class="mfa-login-container">
-            <div class="jenkins-card jenkins-!-margin-bottom-4"
-              style="max-width: 400px; width: 100%; text-align: center;">
+            <div
+              class="jenkins-card jenkins-!-margin-bottom-4"
+              style="max-width: 400px; width: 100%; text-align: center"
+            >
               <div class="jenkins-!-padding-6">
                 <div class="jenkins-!-text-center">
                   <div class="mfa-login-icon jenkins-!-margin-bottom-4">
                     <l:icon src="symbol-check" class="icon-lg" />
                   </div>
                   <h1 class="jenkins-!-margin-bottom-2">${%title}</h1>
-                  <p class="jenkins-!-margin-bottom-2" style="color: var(--text-color-secondary);">
+                  <p
+                    class="jenkins-!-margin-bottom-2"
+                    style="color: var(--text-color-secondary)"
+                  >
                     ${%mfa.enabled.info}
                   </p>
-                  <p class="jenkins-!-margin-bottom-4" style="color: var(--text-color-secondary);">
+                  <p
+                    class="jenkins-!-margin-bottom-4"
+                    style="color: var(--text-color-secondary)"
+                  >
                     ${%mfa.already.verified}
                   </p>
                   <j:choose>
                     <j:when test="${it.safeFromParam != null}">
-                      <a href="${rootURL}${it.safeFromParam}"
-                        class="jenkins-button jenkins-button--primary jenkins-!-margin-top-6">
+                      <a
+                        href="${rootURL}${it.safeFromParam}"
+                        class="jenkins-button jenkins-button--primary jenkins-!-margin-top-6"
+                      >
                         ${%continue.button}
                       </a>
                     </j:when>
                     <j:otherwise>
-                      <a href="${rootURL}/"
-                        class="jenkins-button jenkins-button--primary jenkins-!-margin-top-6">
+                      <a
+                        href="${rootURL}/"
+                        class="jenkins-button jenkins-button--primary jenkins-!-margin-top-6"
+                      >
                         ${%continue.button}
                       </a>
                     </j:otherwise>
@@ -40,59 +59,121 @@
           </div>
         </j:when>
         <j:when test="${it.hasPendingAuth()}">
-          <span id="mfa-invalid-code-msg" style="display:none">${%error.invalid.code}</span>
+          <span id="mfa-invalid-code-msg" style="display: none"
+            >${%error.invalid.code}</span
+          >
 
           <!-- Lockout banner -->
-          <div id="mfa-lockout-banner"
-            class="jenkins-banner jenkins-banner--warning mfa-lockout-banner mfa-lockout-hidden">
+          <div
+            id="mfa-lockout-banner"
+            class="jenkins-banner jenkins-banner--warning mfa-lockout-banner mfa-lockout-hidden"
+          >
             <div class="mfa-lockout-content">
               <l:icon src="symbol-lock-closed" class="icon-lg" />
               <div class="mfa-lockout-text">
                 <span>${%error.locked.title}</span>
-                <span>${%error.locked.message} <span id="mfa-lockout-countdown"
-                    class="mfa-lockout-countdown"></span></span>
+                <span
+                  >${%error.locked.message}
+                  <span
+                    id="mfa-lockout-countdown"
+                    class="mfa-lockout-countdown"
+                  ></span
+                ></span>
               </div>
             </div>
           </div>
 
           <div class="mfa-login-container">
-            <div class="jenkins-card jenkins-!-margin-bottom-4"
-              style="max-width: 400px; width: 100%; text-align: center;">
+            <div
+              class="jenkins-card jenkins-!-margin-bottom-4"
+              style="max-width: 400px; width: 100%; text-align: center"
+            >
               <div class="jenkins-!-padding-6">
                 <div class="jenkins-!-text-center">
                   <div class="mfa-login-icon jenkins-!-margin-bottom-4">
                     <l:icon src="symbol-lock-closed" class="icon-lg" />
                   </div>
                   <h1 class="jenkins-!-margin-bottom-2">${%title}</h1>
-                  <p class="jenkins-!-margin-bottom-6" style="color: var(--text-color-secondary);">
+                  <p
+                    class="jenkins-!-margin-bottom-6"
+                    style="color: var(--text-color-secondary)"
+                  >
                     ${%prompt}
                   </p>
                 </div>
 
-                <form method="post" action="${rootURL}${it.securityCheckEndpoint}">
+                <form
+                  method="post"
+                  action="${rootURL}${it.securityCheckEndpoint}"
+                >
                   <j:if test="${it.fromParam != null and it.fromParam != ''}">
                     <input type="hidden" name="from" value="${it.fromParam}" />
                   </j:if>
                   <div class="mfa-login-code-wrapper">
                     <div class="mfa-login-code-boxes">
-                      <input type="text" class="mfa-login-digit" maxlength="1" data-index="0"
-                        inputmode="numeric" pattern="[0-9]" />
-                      <input type="text" class="mfa-login-digit" maxlength="1" data-index="1"
-                        inputmode="numeric" pattern="[0-9]" />
-                      <input type="text" class="mfa-login-digit" maxlength="1" data-index="2"
-                        inputmode="numeric" pattern="[0-9]" />
-                      <input type="text" class="mfa-login-digit" maxlength="1" data-index="3"
-                        inputmode="numeric" pattern="[0-9]" />
-                      <input type="text" class="mfa-login-digit" maxlength="1" data-index="4"
-                        inputmode="numeric" pattern="[0-9]" />
-                      <input type="text" class="mfa-login-digit" maxlength="1" data-index="5"
-                        inputmode="numeric" pattern="[0-9]" />
+                      <input
+                        type="text"
+                        class="mfa-login-digit"
+                        maxlength="1"
+                        data-index="0"
+                        inputmode="numeric"
+                        pattern="[0-9]"
+                      />
+                      <input
+                        type="text"
+                        class="mfa-login-digit"
+                        maxlength="1"
+                        data-index="1"
+                        inputmode="numeric"
+                        pattern="[0-9]"
+                      />
+                      <input
+                        type="text"
+                        class="mfa-login-digit"
+                        maxlength="1"
+                        data-index="2"
+                        inputmode="numeric"
+                        pattern="[0-9]"
+                      />
+                      <input
+                        type="text"
+                        class="mfa-login-digit"
+                        maxlength="1"
+                        data-index="3"
+                        inputmode="numeric"
+                        pattern="[0-9]"
+                      />
+                      <input
+                        type="text"
+                        class="mfa-login-digit"
+                        maxlength="1"
+                        data-index="4"
+                        inputmode="numeric"
+                        pattern="[0-9]"
+                      />
+                      <input
+                        type="text"
+                        class="mfa-login-digit"
+                        maxlength="1"
+                        data-index="5"
+                        inputmode="numeric"
+                        pattern="[0-9]"
+                      />
                     </div>
-                    <input type="hidden" name="${it.formParamTotpCode}" id="mfa-login-code-hidden" />
+                    <input
+                      type="hidden"
+                      name="${it.formParamTotpCode}"
+                      id="mfa-login-code-hidden"
+                    />
                   </div>
 
-                  <button type="submit" class="jenkins-button jenkins-button--primary"
-                    style="width: 100%;">${%submit.button}</button>
+                  <button
+                    type="submit"
+                    class="jenkins-button jenkins-button--primary"
+                    style="width: 100%"
+                  >
+                    ${%submit.button}
+                  </button>
                 </form>
 
                 <div class="mfa-login-footer">
@@ -102,12 +183,16 @@
             </div>
           </div>
 
-          <st:adjunct includes="io.jenkins.plugins.openmfa.MFALoginAction.mfa-login-script" />
+          <st:adjunct
+            includes="io.jenkins.plugins.openmfa.MFALoginAction.mfa-login-script"
+          />
         </j:when>
         <j:otherwise>
           <div class="mfa-login-container">
-            <div class="jenkins-card jenkins-!-margin-bottom-4"
-              style="max-width: 400px; width: 100%; text-align: center;">
+            <div
+              class="jenkins-card jenkins-!-margin-bottom-4"
+              style="max-width: 400px; width: 100%; text-align: center"
+            >
               <div class="jenkins-card__content">
                 <h2 class="jenkins-!-margin-bottom-4">${%no.pending.auth}</h2>
                 <p>

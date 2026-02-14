@@ -1,5 +1,10 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:f="/lib/form" xmlns:st="jelly:stapler" xmlns:l="/lib/layout">
+<j:jelly
+  xmlns:j="jelly:core"
+  xmlns:f="/lib/form"
+  xmlns:st="jelly:stapler"
+  xmlns:l="/lib/layout"
+>
   <f:section title="${%config.section.title}">
     <f:entry title="${%config.issuer.title}" field="issuer">
       <f:textbox default="${instance.defaultIssuer}" />
@@ -11,7 +16,9 @@
 
     <f:entry>
       <a href="${rootURL}/manage/mfa-management" class="jenkins-button">
-        <l:icon src="symbol-settings" class="icon-sm" /> ${%config.mfaManagement.title} </a>
+        <l:icon src="symbol-settings" class="icon-sm" />
+        ${%config.mfaManagement.title}
+      </a>
     </f:entry>
   </f:section>
 </j:jelly>

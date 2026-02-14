@@ -1,8 +1,8 @@
 <?jelly escape-by-default='true'?>
 <div xmlns:j="jelly:core">
   <p>
-    Number of days users have to set up MFA after it becomes required.
-    During this grace period, users can still log in without MFA but will be reminded to configure it.
-    Set to 0 to enforce MFA immediately.
+    Number of days users have to set up MFA after it becomes required. During
+    this grace period, users can still log in without MFA but will be reminded
+    to configure it. Set to 0 to enforce MFA immediately.
   </p>
 </div>

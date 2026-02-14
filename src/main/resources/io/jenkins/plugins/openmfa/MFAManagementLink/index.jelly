@@ -1,25 +1,36 @@
 <?jelly escape-by-default='true'?>
-<j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler" xmlns:l="/lib/layout" xmlns:f="/lib/form">
+<j:jelly
+  xmlns:j="jelly:core"
+  xmlns:st="jelly:stapler"
+  xmlns:l="/lib/layout"
+  xmlns:f="/lib/form"
+>
   <l:layout title="${%title}" permission="${app.ADMINISTER}">
     <st:adjunct
-      includes="io.jenkins.plugins.openmfa.MFAManagementLink.mfa-management-style,io.jenkins.plugins.openmfa.MFAManagementLink.mfa-management-script" />
+      includes="io.jenkins.plugins.openmfa.MFAManagementLink.mfa-management-style,io.jenkins.plugins.openmfa.MFAManagementLink.mfa-management-script"
+    />
     <l:side-panel>
       <st:include page="sidepanel.jelly" it="${app}" optional="true" />
     </l:side-panel>
     <l:main-panel>
       <j:if test="${request.getParameter('success') == 'reset_mfa'}">
-        <span id="mfa-notification-data" data-type="success"
+        <span
+          id="mfa-notification-data"
+          data-type="success"
           data-msg="${%reset.toast.theUser} ${request.getParameter('user_id')}${%reset.toast.sSuffix} ${%reset.success}"
-          style="display:none">
+          style="display: none"
+        >
         </span>
       </j:if>
 
-      <span id="mfa-reset-dialog-messages"
+      <span
+        id="mfa-reset-dialog-messages"
         data-title="${%reset.confirm.title}"
         data-message-prefix="${%reset.confirm.messagePrefix}"
         data-message-suffix="${%reset.confirm.messageSuffix}"
         data-cancel-text="${%reset.confirm.cancel}"
-        data-ok-text="${%reset.button}">
+        data-ok-text="${%reset.button}"
+      >
       </span>
 
       <div class="mfa-mgmt-container">
@@ -27,13 +38,19 @@
           <l:icon src="symbol-lock-closed" class="icon-lg" />
           <div>
             <h1 class="jenkins-!-margin-bottom-1">${%title}</h1>
-            <p class="jenkins-!-margin-0"
-              style="color: var(--text-color-secondary); font-size: 0.95rem;">
+            <p
+              class="jenkins-!-margin-0"
+              style="color: var(--text-color-secondary); font-size: 0.95rem"
+            >
               ${%subtitle}
             </p>
           </div>
-          <a href="${rootURL}/configureSecurity" class="jenkins-button mfa-mgmt-config-link">
-            <l:icon src="symbol-settings" class="icon-sm" /> ${%config.link} </a>
+          <a
+            href="${rootURL}/configureSecurity"
+            class="jenkins-button mfa-mgmt-config-link"
+          >
+            <l:icon src="symbol-settings" class="icon-sm" /> ${%config.link}
+          </a>
         </div>
 
         <div class="mfa-mgmt-stats">
@@ -51,7 +68,9 @@
           </div>
           <div class="jenkins-card mfa-mgmt-stat-card mfa-mgmt-stat-disabled">
             <div class="jenkins-!-padding-3">
-              <div class="mfa-mgmt-stat-value">${it.totalCount - it.enabledCount}</div>
+              <div class="mfa-mgmt-stat-value">
+                ${it.totalCount - it.enabledCount}
+              </div>
               <div class="mfa-mgmt-stat-label">${%stats.not.enabled}</div>
             </div>
           </div>
@@ -82,34 +101,60 @@
                     </thead>
                     <tbody>
                       <j:forEach var="user" items="${users}">
-                        <j:set var="statusClass"
-                          value="${user.mfaEnabled ? 'success' : 'warning'}" />
+                        <j:set
+                          var="statusClass"
+                          value="${user.mfaEnabled ? 'success' : 'warning'}"
+                        />
 
                         <tr>
                           <td class="mfa-mgmt-user-cell">
-                            <a href="${it.getSetupUri(user.userId)}">${user.userId}</a>
+                            <a href="${it.getSetupUri(user.userId)}"
+                              >${user.userId}</a
+                            >
                           </td>
                           <td>${user.fullName}</td>
                           <td>
                             <span
-                              class="mfa-mgmt-status jenkins-alert jenkins-alert-${statusClass} jenkins-!-margin-0">
+                              class="mfa-mgmt-status jenkins-alert jenkins-alert-${statusClass} jenkins-!-margin-0"
+                            >
                               ${user.statusText}
                             </span>
                           </td>
                           <td class="mfa-mgmt-actions-cell">
                             <j:if test="${user.mfaEnabled}">
-                              <form method="post" action="resetMFA" class="mfa-mgmt-reset-form">
-                                <input type="hidden" name="userId" value="${user.userId}" />
-                                <button type="button"
-                                  class="jenkins-button jenkins-button--destructive">
+                              <form
+                                method="post"
+                                action="resetMFA"
+                                class="mfa-mgmt-reset-form"
+                              >
+                                <input
+                                  type="hidden"
+                                  name="userId"
+                                  value="${user.userId}"
+                                />
+                                <button
+                                  type="button"
+                                  class="jenkins-button jenkins-button--destructive"
+                                >
                                   ${%reset.button}
                                 </button>
                               </form>
                             </j:if>
                             <j:if test="${!user.mfaEnabled}">
-                              <form method="post" action="setMFA" class="mfa-mgmt-set-form">
-                                <input type="hidden" name="userId" value="${user.userId}" />
-                                <button type="submit" class="jenkins-button jenkins-button--primary">
+                              <form
+                                method="post"
+                                action="setMFA"
+                                class="mfa-mgmt-set-form"
+                              >
+                                <input
+                                  type="hidden"
+                                  name="userId"
+                                  value="${user.userId}"
+                                />
+                                <button
+                                  type="submit"
+                                  class="jenkins-button jenkins-button--primary"
+                                >
                                   ${%set.button}
                                 </button>
                               </form>

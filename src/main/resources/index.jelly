@@ -1,6 +1,9 @@
 <?jelly escape-by-default='true'?>
 <j:jelly xmlns:j="jelly:core" xmlns:st="jelly:stapler">
-<div>
-    <p>This plugin allows you to configure Multi-Factor Authentication for Jenkins.</p>
-</div>
+  <div>
+    <p>
+      This plugin allows you to configure Multi-Factor Authentication for
+      Jenkins.
+    </p>
+  </div>
 </j:jelly>

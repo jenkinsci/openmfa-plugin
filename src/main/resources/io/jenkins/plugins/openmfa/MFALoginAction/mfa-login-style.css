@@ -19,7 +19,10 @@
 .mfa-login-icon {
   display: inline-block;
   padding: 16px;
-  background: light-dark(var(--light-grey, #6b7280), var(--text-color-secondary, #d0d0d0));
+  background: light-dark(
+    var(--light-grey, #6b7280),
+    var(--text-color-secondary, #d0d0d0)
+  );
   border: 2px solid light-dark(var(--light-blue, #0b5394), var(--blue, #0b5394));
   border-radius: 50%;
 }
@@ -40,7 +43,9 @@
   font-weight: 600;
   text-align: center;
   background: var(--input-background, #fff);
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition:
+    border-color 0.2s,
+    box-shadow 0.2s;
 }
 
 .mfa-login-digit:focus {
@@ -79,7 +84,9 @@
   z-index: 9998;
   transform: translateY(-100%);
   opacity: 0;
-  transition: transform 0.2s, opacity 0.2s;
+  transition:
+    transform 0.2s,
+    opacity 0.2s;
 }
 
 .mfa-lockout-visible {

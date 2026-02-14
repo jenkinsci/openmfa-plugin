@@ -4,8 +4,8 @@ name: Jenkins Security Scan
 on:
   push:
     branches:
-      - "master"
-      - "main"
+      - 'master'
+      - 'main'
   pull_request:
     types: [opened, synchronize, reopened]
   workflow_dispatch:
@@ -27,7 +27,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: "21"
+          java-version: '21'
           cache: maven
 
       - name: Initialize CodeQL
@@ -59,7 +59,7 @@ jobs:
       - name: Archive SARIF
         uses: actions/upload-artifact@v4
         with:
-          path: "*.sarif"
+          path: '*.sarif'
           name: Jenkins Security Scan SARIF
 
       - name: Upload Scan Result

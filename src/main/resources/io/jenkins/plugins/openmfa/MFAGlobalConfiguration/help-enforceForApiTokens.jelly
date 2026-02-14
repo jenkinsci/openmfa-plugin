@@ -2,7 +2,8 @@
 <div xmlns:j="jelly:core">
   <p>
     When enabled, API token authentication will also require MFA verification.
-    This provides additional security for automated systems and scripts accessing Jenkins.
-    Note: This may require updates to your CI/CD pipelines and automation scripts.
+    This provides additional security for automated systems and scripts
+    accessing Jenkins. Note: This may require updates to your CI/CD pipelines
+    and automation scripts.
   </p>
 </div>

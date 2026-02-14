@@ -84,7 +84,7 @@
   margin: 0;
 }
 
-.mfa-mgmt-set-form input[type="hidden"] {
+.mfa-mgmt-set-form input[type='hidden'] {
   display: none;
 }
 
@@ -104,10 +104,12 @@
   padding: 24px;
   visibility: hidden;
   opacity: 0;
-  transition: visibility 0.2s, opacity 0.2s;
+  transition:
+    visibility 0.2s,
+    opacity 0.2s;
 }
 
-.mfa-mgmt-modal[aria-hidden="false"] {
+.mfa-mgmt-modal[aria-hidden='false'] {
   visibility: visible;
   opacity: 1;
 }
