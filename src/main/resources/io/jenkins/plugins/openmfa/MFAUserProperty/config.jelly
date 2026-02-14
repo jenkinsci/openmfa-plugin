@@ -6,7 +6,7 @@
   xmlns:l="/lib/layout"
 >
   <st:adjunct
-    includes="io.jenkins.plugins.openmfa.MFAUserProperty.config-style"
+    includes="io.jenkins.plugins.openmfa.MFAUserProperty.mfa-user"
   />
 
   <f:section>

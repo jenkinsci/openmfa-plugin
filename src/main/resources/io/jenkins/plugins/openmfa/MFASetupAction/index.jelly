@@ -9,7 +9,7 @@
     <j:set var="instance" value="${it}" />
     <j:set var="descriptor" value="${it.descriptor}" />
     <st:adjunct
-      includes="io.jenkins.plugins.openmfa.MFASetupAction.mfa-setup-style,io.jenkins.plugins.openmfa.MFASetupAction.mfa-setup-script"
+      includes="io.jenkins.plugins.openmfa.MFASetupAction.mfa-setup"
     />
     <l:side-panel>
       <st:include
@@ -53,10 +53,6 @@
       </j:if>
 
       <div class="mfa-container">
-        <l:app-bar title="${%title}">
-          <l:icon src="symbol-lock-closed" class="icon-lg" />
-        </l:app-bar>
-
         <j:set var="mfaProperty" value="${it.getMFAProperty()}" />
 
         <j:choose>

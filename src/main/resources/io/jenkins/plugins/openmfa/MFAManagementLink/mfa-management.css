@@ -1,0 +1,83 @@
+/**
+ * MFA Management - Design Library overrides.
+ * Uses jenkins-table, jenkins-card, jenkins-button, jenkins-banner.
+ * Only MFA-specific: modal, status badges, layout.
+ */
+
+.mfa-mgmt-container {
+  max-width: 960px;
+}
+
+.mfa-mgmt-header {
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+  border-bottom: 2px solid var(--emphasis-color, #0b5394);
+}
+
+.mfa-mgmt-config-link {
+  margin-left: auto;
+}
+
+.mfa-mgmt-stats {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+
+.mfa-mgmt-stat-card {
+  flex: 1;
+  min-width: 150px;
+}
+
+.mfa-mgmt-stat-value {
+  font-size: 2rem;
+  font-weight: 700;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.mfa-mgmt-stat-label {
+  font-size: 0.875rem;
+  color: var(--text-color-secondary, #6b7280);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.mfa-mgmt-stat-enabled .mfa-mgmt-stat-value {
+  color: var(--success-color, #28a745);
+}
+
+.mfa-mgmt-stat-disabled .mfa-mgmt-stat-value {
+  color: var(--text-color-secondary);
+}
+
+.mfa-mgmt-user-cell a {
+  font-weight: 500;
+}
+
+/* Status badges - Design Library aligned */
+.mfa-mgmt-status {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.mfa-mgmt-actions-cell {
+  white-space: nowrap;
+}
+
+.mfa-mgmt-reset-form,
+.mfa-mgmt-set-form {
+  display: inline-block;
+  margin: 0;
+}
+
+.mfa-mgmt-set-form input[type='hidden'] {
+  display: none;
+}

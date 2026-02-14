@@ -7,7 +7,7 @@
 >
   <l:layout title="${%title}" permission="${app.ADMINISTER}">
     <st:adjunct
-      includes="io.jenkins.plugins.openmfa.MFAManagementLink.mfa-management-style,io.jenkins.plugins.openmfa.MFAManagementLink.mfa-management-script"
+      includes="io.jenkins.plugins.openmfa.MFAManagementLink.mfa-management"
     />
     <l:side-panel>
       <st:include page="sidepanel.jelly" it="${app}" optional="true" />
@@ -35,22 +35,13 @@
 
       <div class="mfa-mgmt-container">
         <div class="mfa-mgmt-header">
-          <l:icon src="symbol-lock-closed" class="icon-lg" />
-          <div>
-            <h1 class="jenkins-!-margin-bottom-1">${%title}</h1>
-            <p
-              class="jenkins-!-margin-0"
-              style="color: var(--text-color-secondary); font-size: 0.95rem"
-            >
-              ${%subtitle}
-            </p>
-          </div>
-          <a
-            href="${rootURL}/configureSecurity"
-            class="jenkins-button mfa-mgmt-config-link"
-          >
-            <l:icon src="symbol-settings" class="icon-sm" /> ${%config.link}
-          </a>
+          <l:app-bar title="${%title}">
+            <a href="${rootURL}/configureSecurity" class="jenkins-button">
+              <l:icon src="symbol-settings" class="icon-sm" /> ${%config.link} </a>
+          </l:app-bar>
+          <p style="color: var(--text-color-secondary); margin-top:-26px;">
+            ${%subtitle}
+          </p>
         </div>
 
         <div class="mfa-mgmt-stats">
@@ -82,14 +73,10 @@
             <j:set var="users" value="${it.getAllUsers()}" />
             <j:choose>
               <j:when test="${empty(users)}">
-                <div class="jenkins-card">
-                  <div class="mfa-mgmt-empty">
-                    <p>${%no.users}</p>
-                  </div>
-                </div>
+                <l:notice title="${%no.users}" icon="symbol-people"/>
               </j:when>
               <j:otherwise>
-                <div class="mfa-mgmt-table-wrapper">
+                <div>
                   <table class="jenkins-table jenkins-!-margin-0">
                     <thead>
                       <tr>
@@ -108,9 +95,9 @@
 
                         <tr>
                           <td class="mfa-mgmt-user-cell">
-                            <a href="${it.getSetupUri(user.userId)}"
-                              >${user.userId}</a
-                            >
+                            <a href="${it.getSetupUri(user.userId)}">
+                              ${user.userId}
+                            </a>
                           </td>
                           <td>${user.fullName}</td>
                           <td>
@@ -132,9 +119,14 @@
                                   name="userId"
                                   value="${user.userId}"
                                 />
+                                <input
+                                  type="hidden"
+                                  name="fullName"
+                                  value="${user.fullName}"
+                                />
                                 <button
                                   type="button"
-                                  class="jenkins-button jenkins-button--destructive"
+                                  class="jenkins-button jenkins-!-destructive-color"
                                 >
                                   ${%reset.button}
                                 </button>

@@ -25,12 +25,13 @@ function _getResetDialogLabels() {
  * @param {string} userId - The ID of the user to reset
  * @param {HTMLFormElement} form - The form to submit on confirm
  */
-function showResetConfirm(userId, form) {
+function showResetConfirm(userId, username, form) {
   const labels = _getResetDialogLabels();
   const message =
     (labels ? labels.messagePrefix : '') +
     ' ' +
-    '👤(' +
+    username +
+    '(' +
     userId +
     ')' +
     (labels ? labels.messageSuffix : '');
@@ -89,8 +90,9 @@ function initNotification() {
         if (resetBtn) {
           resetBtn.addEventListener('click', function () {
             const userIdInput = form.querySelector('input[name="userId"]');
+            const userNameInput = form.querySelector('input[name="fullName"]');
             if (userIdInput) {
-              showResetConfirm(userIdInput.value, form);
+              showResetConfirm(userIdInput.value, userNameInput.value, form);
             }
           });
         }

@@ -7,7 +7,7 @@
 >
   <l:layout title="${%title}" norefresh="true">
     <st:adjunct
-      includes="io.jenkins.plugins.openmfa.MFALoginAction.mfa-login-style"
+      includes="io.jenkins.plugins.openmfa.MFALoginAction.mfa-login"
     />
     <l:main-panel>
       <j:choose>
@@ -182,10 +182,6 @@
               </div>
             </div>
           </div>
-
-          <st:adjunct
-            includes="io.jenkins.plugins.openmfa.MFALoginAction.mfa-login-script"
-          />
         </j:when>
         <j:otherwise>
           <div class="mfa-login-container">
