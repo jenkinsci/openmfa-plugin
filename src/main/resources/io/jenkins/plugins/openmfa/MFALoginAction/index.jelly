@@ -6,6 +6,9 @@
   xmlns:f="/lib/form"
 >
   <l:layout title="${%title}" norefresh="true">
+    <st:adjunct
+      includes="io.jenkins.plugins.openmfa.MFALoginAction.mfa-login"
+    />
     <l:main-panel>
       <j:choose>
         <j:when test="${it.hasPendingAuth() and it.isSessionMFAVerified()}">
@@ -181,10 +184,6 @@
               </div>
             </div>
           </div>
-
-          <st:adjunct
-            includes="io.jenkins.plugins.openmfa.MFALoginAction.mfa-login"
-          />
         </j:when>
         <j:otherwise>
           <div class="mfa-login-container">

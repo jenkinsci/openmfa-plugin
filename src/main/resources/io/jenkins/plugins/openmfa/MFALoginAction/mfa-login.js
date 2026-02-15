@@ -10,10 +10,7 @@
 
   function getStoredLockoutRemaining() {
     try {
-      const endTime = parseInt(
-        localStorage.getItem(LOCKOUT_STORAGE_KEY),
-        10,
-      );
+      const endTime = parseInt(localStorage.getItem(LOCKOUT_STORAGE_KEY), 10);
       if (!endTime || endTime <= Date.now()) {
         localStorage.removeItem(LOCKOUT_STORAGE_KEY);
         return null;
@@ -42,7 +39,7 @@
     } catch (e) {}
   }
 
-  const digits = document.querySelectorAll('.mfa-login-digit');
+  let digits = document.querySelectorAll('.mfa-login-digit');
   const hidden = document.getElementById('mfa-login-code-hidden');
   const form = document.querySelector('.mfa-login-container form');
   const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
@@ -64,6 +61,11 @@
    * Sets up event listeners for each digit input.
    */
   function initDigitInputs() {
+    digits = document.querySelectorAll('.mfa-login-digit');
+    if (digits.length <= 0) {
+      return;
+    }
+
     digits.forEach(function (input, idx) {
       input.addEventListener('input', function (e) {
         const val = e.target.value.replace(/[^0-9]/g, '');
@@ -227,13 +229,11 @@
     }
   }
 
-  // Initialize when DOM is ready
-  if (digits.length > 0) {
-    initDigitInputs();
-  }
   if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initDigitInputs);
     document.addEventListener('DOMContentLoaded', initErrorHandling);
   } else {
+    initDigitInputs();
     initErrorHandling();
   }
 })();
