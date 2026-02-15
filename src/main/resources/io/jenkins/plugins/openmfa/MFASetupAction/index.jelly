@@ -179,7 +179,17 @@
         </j:choose>
 
         <div class="jenkins-alert jenkins-alert-warning">
-          <h3 class="jenkins-!-margin-bottom-4">&#9888; ${%notes.title}</h3>
+          <h3
+            style="
+              margin-bottom: 0.75rem;
+              display: flex;
+              gap: 0.25rem;
+              align-items: center;
+            "
+          >
+            <l:icon src="symbol-warning" class="icon-md" />
+            ${%notes.title}
+          </h3>
           <ul class="jenkins-!-margin-0">
             <li>${%notes.required}</li>
             <li>${%notes.lost}</li>

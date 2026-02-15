@@ -149,7 +149,7 @@ public class MFAManagementLink extends ManagementLink {
 
   @Override
   public String getIconFileName() {
-    return "symbol-browsers";
+    return "symbol-id-card";
   }
 
   @Override
