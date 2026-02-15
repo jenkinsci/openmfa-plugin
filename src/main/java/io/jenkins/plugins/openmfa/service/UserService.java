@@ -1,14 +1,20 @@
 package io.jenkins.plugins.openmfa.service;
 
+import java.io.IOException;
+import java.util.Collection;
+import java.util.Optional;
+
 import hudson.model.User;
 import hudson.security.ACL;
+import hudson.security.HudsonPrivateSecurityRealm;
+import hudson.security.SecurityRealm;
 import io.jenkins.plugins.openmfa.MFAUserProperty;
 import io.jenkins.plugins.openmfa.base.Service;
 import io.jenkins.plugins.openmfa.service.model.UserInfo;
 import io.jenkins.plugins.openmfa.util.JenkinsUtil;
 import io.jenkins.plugins.openmfa.util.TOTPUtil;
-import java.io.IOException;
-import java.util.Collection;
+import jenkins.model.Jenkins;
+import jenkins.security.LastGrantedAuthoritiesProperty;
 import lombok.extern.java.Log;
 
 /**
@@ -56,7 +62,7 @@ public class UserService {
    * Gets MFA status information for a specific user.
    *
    * @param user
-   *          The user to get MFA info for
+   *             The user to get MFA info for
    * @return UserMFAInfo containing the user's MFA status
    */
   public UserInfo getUserMFAInfo(User user) {
@@ -71,7 +77,7 @@ public class UserService {
    * Checks if a user has MFA enabled.
    *
    * @param user
-   *          The user to check
+   *             The user to check
    * @return true if MFA is enabled, false otherwise
    */
   public boolean isMFAEnabled(User user) {
@@ -82,9 +88,9 @@ public class UserService {
    * Resets MFA for a user, clearing their secret and disabling MFA.
    *
    * @param user
-   *          The user to reset MFA for
+   *             The user to reset MFA for
    * @throws IOException
-   *           if saving the user fails
+   *                     if saving the user fails
    */
   public void resetMFA(User user) throws IOException {
     JenkinsUtil.checkAdminPermission();
@@ -98,10 +104,18 @@ public class UserService {
   }
 
   private Collection<User> getUsers() {
+    Optional<Jenkins> jenkins = JenkinsUtil.getJenkins();
+
+    if (jenkins.isPresent()) {
+      SecurityRealm realm = jenkins.get().getSecurityRealm();
+      if (realm instanceof HudsonPrivateSecurityRealm) {
+        return ((HudsonPrivateSecurityRealm) realm).getAllUsers();
+      }
+    }
+
     return User.getAll()
       .stream()
-      .filter(u -> !ACL.SYSTEM_USERNAME.equals(u.getId()))
+      .filter(u -> u.getProperty(LastGrantedAuthoritiesProperty.class) != null)
       .toList();
   }
-
 }
