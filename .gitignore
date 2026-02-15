@@ -17,6 +17,8 @@ buildNumber.properties
 .m2/
 
 # Maven hpi:run
+work/
+work/*
 work*/
 work*/*
 
