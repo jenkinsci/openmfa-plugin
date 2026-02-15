@@ -2,6 +2,37 @@ let currentPage = 1;
 let pageSize = 10;
 let totalPages = 1;
 let allRows = [];
+let searchQuery = '';
+
+/**
+ * Returns whether a row matches the current search query (user ID and full name).
+ * @param {Element} row - Table row element
+ * @returns {boolean}
+ */
+function rowMatchesSearch(row) {
+  if (!searchQuery || !searchQuery.trim()) return true;
+  const q = searchQuery.trim().toLowerCase();
+  const cells = row.querySelectorAll('td');
+  const userId =
+    cells[0] && cells[0].textContent
+      ? cells[0].textContent.trim().toLowerCase()
+      : '';
+  const fullName =
+    cells[1] && cells[1].textContent
+      ? cells[1].textContent.trim().toLowerCase()
+      : '';
+  return userId.indexOf(q) !== -1 || fullName.indexOf(q) !== -1;
+}
+
+/**
+ * Applies search filter and re-renders the table.
+ * @param {string} value - Search input value
+ */
+function applySearch(value) {
+  searchQuery = value;
+  currentPage = 1;
+  renderPage();
+}
 
 /**
  * Changes the page size and re-renders the table.
@@ -27,29 +58,30 @@ function goToPage(page) {
  * Renders the current page of the table.
  */
 function renderPage() {
-  var totalItems = allRows.length;
+  const filteredRows = allRows.filter(rowMatchesSearch);
+  const totalItems = filteredRows.length;
   totalPages = Math.ceil(totalItems / pageSize) || 1;
 
   if (currentPage > totalPages) {
     currentPage = totalPages;
   }
 
-  var startIndex = (currentPage - 1) * pageSize;
-  var endIndex = Math.min(startIndex + pageSize, totalItems);
+  const startIndex = (currentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, totalItems);
 
-  // Hide all rows, then show only current page
-  for (var i = 0; i < allRows.length; i++) {
+  // Hide all rows, show only matching rows, then only current page of those
+  for (let i = 0; i < allRows.length; i++) {
     allRows[i].style.display = 'none';
   }
-  for (var i = startIndex; i < endIndex; i++) {
-    allRows[i].style.display = '';
+  for (let i = startIndex; i < endIndex && i < filteredRows.length; i++) {
+    filteredRows[i].style.display = '';
   }
 
   // Update pagination info
-  var infoEl = document.getElementById('mfa-pagination-info');
+  const infoEl = document.getElementById('mfa-pagination-info');
   if (infoEl && totalItems > 0) {
-    var showingStart = startIndex + 1;
-    var showingEnd = endIndex;
+    const showingStart = startIndex + 1;
+    const showingEnd = endIndex;
     infoEl.textContent =
       paginationShowingText +
       ' ' +
@@ -69,10 +101,10 @@ function renderPage() {
   }
 
   // Update button states
-  var firstBtn = document.getElementById('mfa-page-first');
-  var prevBtn = document.getElementById('mfa-page-prev');
-  var nextBtn = document.getElementById('mfa-page-next');
-  var lastBtn = document.getElementById('mfa-page-last');
+  const firstBtn = document.getElementById('mfa-page-first');
+  const prevBtn = document.getElementById('mfa-page-prev');
+  const nextBtn = document.getElementById('mfa-page-next');
+  const lastBtn = document.getElementById('mfa-page-last');
 
   if (firstBtn) firstBtn.disabled = currentPage <= 1;
   if (prevBtn) prevBtn.disabled = currentPage <= 1;
@@ -87,21 +119,21 @@ function renderPage() {
  * Renders the page number buttons.
  */
 function renderPageNumbers() {
-  var container = document.getElementById('mfa-page-numbers');
+  const container = document.getElementById('mfa-page-numbers');
   if (!container) return;
 
   container.innerHTML = '';
 
-  var maxVisible = 5;
-  var startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
-  var endPage = Math.min(totalPages, startPage + maxVisible - 1);
+  const maxVisible = 5;
+  let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+  let endPage = Math.min(totalPages, startPage + maxVisible - 1);
 
   if (endPage - startPage + 1 < maxVisible) {
     startPage = Math.max(1, endPage - maxVisible + 1);
   }
 
-  for (var i = startPage; i <= endPage; i++) {
-    var btn = document.createElement('button');
+  for (let i = startPage; i <= endPage; i++) {
+    const btn = document.createElement('button');
     btn.type = 'button';
     btn.className = 'mfa-mgmt-pagination-btn mfa-mgmt-pagination-num';
     if (i === currentPage) {
@@ -122,16 +154,16 @@ function renderPageNumbers() {
  * Initializes pagination for the user table.
  */
 function initPagination() {
-  var table = document.getElementById('mfa-users-table');
+  const table = document.getElementById('mfa-users-table');
   if (!table) return;
 
-  var tbody = table.querySelector('tbody');
+  const tbody = table.querySelector('tbody');
   if (!tbody) return;
 
   allRows = Array.prototype.slice.call(tbody.querySelectorAll('.mfa-user-row'));
 
   // Hide pagination if only one page needed
-  var paginationEl = document.getElementById('mfa-pagination');
+  const paginationEl = document.getElementById('mfa-pagination');
   if (allRows.length <= pageSize && paginationEl) {
     // Still show it for consistency, but could hide if preferred
   }

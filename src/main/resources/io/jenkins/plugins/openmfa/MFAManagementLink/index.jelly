@@ -73,15 +73,26 @@
 
         <div class="jenkins-!-margin-bottom-4">
           <h3>${%users.title}</h3>
-          <div class="mfa-mgmt-page-size jenkins-!-margin-bottom-2">
-            <label for="mfa-page-size">${%pagination.show}</label>
-            <select id="mfa-page-size" onchange="changePageSize(this.value)">
+          <div class="mfa-mgmt-toolbar jenkins-!-margin-bottom-2">
+            <div class="mfa-mgmt-page-size">
+              <label for="mfa-page-size">${%pagination.show}</label>
+              <select id="mfa-page-size" onchange="changePageSize(this.value)">
               <option value="10">10</option>
               <option value="25">25</option>
               <option value="50">50</option>
               <option value="100">100</option>
             </select>
-            <span>${%pagination.entries}</span>
+              <span>${%pagination.entries}</span>
+            </div>
+            <div class="mfa-mgmt-search">
+              <input
+                type="text"
+                id="mfa-search"
+                placeholder="${%search.placeholder}"
+                aria-label="${%search.placeholder}"
+                oninput="applySearch(this.value)"
+              />
+            </div>
           </div>
           <div class="jenkins-!-padding-0">
             <j:set var="users" value="${it.getAllUsers()}" />
