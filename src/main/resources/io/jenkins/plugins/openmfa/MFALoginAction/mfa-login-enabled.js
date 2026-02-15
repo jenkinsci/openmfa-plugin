@@ -39,7 +39,7 @@
     } catch (e) {}
   }
 
-  let digits = document.querySelectorAll('.mfa-login-digit');
+  const digits = document.querySelectorAll('.mfa-login-digit');
   const hidden = document.getElementById('mfa-login-code-hidden');
   const form = document.querySelector('.mfa-login-container form');
   const submitBtn = form ? form.querySelector('button[type="submit"]') : null;
@@ -61,11 +61,6 @@
    * Sets up event listeners for each digit input.
    */
   function initDigitInputs() {
-    digits = document.querySelectorAll('.mfa-login-digit');
-    if (digits.length <= 0) {
-      return;
-    }
-
     digits.forEach(function (input, idx) {
       input.addEventListener('input', function (e) {
         const val = e.target.value.replace(/[^0-9]/g, '');
@@ -184,6 +179,34 @@
   }
 
   /**
+   * Starts countdown and redirect when already verified (continue link present).
+   */
+  function initAlreadyVerifiedRedirect() {
+    const link = document.getElementById('mfa-continue-link');
+    const msg = document.getElementById('mfa-redirect-msg');
+    if (!link || !msg) return;
+
+    const redirectUrl =
+      link.getAttribute('href') ||
+      (window.Jenkins && window.Jenkins.rootURL
+        ? window.Jenkins.rootURL + '/'
+        : '/');
+    const template = msg.getAttribute('data-redirect-template');
+    let seconds = 5;
+
+    function tick() {
+      if (seconds <= 0) {
+        window.location.href = redirectUrl;
+        return;
+      }
+      msg.textContent = template.replace('{0}', String(seconds));
+      seconds--;
+      setTimeout(tick, 1000);
+    }
+    tick();
+  }
+
+  /**
    * Initializes error handling and lockout from server (banner data) or stored value.
    * If lockout remaining > 0, shows banner and blocks form submit (no server request).
    */
@@ -229,11 +252,14 @@
     }
   }
 
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initDigitInputs);
-    document.addEventListener('DOMContentLoaded', initErrorHandling);
-  } else {
+  if (digits.length > 0) {
     initDigitInputs();
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initErrorHandling);
+    document.addEventListener('DOMContentLoaded', initAlreadyVerifiedRedirect);
+  } else {
     initErrorHandling();
+    initAlreadyVerifiedRedirect();
   }
 })();

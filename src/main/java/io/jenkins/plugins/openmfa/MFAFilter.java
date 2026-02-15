@@ -1,11 +1,5 @@
 package io.jenkins.plugins.openmfa;
 
-import java.io.IOException;
-import java.net.URLEncoder;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
-
 import hudson.Extension;
 import hudson.model.User;
 import io.jenkins.plugins.openmfa.base.MFAContext;
@@ -23,6 +17,11 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import lombok.extern.java.Log;
 
 /**
