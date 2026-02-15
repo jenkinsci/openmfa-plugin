@@ -5,6 +5,23 @@ let allRows = [];
 let searchQuery = '';
 
 /**
+ * Returns pagination label strings from the DOM (set by Jelly).
+ * @returns {{ showing: string, to: string, of: string, entries: string }}
+ */
+function getPaginationLabels() {
+  const el = document.getElementById('mfa-pagination-labels');
+  if (!el) {
+    return {showing: '', to: '', of: '', entries: ''};
+  }
+  return {
+    showing: el.getAttribute('data-showing') || '',
+    to: el.getAttribute('data-to') || '',
+    of: el.getAttribute('data-of') || '',
+    entries: el.getAttribute('data-entries') || '',
+  };
+}
+
+/**
  * Returns whether a row matches the current search query (user ID and full name).
  * @param {Element} row - Table row element
  * @returns {boolean}
@@ -80,22 +97,23 @@ function renderPage() {
   // Update pagination info
   const infoEl = document.getElementById('mfa-pagination-info');
   if (infoEl && totalItems > 0) {
+    const labels = getPaginationLabels();
     const showingStart = startIndex + 1;
     const showingEnd = endIndex;
     infoEl.textContent =
-      paginationShowingText +
+      labels.showing +
       ' ' +
       showingStart +
       ' ' +
-      paginationToText +
+      labels.to +
       ' ' +
       showingEnd +
       ' ' +
-      paginationOfText +
+      labels.of +
       ' ' +
       totalItems +
       ' ' +
-      paginationEntriesText;
+      labels.entries;
   } else if (infoEl) {
     infoEl.textContent = '';
   }
@@ -141,17 +159,20 @@ function renderPageNumbers() {
     }
     btn.textContent = i;
     btn.setAttribute('data-page', i);
-    btn.onclick = (function (page) {
-      return function () {
-        goToPage(page);
-      };
-    })(i);
+    btn.addEventListener(
+      'click',
+      (function (page) {
+        return function () {
+          goToPage(page);
+        };
+      })(i),
+    );
     container.appendChild(btn);
   }
 }
 
 /**
- * Initializes pagination for the user table.
+ * Initializes pagination for the user table and wires toolbar/pagination button events.
  */
 function initPagination() {
   const table = document.getElementById('mfa-users-table');
@@ -162,10 +183,44 @@ function initPagination() {
 
   allRows = Array.prototype.slice.call(tbody.querySelectorAll('.mfa-user-row'));
 
-  // Hide pagination if only one page needed
-  const paginationEl = document.getElementById('mfa-pagination');
-  if (allRows.length <= pageSize && paginationEl) {
-    // Still show it for consistency, but could hide if preferred
+  const pageSizeEl = document.getElementById('mfa-page-size');
+  if (pageSizeEl) {
+    pageSize = parseInt(pageSizeEl.value, 10) || 10;
+    pageSizeEl.addEventListener('change', function () {
+      changePageSize(this.value);
+    });
+  }
+
+  const searchEl = document.getElementById('mfa-search');
+  if (searchEl) {
+    searchEl.addEventListener('input', function () {
+      applySearch(this.value);
+    });
+  }
+
+  const firstBtn = document.getElementById('mfa-page-first');
+  if (firstBtn) {
+    firstBtn.addEventListener('click', function () {
+      goToPage(1);
+    });
+  }
+  const prevBtn = document.getElementById('mfa-page-prev');
+  if (prevBtn) {
+    prevBtn.addEventListener('click', function () {
+      goToPage(currentPage - 1);
+    });
+  }
+  const nextBtn = document.getElementById('mfa-page-next');
+  if (nextBtn) {
+    nextBtn.addEventListener('click', function () {
+      goToPage(currentPage + 1);
+    });
+  }
+  const lastBtn = document.getElementById('mfa-page-last');
+  if (lastBtn) {
+    lastBtn.addEventListener('click', function () {
+      goToPage(totalPages);
+    });
   }
 
   renderPage();

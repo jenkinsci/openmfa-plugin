@@ -36,6 +36,16 @@
       >
       </span>
 
+      <span
+        id="mfa-pagination-labels"
+        data-showing="${%pagination.showing}"
+        data-to="${%pagination.to}"
+        data-of="${%pagination.of}"
+        data-entries="${%pagination.entries.label}"
+        style="display: none"
+      >
+      </span>
+
       <div class="mfa-mgmt-container">
         <div class="mfa-mgmt-header">
           <l:app-bar title="${%title}">
@@ -76,12 +86,12 @@
           <div class="mfa-mgmt-toolbar jenkins-!-margin-bottom-2">
             <div class="mfa-mgmt-page-size">
               <label for="mfa-page-size">${%pagination.show}</label>
-              <select id="mfa-page-size" onchange="changePageSize(this.value)">
-              <option value="10">10</option>
-              <option value="25">25</option>
-              <option value="50">50</option>
-              <option value="100">100</option>
-            </select>
+              <select id="mfa-page-size">
+                <option value="10">10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
               <span>${%pagination.entries}</span>
             </div>
             <div class="mfa-mgmt-search">
@@ -90,7 +100,6 @@
                 id="mfa-search"
                 placeholder="${%search.placeholder}"
                 aria-label="${%search.placeholder}"
-                oninput="applySearch(this.value)"
               />
             </div>
           </div>
@@ -187,7 +196,10 @@
                 </div>
 
                 <!-- Pagination controls -->
-                <div id="mfa-pagination" class="mfa-mgmt-pagination jenkins-!-margin-top-2">
+                <div
+                  id="mfa-pagination"
+                  class="mfa-mgmt-pagination jenkins-!-margin-top-2"
+                >
                   <div class="mfa-mgmt-pagination-info">
                     <span id="mfa-pagination-info"></span>
                   </div>
@@ -196,19 +208,23 @@
                       type="button"
                       class="mfa-mgmt-pagination-btn"
                       id="mfa-page-first"
-                      onclick="goToPage(1)"
                       title="${%pagination.first}"
                     >
-                      &#171;
+                      <l:icon
+                        src="symbol-play-back plugin-ionicons-api"
+                        class="icon-sm"
+                      />
                     </button>
                     <button
                       type="button"
                       class="mfa-mgmt-pagination-btn"
                       id="mfa-page-prev"
-                      onclick="goToPage(currentPage - 1)"
                       title="${%pagination.previous}"
                     >
-                      &#8249;
+                      <l:icon
+                        src="symbol-caret-back plugin-ionicons-api"
+                        class="icon-sm"
+                      />
                     </button>
                     <span
                       class="mfa-mgmt-pagination-pages"
@@ -218,30 +234,26 @@
                       type="button"
                       class="mfa-mgmt-pagination-btn"
                       id="mfa-page-next"
-                      onclick="goToPage(currentPage + 1)"
                       title="${%pagination.next}"
                     >
-                      &#8250;
+                      <l:icon
+                        src="symbol-caret-forward plugin-ionicons-api"
+                        class="icon-sm"
+                      />
                     </button>
                     <button
                       type="button"
                       class="mfa-mgmt-pagination-btn"
                       id="mfa-page-last"
-                      onclick="goToPage(totalPages)"
                       title="${%pagination.last}"
                     >
-                      &#187;
+                      <l:icon
+                        src="symbol-play-forward plugin-ionicons-api"
+                        class="icon-sm"
+                      />
                     </button>
                   </div>
                 </div>
-
-                <!-- Hidden data for pagination info text -->
-                <script type="text/javascript">
-                  let paginationShowingText = '${%pagination.showing}';
-                  let paginationToText = '${%pagination.to}';
-                  let paginationOfText = '${%pagination.of}';
-                  let paginationEntriesText = '${%pagination.entries.label}';
-                </script>
               </j:otherwise>
             </j:choose>
           </div>
