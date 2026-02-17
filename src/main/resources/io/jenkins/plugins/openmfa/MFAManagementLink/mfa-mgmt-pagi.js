@@ -153,9 +153,9 @@ function renderPageNumbers() {
   for (let i = startPage; i <= endPage; i++) {
     const btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'mfa-mgmt-pagination-btn mfa-mgmt-pagination-num';
+    btn.className = 'jenkins-button';
     if (i === currentPage) {
-      btn.className += ' mfa-mgmt-pagination-active';
+      btn.className += ' jenkins-button--primary';
     }
     btn.textContent = i;
     btn.setAttribute('data-page', i);

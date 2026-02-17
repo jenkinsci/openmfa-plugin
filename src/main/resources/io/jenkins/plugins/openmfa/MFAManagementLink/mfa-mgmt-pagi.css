@@ -6,27 +6,7 @@
 }
 
 .mfa-mgmt-search input {
-  padding: 6px 10px;
-  border: 1px solid var(--input-border, #d0d0d0);
-  border-radius: 4px;
-  background: var(--input-background, #fff);
-  color: var(--text-color, #333);
-  font-size: 0.875rem;
   min-width: 200px;
-}
-
-.mfa-mgmt-search input::placeholder {
-  color: var(--text-color-secondary, #6b7280);
-}
-
-.mfa-mgmt-search input:hover {
-  border-color: var(--emphasis-color, #0b5394);
-}
-
-.mfa-mgmt-search input:focus {
-  outline: none;
-  border-color: var(--focus-input-border, #0b5394);
-  box-shadow: 0 0 0 2px var(--focus-input-glow, rgba(11, 83, 148, 0.2));
 }
 
 .mfa-mgmt-page-size {
@@ -38,23 +18,7 @@
 }
 
 .mfa-mgmt-page-size select {
-  padding: 4px 8px;
-  border: 1px solid var(--input-border, #d0d0d0);
-  border-radius: 4px;
-  background: var(--input-background, #fff);
-  color: var(--text-color, #333);
-  font-size: 0.875rem;
-  cursor: pointer;
-}
-
-.mfa-mgmt-page-size select:hover {
-  border-color: var(--emphasis-color, #0b5394);
-}
-
-.mfa-mgmt-page-size select:focus {
-  outline: none;
-  border-color: var(--focus-input-border, #0b5394);
-  box-shadow: 0 0 0 2px var(--focus-input-glow, rgba(11, 83, 148, 0.2));
+  min-width: 70px;
 }
 
 /* Pagination styles */
@@ -62,9 +26,6 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 24px;
-  border-top: 1px solid var(--table-border-color, #e0e0e0);
-  background: var(--light-grey, #f5f5f5);
   flex-wrap: wrap;
   gap: 12px;
 }
@@ -78,41 +39,6 @@
   display: flex;
   align-items: center;
   gap: 4px;
-}
-
-.mfa-mgmt-pagination-btn {
-  background: var(--input-background, #fff);
-  border: 1px solid var(--input-border, #d0d0d0);
-  color: var(--text-color, #333);
-  padding: 6px 12px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  border-radius: 4px;
-  cursor: pointer;
-  transition:
-    background 0.15s ease,
-    border-color 0.15s ease;
-  min-width: 36px;
-}
-
-.mfa-mgmt-pagination-btn:hover:not(:disabled) {
-  background: var(--light-grey, #f5f5f5);
-  border-color: var(--emphasis-color, #0b5394);
-}
-
-.mfa-mgmt-pagination-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.mfa-mgmt-pagination-btn.mfa-mgmt-pagination-active {
-  background: var(--emphasis-color, #0b5394);
-  border-color: var(--emphasis-color, #0b5394);
-  color: #fff;
-}
-
-.mfa-mgmt-pagination-btn.mfa-mgmt-pagination-active:hover {
-  background: var(--link-color-hover, #094a82);
 }
 
 .mfa-mgmt-pagination-pages {

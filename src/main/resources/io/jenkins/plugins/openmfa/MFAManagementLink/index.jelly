@@ -86,18 +86,21 @@
           <div class="mfa-mgmt-toolbar jenkins-!-margin-bottom-2">
             <div class="mfa-mgmt-page-size">
               <label for="mfa-page-size">${%pagination.show}</label>
-              <select id="mfa-page-size">
-                <option value="10">10</option>
-                <option value="25">25</option>
-                <option value="50">50</option>
-                <option value="100">100</option>
-              </select>
+              <div class="jenkins-select">
+                <select id="mfa-page-size" class="jenkins-select__input">
+                  <option value="10">10</option>
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                </select>
+              </div>
               <span>${%pagination.entries}</span>
             </div>
             <div class="mfa-mgmt-search">
               <input
                 type="text"
                 id="mfa-search"
+                class="jenkins-input"
                 placeholder="${%search.placeholder}"
                 aria-label="${%search.placeholder}"
               />
@@ -132,7 +135,10 @@
 
                         <tr class="mfa-user-row">
                           <td class="mfa-mgmt-user-cell">
-                            <a href="${it.getSetupUri(user.userId)}">
+                            <a
+                              href="${it.getSetupUri(user.userId)}"
+                              class="jenkins-table__link"
+                            >
                               ${user.userId}
                             </a>
                           </td>
@@ -197,61 +203,62 @@
 
                 <!-- Pagination controls -->
                 <div
-                  id="mfa-pagination"
-                  class="mfa-mgmt-pagination jenkins-!-margin-top-2"
+                  class="jenkins-card jenkins-!-margin-top-2 jenkins-!-padding-2"
                 >
-                  <div class="mfa-mgmt-pagination-info">
-                    <span id="mfa-pagination-info"></span>
-                  </div>
-                  <div class="mfa-mgmt-pagination-controls">
-                    <button
-                      type="button"
-                      class="mfa-mgmt-pagination-btn"
-                      id="mfa-page-first"
-                      title="${%pagination.first}"
-                    >
-                      <l:icon
-                        src="symbol-play-back plugin-ionicons-api"
-                        class="icon-sm"
-                      />
-                    </button>
-                    <button
-                      type="button"
-                      class="mfa-mgmt-pagination-btn"
-                      id="mfa-page-prev"
-                      title="${%pagination.previous}"
-                    >
-                      <l:icon
-                        src="symbol-caret-back plugin-ionicons-api"
-                        class="icon-sm"
-                      />
-                    </button>
-                    <span
-                      class="mfa-mgmt-pagination-pages"
-                      id="mfa-page-numbers"
-                    ></span>
-                    <button
-                      type="button"
-                      class="mfa-mgmt-pagination-btn"
-                      id="mfa-page-next"
-                      title="${%pagination.next}"
-                    >
-                      <l:icon
-                        src="symbol-caret-forward plugin-ionicons-api"
-                        class="icon-sm"
-                      />
-                    </button>
-                    <button
-                      type="button"
-                      class="mfa-mgmt-pagination-btn"
-                      id="mfa-page-last"
-                      title="${%pagination.last}"
-                    >
-                      <l:icon
-                        src="symbol-play-forward plugin-ionicons-api"
-                        class="icon-sm"
-                      />
-                    </button>
+                  <div id="mfa-pagination" class="mfa-mgmt-pagination">
+                    <div class="mfa-mgmt-pagination-info">
+                      <span id="mfa-pagination-info"></span>
+                    </div>
+                    <div class="mfa-mgmt-pagination-controls">
+                      <button
+                        type="button"
+                        class="jenkins-button"
+                        id="mfa-page-first"
+                        title="${%pagination.first}"
+                      >
+                        <l:icon
+                          src="symbol-play-back plugin-ionicons-api"
+                          class="icon-sm"
+                        />
+                      </button>
+                      <button
+                        type="button"
+                        class="jenkins-button"
+                        id="mfa-page-prev"
+                        title="${%pagination.previous}"
+                      >
+                        <l:icon
+                          src="symbol-caret-back plugin-ionicons-api"
+                          class="icon-sm"
+                        />
+                      </button>
+                      <span
+                        class="mfa-mgmt-pagination-pages"
+                        id="mfa-page-numbers"
+                      ></span>
+                      <button
+                        type="button"
+                        class="jenkins-button"
+                        id="mfa-page-next"
+                        title="${%pagination.next}"
+                      >
+                        <l:icon
+                          src="symbol-caret-forward plugin-ionicons-api"
+                          class="icon-sm"
+                        />
+                      </button>
+                      <button
+                        type="button"
+                        class="jenkins-button"
+                        id="mfa-page-last"
+                        title="${%pagination.last}"
+                      >
+                        <l:icon
+                          src="symbol-play-forward plugin-ionicons-api"
+                          class="icon-sm"
+                        />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </j:otherwise>
