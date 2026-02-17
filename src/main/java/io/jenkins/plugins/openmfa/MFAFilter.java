@@ -17,6 +17,8 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import jenkins.security.BasicHeaderApiTokenAuthenticator;
+
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.Arrays;
@@ -75,6 +77,19 @@ public class MFAFilter implements Filter {
       !(request instanceof HttpServletRequest)
         || !(response instanceof HttpServletResponse)
     ) {
+      chain.doFilter(request, response);
+      log.fine("");
+      return;
+    }
+
+    if (
+      Boolean.TRUE.equals(
+        request.getAttribute(
+          BasicHeaderApiTokenAuthenticator.class.getName()
+        )
+      )
+    ) {
+      log.fine("Authenticated via API token, skipping MFA check");
       chain.doFilter(request, response);
       return;
     }
