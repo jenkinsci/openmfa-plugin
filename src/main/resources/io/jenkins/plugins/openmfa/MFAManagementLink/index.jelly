@@ -7,6 +7,9 @@
 >
   <l:layout title="${%title}" permission="${app.ADMINISTER}">
     <st:adjunct
+      includes="io.jenkins.plugins.openmfa.mfa"
+    />
+    <st:adjunct
       includes="io.jenkins.plugins.openmfa.MFAManagementLink.mfa-mgmt"
     />
     <st:adjunct
@@ -33,6 +36,12 @@
         data-message-suffix="${%reset.confirm.messageSuffix}"
         data-cancel-text="${%reset.confirm.cancel}"
         data-ok-text="${%reset.button}"
+        data-toast-user-prefix="${%reset.toast.theUser}"
+        data-toast-user-suffix="${%reset.toast.sSuffix}"
+        data-toast-success="${%reset.success}"
+        data-toast-error-default="${%reset.error.default}"
+        data-status-disabled="${%table.status.disabled}"
+        data-set-button-text="${%set.button}"
       >
       </span>
 
@@ -152,7 +161,7 @@
                           </td>
                           <td class="mfa-mgmt-actions-cell">
                             <j:if test="${user.mfaEnabled}">
-                              <form
+                              <f:form
                                 method="post"
                                 action="resetMFA"
                                 class="mfa-mgmt-reset-form"
@@ -173,10 +182,10 @@
                                 >
                                   ${%reset.button}
                                 </button>
-                              </form>
+                              </f:form>
                             </j:if>
                             <j:if test="${!user.mfaEnabled}">
-                              <form
+                              <f:form
                                 method="post"
                                 action="setMFA"
                                 class="mfa-mgmt-set-form"
@@ -192,7 +201,7 @@
                                 >
                                   ${%set.button}
                                 </button>
-                              </form>
+                              </f:form>
                             </j:if>
                           </td>
                         </tr>

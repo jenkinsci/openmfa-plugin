@@ -15,6 +15,7 @@ import java.io.IOException;
 import java.util.Collection;
 import jenkins.model.Jenkins;
 import lombok.extern.java.Log;
+import org.kohsuke.stapler.Header;
 import org.kohsuke.stapler.HttpResponse;
 import org.kohsuke.stapler.HttpResponses;
 import org.kohsuke.stapler.QueryParameter;
@@ -38,7 +39,9 @@ public class MFAManagementLink extends ManagementLink {
    * @return HTTP response indicating success or failure
    */
   @RequirePOST
-  public HttpResponse doResetMFA(@QueryParameter String userId) {
+  public HttpResponse doResetMFA(
+    @QueryParameter String userId,
+    @Header("X-Requested-With") String requestedWith) {
     checkAdminPermission();
 
     if (userId == null || userId.trim().isEmpty()) {
@@ -60,6 +63,10 @@ public class MFAManagementLink extends ManagementLink {
       UserService userService = MFAContext.i().getService(UserService.class);
       userService.resetMFA(user);
       log.info(String.format("Admin reset MFA for user: %s", userId));
+
+      if ("XMLHttpRequest".equals(requestedWith)) {
+        return HttpResponses.ok();
+      }
       return HttpResponses.redirectTo(".?success=reset_mfa&user_id=" + userId);
     } catch (IOException e) {
       log.severe(
