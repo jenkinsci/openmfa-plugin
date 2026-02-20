@@ -17,13 +17,12 @@ import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
-import jenkins.security.BasicHeaderApiTokenAuthenticator;
-
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import jenkins.security.BasicHeaderApiTokenAuthenticator;
 import lombok.extern.java.Log;
 
 /**
