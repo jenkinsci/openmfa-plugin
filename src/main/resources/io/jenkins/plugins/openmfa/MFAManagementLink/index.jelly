@@ -158,49 +158,51 @@
                             </span>
                           </td>
                           <td class="mfa-mgmt-actions-cell">
-                            <j:if test="${user.mfaEnabled}">
-                              <f:form
-                                method="post"
-                                action="resetMFA"
-                                class="mfa-mgmt-reset-form"
-                              >
-                                <input
-                                  type="hidden"
-                                  name="userId"
-                                  value="${user.userId}"
-                                />
-                                <input
-                                  type="hidden"
-                                  name="fullName"
-                                  value="${user.fullName}"
-                                />
-                                <button
-                                  type="button"
-                                  class="jenkins-button jenkins-!-destructive-color"
+                            <l:isAdmin>
+                              <j:if test="${user.mfaEnabled}">
+                                <f:form
+                                  method="post"
+                                  action="resetMFA"
+                                  class="mfa-mgmt-reset-form"
                                 >
-                                  ${%reset.button}
-                                </button>
-                              </f:form>
-                            </j:if>
-                            <j:if test="${!user.mfaEnabled}">
-                              <f:form
-                                method="post"
-                                action="setMFA"
-                                class="mfa-mgmt-set-form"
-                              >
-                                <input
-                                  type="hidden"
-                                  name="userId"
-                                  value="${user.userId}"
-                                />
-                                <button
-                                  type="submit"
-                                  class="jenkins-button jenkins-button--primary"
+                                  <input
+                                    type="hidden"
+                                    name="userId"
+                                    value="${user.userId}"
+                                  />
+                                  <input
+                                    type="hidden"
+                                    name="fullName"
+                                    value="${user.fullName}"
+                                  />
+                                  <button
+                                    type="button"
+                                    class="jenkins-button jenkins-!-destructive-color"
+                                  >
+                                    ${%reset.button}
+                                  </button>
+                                </f:form>
+                              </j:if>
+                              <j:if test="${!user.mfaEnabled}">
+                                <f:form
+                                  method="post"
+                                  action="setMFA"
+                                  class="mfa-mgmt-set-form"
                                 >
-                                  ${%set.button}
-                                </button>
-                              </f:form>
-                            </j:if>
+                                  <input
+                                    type="hidden"
+                                    name="userId"
+                                    value="${user.userId}"
+                                  />
+                                  <button
+                                    type="submit"
+                                    class="jenkins-button jenkins-button--primary"
+                                  >
+                                    ${%set.button}
+                                  </button>
+                                </f:form>
+                              </j:if>
+                            </l:isAdmin>
                           </td>
                         </tr>
                       </j:forEach>
