@@ -70,6 +70,23 @@
             includes="io.jenkins.plugins.openmfa.MFALoginAction.mfa-login-redirect"
           />
         </j:when>
+        <j:when test="${it.shouldShowMFAOptionalNotice()}">
+          <div class="mfa-login-container">
+            <div style="width: 100%; text-align: center">
+              <l:notice
+                title="${%mfa.not.enabled.title}"
+                icon="symbol-information-circle"
+              >
+                <p>
+                  <j:out
+                    value="${%mfa.not.enabled.message(it.mFASetupPath)}"
+                    escapeText="false"
+                  />
+                </p>
+              </l:notice>
+            </div>
+          </div>
+        </j:when>
         <j:when test="${it.hasPendingAuth()}">
           <span id="mfa-invalid-code-msg" style="display: none">
             ${%error.invalid.code}

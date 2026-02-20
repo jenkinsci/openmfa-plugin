@@ -21,7 +21,9 @@ function _getDisableDialogLabels() {
  */
 function showDisableConfirm(form) {
   const labels = _getDisableDialogLabels();
-  const message = labels ? labels.message : 'Are you sure you want to disable MFA?';
+  const message = labels
+    ? labels.message
+    : 'Are you sure you want to disable MFA?';
 
   // Fallback if the Design Library dialog API is not available
   if (typeof dialog === 'undefined') {

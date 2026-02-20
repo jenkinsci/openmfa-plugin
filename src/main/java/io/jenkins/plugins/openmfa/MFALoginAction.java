@@ -9,6 +9,8 @@ import io.jenkins.plugins.openmfa.constant.PluginConstants;
 import io.jenkins.plugins.openmfa.service.RateLimitService;
 import io.jenkins.plugins.openmfa.service.SessionService;
 import io.jenkins.plugins.openmfa.util.JenkinsUtil;
+import io.jenkins.plugins.openmfa.util.SecurityUtil;
+import io.jenkins.plugins.openmfa.util.TOTPUtil;
 import jakarta.servlet.http.HttpSession;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -156,6 +158,20 @@ public class MFALoginAction extends InvisibleAction implements RootAction {
   }
 
   /**
+   * Returns the current user's MFA setup path.
+   */
+  public String getMFASetupPath() {
+    var req = Stapler.getCurrentRequest2();
+    return JenkinsUtil.getCurrentUser()
+      .map(User::getId)
+      .map(
+        userId -> SecurityUtil
+          .buildSetupURI(req != null ? req.getContextPath() : "", userId)
+      )
+      .orElse(null);
+  }
+
+  /**
    * Gets the username from the current user.
    */
   public String getPendingUsername() {
@@ -199,6 +215,24 @@ public class MFALoginAction extends InvisibleAction implements RootAction {
   }
 
   /**
+   * Check if MFA is enabled for the current user.
+   *
+   * @return true if MFA is enabled, false otherwise
+   */
+  public boolean isMFAEnabled() {
+    return TOTPUtil.isMFAEnabled();
+  }
+
+  /**
+   * Check if MFA is required for the current user.
+   *
+   * @return true if MFA is required for the current user, false otherwise
+   */
+  public boolean isMFARequired() {
+    return TOTPUtil.isMFARequired();
+  }
+
+  /**
    * Check if the current session has already passed MFA verification.
    *
    * @return true if the current session has already passed MFA verification,
@@ -215,6 +249,16 @@ public class MFALoginAction extends InvisibleAction implements RootAction {
       && MFAContext.i()
         .getService(SessionService.class)
         .isVerifiedSession(session);
+  }
+
+  /**
+   * Returns true when the user is logged in, MFA is disabled, and MFA is not
+   * globally required.
+   */
+  public boolean shouldShowMFAOptionalNotice() {
+    return JenkinsUtil.getCurrentUser().isPresent()
+      && !isMFAEnabled()
+      && !isMFARequired();
   }
 
 }
