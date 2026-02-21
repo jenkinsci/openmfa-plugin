@@ -24,6 +24,7 @@ It introduces setup, verification, and management flows for user accounts inside
   - [Security Notes](#security-notes)
   - [Development](#development)
     - [VS Code Debugging](#vs-code-debugging)
+    - [Using the `.env` File](#using-the-env-file)
     - [Code Style](#code-style)
   - [License](#license)
 
@@ -147,6 +148,26 @@ To use:
 
 You can set breakpoints in your Java code immediately.
 
+### Using the `.env` File
+
+You can configure your development environment by creating a `.env` file in the project root. This file is used to provide environment variables, such as `JAVA_HOME`, which are required for Maven or Jenkins commands.
+
+- **Sample `.env` file:**
+  ```
+  JAVA_HOME=/path/to/your/java
+  # JENKINS_HOME=/path/to/jenkins_home (optional)
+  ```
+
+**How to use:**
+1. Copy `.env.example` to `.env`:
+   ```bash
+   cp .env.example .env
+   ```
+2. Edit `.env`, setting `JAVA_HOME` to your local Java installation and any other variables as needed.
+3. The `.env` file is automatically loaded when running development commands via the provided `.vscode/run.sh` (used in `vscode/tasks.json`) script, ensuring your environment variables (like `JAVA_HOME`) are available.
+
+**Tip:**  
+`.env` is ignored by git, so your local secrets and paths are not committed. Use `.env.example` as a starting point for other developers.
 ### Code Style
 
 This project uses Spotless with Eclipse formatter rules from `fmt.xml`. It also ships a `prek` config in `.pre-commit-config.yaml`.
