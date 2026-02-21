@@ -45,7 +45,7 @@
     | unwanted libraries from being packaged, resulting in leaner,
     | safer plugins.
     -->
-    <hpi.bundledArtifacts>core,javase</hpi.bundledArtifacts>
+    <hpi.bundledArtifacts>core,jai-imageio-core,javase,jcommander</hpi.bundledArtifacts>
     <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
     <lombok.version>1.18.42</lombok.version>
     <zxing.version>3.5.3</zxing.version>
