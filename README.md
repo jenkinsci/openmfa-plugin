@@ -98,11 +98,11 @@ Recommended workflow:
 3. Copy the OpenMFA section into your managed JCasC repository.
 4. Apply via your standard `CASC_JENKINS_CONFIG` workflow.
 
-Example shape (keys may vary by controller/JCasC export; use exported keys as source of truth):
+Example:
 
 ```yaml
-unclassified:
-  <openmfa-global-config-key>:
+security:
+  openMFA:
     issuer: 'Jenkins'
     requireMFA: true
 ```

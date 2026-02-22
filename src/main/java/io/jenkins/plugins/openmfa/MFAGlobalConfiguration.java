@@ -9,6 +9,7 @@ import jenkins.model.GlobalConfigurationCategory;
 import lombok.Getter;
 import lombok.Setter;
 import net.sf.json.JSONObject;
+import org.jenkinsci.Symbol;
 import org.kohsuke.stapler.DataBoundSetter;
 import org.kohsuke.stapler.StaplerRequest2;
 
@@ -19,6 +20,7 @@ import org.kohsuke.stapler.StaplerRequest2;
 @Extension
 @Getter
 @Setter
+@Symbol("openMFA")
 public class MFAGlobalConfiguration extends GlobalConfiguration {
 
   /**
