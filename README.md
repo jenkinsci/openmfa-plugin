@@ -1,9 +1,6 @@
 # OpenMFA Plugin
 
-[![Build Status](https://ci.jenkins.io/buildStatus/icon?job=Plugins/openmfa-plugin/master)](https://ci.jenkins.io/job/Plugins/job/openmfa-plugin/job/master/)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://raw.githubusercontent.com/jenkinsci/openmfa-plugin/master/LICENSE.md)
-[![Build Status](https://ci.jenkins.io/job/Plugins/job/openmfa-plugin/job/master/badge/icon)](https://ci.jenkins.io/job/Plugins/job/openmfa-plugin/job/master/)
-[![Contributors](https://img.shields.io/github/contributors/jenkinsci/openmfa-plugin.svg)](https://github.com/jenkinsci/openmfa-plugin/graphs/contributors)
 [![Jenkins Plugin](https://img.shields.io/jenkins/plugin/v/openmfa.svg)](https://plugins.jenkins.io/openmfa)
 [![GitHub release](https://img.shields.io/github/release/jenkinsci/openmfa-plugin.svg?label=changelog)](https://github.com/jenkinsci/openmfa-plugin/releases/latest)
 [![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/openmfa.svg?color=blue)](https://plugins.jenkins.io/openmfa)
