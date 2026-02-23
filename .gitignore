@@ -19,8 +19,6 @@ buildNumber.properties
 # Maven hpi:run
 work/
 work/*
-work*/
-work*/*
 
 # Environment files
 .env*
