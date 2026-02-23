@@ -5,6 +5,8 @@
 [![GitHub release](https://img.shields.io/github/release/jenkinsci/openmfa-plugin.svg?label=changelog)](https://github.com/jenkinsci/openmfa-plugin/releases/latest)
 [![Jenkins Plugin Installs](https://img.shields.io/jenkins/plugin/i/openmfa.svg?color=blue)](https://plugins.jenkins.io/openmfa)
 
+<img src="./images/mfa-logo-head.png" width="256" />
+
 OpenMFA is a [Jenkins](https://www.jenkins.io/) plugin that adds TOTP-based MFA for interactive logins.
 It introduces setup, verification, and management flows for user accounts inside Jenkins.
 
