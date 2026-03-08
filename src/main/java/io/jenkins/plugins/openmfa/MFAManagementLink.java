@@ -133,12 +133,12 @@ public class MFAManagementLink extends ManagementLink {
 
   @Override
   public String getDescription() {
-    return "View and manage MFA status for all users";
+    return Messages.MFAManagementLink_description();
   }
 
   @Override
   public String getDisplayName() {
-    return UIConstants.DisplayNames.MFA_USER_MANAGEMENT;
+    return Messages.DisplayNames_MFA_USER_MANAGEMENT();
   }
 
   /**

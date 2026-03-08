@@ -93,7 +93,7 @@ class MFAManagementLinkTest {
 
   @Test
   void testGetDisplayName(JenkinsRule j) {
-    assertEquals("MFA User Management", action.getDisplayName());
+    assertEquals("MFA User Management", Messages.DisplayNames_MFA_USER_MANAGEMENT());
   }
 
   @Test
