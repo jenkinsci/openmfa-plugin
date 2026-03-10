@@ -58,6 +58,7 @@
         data-message="${%disable.confirm.message}"
         data-cancel-text="${%disable.confirm.cancel}"
         data-ok-text="${%disable.button}"
+        data-copy-feedback="${%copy.feedback}"
       >
       </span>
 

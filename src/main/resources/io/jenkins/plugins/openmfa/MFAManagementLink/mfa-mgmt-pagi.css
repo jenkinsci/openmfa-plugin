@@ -17,6 +17,10 @@
   color: var(--text-color-secondary, #6b7280);
 }
 
+.mfa-mgmt-page-size label {
+  width: 3.5em;
+}
+
 .mfa-mgmt-page-size select {
   min-width: 70px;
 }

@@ -24,24 +24,6 @@ public final class UIConstants {
   }
 
   /**
-   * Display names for UI components
-   */
-  public static final class DisplayNames {
-
-    public static final String CONFIGURE_MFA = "Configure MFA";
-    public static final String MFA_LOGIN = "MFA Login";
-    public static final String MFA_SECURITY_REALM =
-      "MFA Security Realm (wraps existing realm)";
-    public static final String MFA_USER_MANAGEMENT = "MFA User Management";
-    public static final String MULTI_FACTOR_AUTHENTICATION =
-      "Multi-Factor Authentication (MFA)";
-    public static final String OPENMFA_GLOBAL_CONFIGURATION = "OpenMFA";
-
-    private DisplayNames() {
-    }
-  }
-
-  /**
    * HTTP response codes
    */
   public static final class HttpStatus {

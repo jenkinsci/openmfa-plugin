@@ -5,7 +5,6 @@ import hudson.Extension;
 import hudson.model.User;
 import hudson.model.UserPropertyDescriptor;
 import hudson.model.userproperty.UserPropertyCategory;
-import io.jenkins.plugins.openmfa.constant.UIConstants;
 
 /**
  * Descriptor for {@link MFAUserProperty}.
@@ -20,7 +19,7 @@ public class MFAUserPropertyDescriptor extends UserPropertyDescriptor {
   @NonNull
   @Override
   public String getDisplayName() {
-    return UIConstants.DisplayNames.MULTI_FACTOR_AUTHENTICATION;
+    return Messages.DisplayNames_MULTI_FACTOR_AUTHENTICATION();
   }
 
   @NonNull

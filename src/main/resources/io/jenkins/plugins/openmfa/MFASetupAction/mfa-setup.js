@@ -11,6 +11,7 @@ function _getDisableDialogLabels() {
     message: el.getAttribute('data-message') || '',
     okText: el.getAttribute('data-ok-text') || '',
     cancelText: el.getAttribute('data-cancel-text') || '',
+    copyFeedback: el.getAttribute('data-copy-feedback') || 'Copied!',
   };
 }
 
@@ -64,12 +65,14 @@ function initNotification() {
 function copySecret(button) {
   const input = button.previousElementSibling;
   const secret = input.value;
+  const labels = _getDisableDialogLabels() || {};
+  const feedbackText = labels.copyFeedback || 'Copied!';
   if (navigator.clipboard && navigator.clipboard.writeText) {
     navigator.clipboard
       .writeText(secret)
       .then(function () {
         const originalText = button.textContent;
-        button.textContent = 'Copied!';
+        button.textContent = feedbackText;
         button.classList.add('copied');
         setTimeout(function () {
           button.textContent = originalText;
@@ -78,14 +81,14 @@ function copySecret(button) {
       })
       .catch(function (err) {
         console.error('Failed to copy:', err);
-        fallbackCopy(secret, button);
+        fallbackCopy(secret, button, feedbackText);
       });
   } else {
-    fallbackCopy(secret, button);
+    fallbackCopy(secret, button, feedbackText);
   }
 }
 
-function fallbackCopy(text, button) {
+function fallbackCopy(text, button, feedbackText) {
   const textArea = document.createElement('textarea');
   textArea.value = text;
   textArea.style.position = 'fixed';
@@ -95,7 +98,7 @@ function fallbackCopy(text, button) {
   try {
     document.execCommand('copy');
     const originalText = button.textContent;
-    button.textContent = 'Copied!';
+    button.textContent = feedbackText;
     button.classList.add('copied');
     setTimeout(function () {
       button.textContent = originalText;

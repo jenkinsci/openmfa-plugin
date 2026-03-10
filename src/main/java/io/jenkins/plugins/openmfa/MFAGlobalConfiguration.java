@@ -67,7 +67,7 @@ public class MFAGlobalConfiguration extends GlobalConfiguration {
   @NonNull
   @Override
   public String getDisplayName() {
-    return UIConstants.DisplayNames.OPENMFA_GLOBAL_CONFIGURATION;
+    return Messages.DisplayNames_OPENMFA_GLOBAL_CONFIGURATION();
   }
 
   @DataBoundSetter
