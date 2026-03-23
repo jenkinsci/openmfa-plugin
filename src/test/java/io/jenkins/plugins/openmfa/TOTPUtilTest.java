@@ -60,6 +60,21 @@ class TOTPUtilTest {
   }
 
   @Test
+  void testReplayAttackPrevention() {
+    Secret secret = totpService.generateSecret();
+    String code = totpService.generateTOTP(secret);
+
+    // First verification should succeed
+    assertTrue(totpService.verifyCode(secret, code));
+
+    // Second verification with same code should fail (replay attack)
+    assertFalse(
+      totpService.verifyCode(secret, code),
+      "Second use of same code should be rejected"
+    );
+  }
+
+  @Test
   void testTimeDriftTolerance() {
     Secret secret = totpService.generateSecret();
     long currentTime = System.currentTimeMillis() / 1000L / 30;

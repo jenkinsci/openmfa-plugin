@@ -60,6 +60,12 @@ class MFAUserPropertyTest {
   }
 
   @Test
+  void testNullUserRejected() {
+    MFAUserProperty property = MFAUserProperty.forUser(null);
+    assertNull(property, "Null user should return null property");
+  }
+
+  @Test
   void testVerifyCode(JenkinsRule j) {
     MFAUserProperty property = new MFAUserProperty();
 

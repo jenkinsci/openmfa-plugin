@@ -115,6 +115,14 @@
       <artifactId>junit-platform-launcher</artifactId>
       <scope>test</scope>
     </dependency>
+
+    <!-- Spring Test for MockHttpServletRequest/Session -->
+    <dependency>
+      <groupId>org.springframework</groupId>
+      <artifactId>spring-test</artifactId>
+      <version>6.2.3</version>
+      <scope>test</scope>
+    </dependency>
   </dependencies>
 
   <repositories>
