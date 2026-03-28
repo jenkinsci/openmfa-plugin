@@ -105,7 +105,27 @@ security:
   openMFA:
     issuer: 'Jenkins'
     requireMFA: true
+    exemptUsers:
+      - svc-deploy
+      - break-glass
+    exemptRoles:
+      - ci-agents
+      - service-accounts
 ```
+
+## MFA Exemptions
+
+You can exempt specific users or roles from MFA requirements:
+
+- **Exempt Users**: Individual usernames that bypass MFA (case-insensitive)
+- **Exempt Roles**: Group/role names that bypass MFA for all members
+
+Exemptions are useful for:
+- Service accounts used by CI/CD pipelines
+- Emergency break-glass accounts
+- Automated agents that cannot complete MFA
+
+**Note:** Exempted users bypass MFA entirely. Do not exempt regular user accounts.
 
 ## Security Notes
 
