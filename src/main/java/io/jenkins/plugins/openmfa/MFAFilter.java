@@ -4,6 +4,7 @@ import hudson.Extension;
 import hudson.model.User;
 import io.jenkins.plugins.openmfa.base.MFAContext;
 import io.jenkins.plugins.openmfa.constant.PluginConstants;
+import io.jenkins.plugins.openmfa.service.ExemptionService;
 import io.jenkins.plugins.openmfa.service.SessionService;
 import io.jenkins.plugins.openmfa.util.JenkinsUtil;
 import io.jenkins.plugins.openmfa.util.SecurityUtil;
@@ -58,6 +59,9 @@ public class MFAFilter implements Filter {
       "/" + PluginConstants.Urls.SETUP_ACTION_URL,
       PluginConstants.Urls.SECURITY_CHECK_ENDPOINT
     );
+
+  private ExemptionService exemptionService =
+    MFAContext.i().getService(ExemptionService.class);
 
   private SessionService sessionService =
     MFAContext.i().getService(SessionService.class);
@@ -172,6 +176,13 @@ public class MFAFilter implements Filter {
     throws IOException {
 
     String username = user.getId();
+
+    // Check if user is exempt from MFA
+    if (exemptionService.isExempt(user)) {
+      log.fine("User " + username + " is exempt from MFA, allowing access");
+      return true;
+    }
+
     if (!TOTPUtil.isMFAEnabled()) {
       if (TOTPUtil.isMFARequired()) {
         resp.sendRedirect(
