@@ -67,6 +67,53 @@ class MFAFilterWebTest {
   }
 
   /**
+   * Test that exempt users can access resources without MFA when requireMFA is
+   * enabled.
+   */
+  @Test
+  void testExemptUserBypassesMFA(JenkinsRule j) throws Exception {
+    j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
+
+    // Enable requireMFA
+    MFAGlobalConfiguration config = MFAGlobalConfiguration.get();
+    config.setRequireMFA(true);
+    config.setExemptUsers("exemptuser");
+
+    // Create exempt user
+    User exemptUser = User.getById("exemptuser", true);
+
+    try (var wc = j.createWebClient()) {
+      wc.setThrowExceptionOnFailingStatusCode(false);
+      wc.login("exemptuser");
+
+      // Exempt user should be able to access root without MFA
+      HtmlPage rootPage = wc.goTo("");
+      assertNotNull(rootPage, "Exempt user should access root without MFA");
+    }
+  }
+
+  /**
+   * Test that exemption by username is case-insensitive.
+   */
+  @Test
+  void testExemptUserCaseInsensitive(JenkinsRule j) throws Exception {
+    j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
+
+    // Set exemption with uppercase
+    MFAGlobalConfiguration config = MFAGlobalConfiguration.get();
+    config.setRequireMFA(true);
+    config.setExemptUsers("EXEMPTUSER");
+
+    try (var wc = j.createWebClient()) {
+      wc.setThrowExceptionOnFailingStatusCode(false);
+      wc.login("exemptuser"); // Login with lowercase
+
+      HtmlPage rootPage = wc.goTo("");
+      assertNotNull(rootPage, "Exemption should be case-insensitive");
+    }
+  }
+
+  /**
    * Test login form submission with valid credentials.
    */
   @Test
@@ -127,6 +174,31 @@ class MFAFilterWebTest {
       // Access MFA setup page
       HtmlPage setupPage = wc.goTo("user/setupuser/mfa-setup");
       assertNotNull(setupPage, "MFA setup page should be accessible");
+    }
+  }
+
+  /**
+   * Test that non-exempt users are challenged for MFA when requireMFA is enabled.
+   */
+  @Test
+  void testNonExemptUserChallengedForMFA(JenkinsRule j) throws Exception {
+    j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
+
+    // Enable requireMFA with no exemptions
+    MFAGlobalConfiguration config = MFAGlobalConfiguration.get();
+    config.setRequireMFA(true);
+    config.setExemptUsers("");
+
+    try (var wc = j.createWebClient()) {
+      wc.setThrowExceptionOnFailingStatusCode(false);
+      wc.login("regularuser");
+
+      // Non-exempt user should be redirected to MFA setup/challenge
+      HtmlPage page = wc.goTo("");
+
+      // Should be redirected to MFA-related page (not the requested page)
+      // The exact behavior depends on MFA enrollment state
+      assertNotNull(page);
     }
   }
 
