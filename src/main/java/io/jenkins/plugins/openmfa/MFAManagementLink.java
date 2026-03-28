@@ -133,7 +133,7 @@ public class MFAManagementLink extends ManagementLink {
 
   @Override
   public String getDescription() {
-    return Messages.MFAManagementLink_description();
+    return Messages.MFAManagementLink_DESCRIPTION();
   }
 
   @Override
