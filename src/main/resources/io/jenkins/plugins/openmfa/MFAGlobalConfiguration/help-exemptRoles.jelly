@@ -1,0 +1,7 @@
+<?jelly escape-by-default='true'?>
+<div>
+  List of role/group names exempt from MFA requirements.
+  Enter one role per line.
+  Users with any of these roles bypass MFA verification.
+  Use for CI/CD service accounts or automated agents.
+</div>
