@@ -34,9 +34,6 @@ public class ExemptionService {
     }
 
     MFAGlobalConfiguration config = MFAGlobalConfiguration.get();
-    if (config == null) {
-      return false;
-    }
 
     // Check username exemption
     if (isExemptByUsername(user, config)) {
@@ -61,9 +58,6 @@ public class ExemptionService {
 
     // Get user's authentication to check authorities
     Authentication auth = user.impersonate2();
-    if (auth == null) {
-      return false;
-    }
 
     return auth.getAuthorities().stream()
       .map(GrantedAuthority::getAuthority)
