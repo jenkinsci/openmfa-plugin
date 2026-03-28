@@ -80,6 +80,7 @@ class MFAFilterWebTest {
     config.setExemptUsers("exemptuser");
 
     // Create exempt user
+    @SuppressWarnings("unused")
     User exemptUser = User.getById("exemptuser", true);
 
     try (var wc = j.createWebClient()) {
