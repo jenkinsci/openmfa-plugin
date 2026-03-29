@@ -4,6 +4,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.ExtensionList;
 import io.jenkins.plugins.openmfa.constant.UIConstants;
+import java.util.concurrent.atomic.AtomicReference;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.GlobalConfigurationCategory;
 import lombok.Getter;
@@ -24,12 +25,39 @@ import org.kohsuke.stapler.StaplerRequest2;
 public class MFAGlobalConfiguration extends GlobalConfiguration {
 
   /**
+   * Cached instance for fallback when ExtensionList is not available.
+   */
+  private static final AtomicReference<MFAGlobalConfiguration> FALLBACK_INSTANCE =
+    new AtomicReference<>();
+
+  /**
    * Get the singleton instance of this configuration.
    */
   @NonNull
   public static MFAGlobalConfiguration get() {
-    return ExtensionList.lookupSingleton(MFAGlobalConfiguration.class);
+    // Try to get from ExtensionList first (works when Jenkins is fully initialized)
+    try {
+      return ExtensionList.lookupSingleton(MFAGlobalConfiguration.class);
+    } catch (IllegalStateException e) {
+      // Fallback: use a cached instance if ExtensionList is not available
+      // This can happen in some test scenarios
+      FALLBACK_INSTANCE.compareAndSet(null, new MFAGlobalConfiguration());
+      return FALLBACK_INSTANCE.get();
+    }
   }
+
+  /**
+   * Reset the fallback instance. For test use only.
+   */
+  public static void resetFallbackInstance() {
+    FALLBACK_INSTANCE.set(null);
+  }
+
+  /** Comma/newline-separated list of roles/groups exempt from MFA */
+  private String exemptRoles = "";
+
+  /** Comma/newline-separated list of usernames exempt from MFA */
+  private String exemptUsers = "";
 
   /** The issuer name shown in authenticator apps */
   private String issuer = UIConstants.Defaults.DEFAULT_ISSUER;
@@ -68,6 +96,32 @@ public class MFAGlobalConfiguration extends GlobalConfiguration {
   @Override
   public String getDisplayName() {
     return Messages.DisplayNames_OPENMFA_GLOBAL_CONFIGURATION();
+  }
+
+  /**
+   * Get the list of exempt roles (for Jelly view).
+   * Returns one role per line for easier editing.
+   */
+  public String getExemptRoles() {
+    return exemptRoles;
+  }
+
+  /**
+   * Get the list of exempt users (for Jelly view).
+   * Returns one user per line for easier editing.
+   */
+  public String getExemptUsers() {
+    return exemptUsers;
+  }
+
+  @DataBoundSetter
+  public void setExemptRoles(String exemptRoles) {
+    this.exemptRoles = exemptRoles != null ? exemptRoles : "";
+  }
+
+  @DataBoundSetter
+  public void setExemptUsers(String exemptUsers) {
+    this.exemptUsers = exemptUsers != null ? exemptUsers : "";
   }
 
   @DataBoundSetter
