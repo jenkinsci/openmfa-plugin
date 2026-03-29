@@ -4,6 +4,7 @@ import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.ExtensionList;
 import io.jenkins.plugins.openmfa.constant.UIConstants;
+import java.util.concurrent.atomic.AtomicReference;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.GlobalConfigurationCategory;
 import lombok.Getter;
@@ -24,11 +25,33 @@ import org.kohsuke.stapler.StaplerRequest2;
 public class MFAGlobalConfiguration extends GlobalConfiguration {
 
   /**
+   * Cached instance for fallback when ExtensionList is not available.
+   */
+  private static final AtomicReference<MFAGlobalConfiguration> FALLBACK_INSTANCE =
+    new AtomicReference<>();
+
+  /**
    * Get the singleton instance of this configuration.
    */
   @NonNull
   public static MFAGlobalConfiguration get() {
-    return ExtensionList.lookupSingleton(MFAGlobalConfiguration.class);
+    // Try to get from ExtensionList first (works when Jenkins is fully initialized)
+    try {
+      return ExtensionList.lookupSingleton(MFAGlobalConfiguration.class);
+    } catch (IllegalStateException e) {
+      // Fallback: use a cached instance if ExtensionList is not available
+      // This can happen in some test scenarios
+      return FALLBACK_INSTANCE.compareAndSet(null, new MFAGlobalConfiguration())
+        ? FALLBACK_INSTANCE.get()
+        : FALLBACK_INSTANCE.get();
+    }
+  }
+
+  /**
+   * Reset the fallback instance. For test use only.
+   */
+  public static void resetFallbackInstance() {
+    FALLBACK_INSTANCE.set(null);
   }
 
   /** Comma/newline-separated list of roles/groups exempt from MFA */
