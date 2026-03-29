@@ -20,6 +20,7 @@ It introduces setup, verification, and management flows for user accounts inside
   - [User Flow](#user-flow)
   - [MFA User Management](#mfa-user-management)
   - [Configuration as Code (JCasC)](#configuration-as-code-jcasc)
+  - [MFA Exemptions](#mfa-exemptions)
   - [Security Notes](#security-notes)
   - [Development](#development)
     - [VS Code Debugging](#vs-code-debugging)
@@ -36,6 +37,7 @@ It introduces setup, verification, and management flows for user accounts inside
 - Session-based MFA verification after primary login
 - Basic brute-force protection on code verification attempts
 - Supports Jenkins dark theme for all UI elements
+- Configurable exemptions for service accounts and specific roles
 
 ## Requirements
 
@@ -48,6 +50,8 @@ It introduces setup, verification, and management flows for user accounts inside
 3. Configure:
    - `Issuer Name`
    - `Require MFA for all users`
+   - `Exempt Users` (optional)
+   - `Exempt Roles` (optional)
 4. Save settings.
 5. Ask users to enroll via the OpenMFA setup page before broad enforcement.
 
