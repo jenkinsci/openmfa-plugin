@@ -41,9 +41,8 @@ public class MFAGlobalConfiguration extends GlobalConfiguration {
     } catch (IllegalStateException e) {
       // Fallback: use a cached instance if ExtensionList is not available
       // This can happen in some test scenarios
-      return FALLBACK_INSTANCE.compareAndSet(null, new MFAGlobalConfiguration())
-        ? FALLBACK_INSTANCE.get()
-        : FALLBACK_INSTANCE.get();
+      FALLBACK_INSTANCE.compareAndSet(null, new MFAGlobalConfiguration());
+      return FALLBACK_INSTANCE.get();
     }
   }
 
