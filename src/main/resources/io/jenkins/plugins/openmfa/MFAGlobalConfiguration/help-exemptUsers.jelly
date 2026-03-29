@@ -1,7 +1,6 @@
 <?jelly escape-by-default='true'?>
 <div>
-  List of usernames exempt from MFA requirements.
-  Enter one username per line.
-  Exempted users can access Jenkins without completing MFA verification.
-  Use for service accounts or emergency access accounts.
+  List of usernames exempt from MFA requirements. Enter one username per line.
+  Exempted users can access Jenkins without completing MFA verification. Use for
+  service accounts or emergency access accounts.
 </div>

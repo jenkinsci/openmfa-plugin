@@ -17,16 +17,12 @@
     <f:entry title="${%config.exemptUsers.title}" field="exemptUsers">
       <f:textarea />
     </f:entry>
-    <f:description>
-      ${%config.exemptUsers.description}
-    </f:description>
+    <f:description> ${%config.exemptUsers.description} </f:description>
 
     <f:entry title="${%config.exemptRoles.title}" field="exemptRoles">
       <f:textarea />
     </f:entry>
-    <f:description>
-      ${%config.exemptRoles.description}
-    </f:description>
+    <f:description> ${%config.exemptRoles.description} </f:description>
 
     <f:entry>
       <a href="${rootURL}/manage/mfa-management" class="jenkins-button">

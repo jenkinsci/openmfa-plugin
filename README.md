@@ -125,6 +125,7 @@ You can exempt specific users or roles from MFA requirements:
 - **Exempt Roles**: Group/role names that bypass MFA for all members
 
 Exemptions are useful for:
+
 - Service accounts used by CI/CD pipelines
 - Emergency break-glass accounts
 - Automated agents that cannot complete MFA
