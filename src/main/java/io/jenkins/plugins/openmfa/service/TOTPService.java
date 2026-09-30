@@ -22,6 +22,7 @@ import hudson.util.Secret;
 import io.jenkins.plugins.openmfa.base.MFAException;
 import io.jenkins.plugins.openmfa.base.Service;
 import io.jenkins.plugins.openmfa.constant.TOTPConstants;
+import io.jenkins.plugins.openmfa.util.TOTPUtil;
 import java.security.SecureRandom;
 import java.util.Iterator;
 import java.util.Map;
@@ -119,14 +120,7 @@ public class TOTPService {
    * @return otpauth:// URI
    */
   public String getProvisioningUri(String username, Secret secret, String issuer) {
-    String secretPlainText = secret.getPlainText();
-    return String.format(
-      TOTPConstants.TOTP_URI_FORMAT,
-      issuer,
-      username,
-      secretPlainText.replace("=", ""),
-      issuer
-    );
+    return TOTPUtil.getProvisioningUri(username, secret.getPlainText(), issuer);
   }
 
   /**

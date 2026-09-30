@@ -31,4 +31,21 @@ class MFAGlobalConfigurationTest {
     assertEquals("svc-account1\nsvc-account2", loaded.getExemptUsers());
     assertEquals("ci-agents\nservice-accounts", loaded.getExemptRoles());
   }
+
+  @Test
+  void testIssuerConfigurationPersistence(JenkinsRule j) throws Exception {
+    MFAGlobalConfiguration config = MFAGlobalConfiguration.get();
+    assertEquals("Jenkins", config.getIssuer());
+
+    config.setIssuer("  Prod Jenkins  ");
+    assertEquals("Prod Jenkins", config.getIssuer());
+    config.save();
+
+    config.setIssuer("Temporary");
+    config.load();
+    assertEquals("Prod Jenkins", config.getIssuer());
+
+    config.setIssuer("   ");
+    assertEquals("Jenkins", config.getIssuer());
+  }
 }

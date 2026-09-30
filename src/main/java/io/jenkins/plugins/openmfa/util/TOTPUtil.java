@@ -5,6 +5,8 @@ import io.jenkins.plugins.openmfa.MFAGlobalConfiguration;
 import io.jenkins.plugins.openmfa.MFAUserProperty;
 import io.jenkins.plugins.openmfa.base.MFAException;
 import io.jenkins.plugins.openmfa.constant.TOTPConstants;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -68,8 +70,14 @@ public class TOTPUtil {
    */
   public static String getProvisioningUri(
     String username, String secret, String issuer) {
+    String encodedIssuer = encodeUriComponent(issuer);
+    String encodedUsername = encodeUriComponent(username);
     return String.format(
-      TOTPConstants.TOTP_URI_FORMAT, issuer, username, secret.replace("=", ""), issuer
+      TOTPConstants.TOTP_URI_FORMAT,
+      encodedIssuer,
+      encodedUsername,
+      secret.replace("=", ""),
+      encodedIssuer
     );
   }
 
@@ -152,6 +160,17 @@ public class TOTPUtil {
       sb.append(String.format(TOTPConstants.HEX_FORMAT, b));
     }
     return sb.toString();
+  }
+
+  /**
+   * Percent-encodes an otpauth URI component.
+   * Spaces are encoded as {@code %20}, not {@code +}.
+   */
+  private static String encodeUriComponent(String value) {
+    if (value == null) {
+      return "";
+    }
+    return URLEncoder.encode(value, StandardCharsets.UTF_8).replace("+", "%20");
   }
 
   private static String generateTOTP(String key, String time, String returnDigits) {

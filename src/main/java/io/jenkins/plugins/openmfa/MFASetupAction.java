@@ -100,7 +100,7 @@ public class MFASetupAction extends InvisibleAction {
   public String generateQRCode(String username, String encryptedSecret) {
     try {
       Secret secret = Secret.fromString(encryptedSecret);
-      String issuer = UIConstants.Defaults.DEFAULT_ISSUER;
+      String issuer = MFAGlobalConfiguration.get().getIssuer();
 
       TOTPService totpService = MFAContext.i().getService(TOTPService.class);
       String uri = totpService.getProvisioningUri(username, secret, issuer);

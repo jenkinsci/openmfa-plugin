@@ -4,11 +4,20 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.google.zxing.BinaryBitmap;
+import com.google.zxing.MultiFormatReader;
+import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
+import com.google.zxing.common.HybridBinarizer;
 import hudson.model.User;
 import io.jenkins.plugins.openmfa.base.MFAContext;
 import io.jenkins.plugins.openmfa.constant.PluginConstants;
+import io.jenkins.plugins.openmfa.constant.UIConstants;
 import io.jenkins.plugins.openmfa.service.RateLimitService;
 import io.jenkins.plugins.openmfa.service.TOTPService;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.util.Base64;
+import javax.imageio.ImageIO;
 import jenkins.security.ApiTokenProperty;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -146,6 +155,28 @@ class MFAFlowTest {
     );
   }
 
+  @Test
+  void testQrCodeUsesConfiguredIssuer(JenkinsRule j) throws Exception {
+    MFAGlobalConfiguration.get().setIssuer("Prod Jenkins");
+    User user = User.getById("issuer-user", true);
+
+    String uri = decodeSetupQr(user);
+
+    assertTrue(uri.startsWith("otpauth://totp/Prod%20Jenkins:issuer-user?"));
+    assertTrue(uri.contains("issuer=Prod%20Jenkins"));
+    assertFalse(uri.contains("issuer=Jenkins"));
+  }
+
+  @Test
+  void testQrCodeUsesDefaultIssuer(JenkinsRule j) throws Exception {
+    User user = User.getById("default-issuer-user", true);
+
+    String uri = decodeSetupQr(user);
+
+    assertTrue(uri.startsWith("otpauth://totp/Jenkins:default-issuer-user?"));
+    assertTrue(uri.contains("issuer=Jenkins"));
+  }
+
   /**
    * Test rate limiting - multiple failed attempts should trigger lockout.
    */
@@ -177,6 +208,23 @@ class MFAFlowTest {
     // Verify lockout duration is reasonable
     long remainingSeconds = rateLimitService.getRemainingLockoutSeconds(username);
     assertTrue(remainingSeconds > 0, "Lockout should have remaining time");
+  }
+
+  private String decodeSetupQr(User user) throws Exception {
+    MFASetupAction action = new MFASetupAction(user);
+    String dataUri = action.generateQRCode(user.getId(), action.generateSecret());
+    assertNotNull(dataUri);
+    assertTrue(dataUri.startsWith(UIConstants.QRCode.DATA_URI_PREFIX));
+
+    byte[] png =
+      Base64.getDecoder()
+        .decode(dataUri.substring(UIConstants.QRCode.DATA_URI_PREFIX.length()));
+    BufferedImage image = ImageIO.read(new ByteArrayInputStream(png));
+    BinaryBitmap bitmap =
+      new BinaryBitmap(
+        new HybridBinarizer(new BufferedImageLuminanceSource(image))
+      );
+    return new MultiFormatReader().decode(bitmap).getText();
   }
 
 }

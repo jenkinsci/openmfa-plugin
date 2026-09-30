@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import hudson.util.Secret;
 import io.jenkins.plugins.openmfa.base.MFAContext;
 import io.jenkins.plugins.openmfa.service.TOTPService;
+import io.jenkins.plugins.openmfa.util.TOTPUtil;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -57,6 +58,26 @@ class TOTPUtilTest {
     assertTrue(uri.contains("testuser"));
     assertTrue(uri.contains("secret=" + secretPlainText.replace("=", "")));
     assertTrue(uri.contains("issuer=Jenkins"));
+  }
+
+  @Test
+  void testGetProvisioningUriDefaultsToPlainIssuer() {
+    String uri = TOTPUtil.getProvisioningUri("testuser", "SECRET", "Jenkins");
+
+    assertEquals(
+      "otpauth://totp/Jenkins:testuser?secret=SECRET&issuer=Jenkins", uri
+    );
+  }
+
+  @Test
+  void testGetProvisioningUriEncodesSpaces() {
+    String uri =
+      TOTPUtil.getProvisioningUri("alice smith", "SECRET", "Prod Jenkins");
+
+    assertEquals(
+      "otpauth://totp/Prod%20Jenkins:alice%20smith?secret=SECRET&issuer=Prod%20Jenkins",
+      uri
+    );
   }
 
   @Test
