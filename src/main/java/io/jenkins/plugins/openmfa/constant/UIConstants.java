@@ -17,6 +17,7 @@ public final class UIConstants {
 
     public static final String DEFAULT_ISSUER = "Jenkins";
     public static final boolean DEFAULT_MFA_ENABLED = false;
+    public static final int DEFAULT_REMEMBER_MFA_HOURS = 24;
     public static final boolean DEFAULT_REQUIRE_MFA = false;
 
     private Defaults() {

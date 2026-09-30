@@ -48,6 +48,24 @@ public final class PluginConstants {
   }
 
   /**
+   * Remember-MFA cookie constants
+   */
+  public static final class RememberMFA {
+
+    /** Name of the long-lived remember-MFA cookie issued by this plugin */
+    public static final String COOKIE_NAME = "openmfa-remember";
+
+    /** One hour in milliseconds */
+    public static final long HOUR_MS = 60L * 60 * 1000;
+
+    /** Name of the Jenkins "Keep me signed in" (remember-me) cookie */
+    public static final String JENKINS_REMEMBER_ME_COOKIE = "remember-me";
+
+    private RememberMFA() {
+    }
+  }
+
+  /**
    * Session attribute constants
    */
   public static final class SessionAttributes {

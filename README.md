@@ -19,8 +19,10 @@ It introduces setup, verification, and management flows for user accounts inside
   - [Getting Started](#getting-started)
   - [User Flow](#user-flow)
   - [MFA User Management](#mfa-user-management)
+  - [Remember MFA ("Keep me signed in")](#remember-mfa-keep-me-signed-in)
   - [Configuration as Code (JCasC)](#configuration-as-code-jcasc)
   - [MFA Exemptions](#mfa-exemptions)
+  - [Ephemeral JENKINS_HOME (Kubernetes / jenkins-operator)](#ephemeral-jenkins_home-kubernetes--jenkins-operator)
   - [Security Notes](#security-notes)
   - [Development](#development)
     - [VS Code Debugging](#vs-code-debugging)
@@ -35,13 +37,15 @@ It introduces setup, verification, and management flows for user accounts inside
 - Global admin configuration for issuer and enforcement
 - MFA user management page for administrators
 - Session-based MFA verification after primary login
+- Remember MFA across sessions for users who check "Keep me signed in"
+  (signed cookie, configurable duration, disabled by setting it to 0)
 - Basic brute-force protection on code verification attempts
 - Supports Jenkins dark theme for all UI elements
 - Configurable exemptions for service accounts and specific roles
 
 ## Requirements
 
-- Jenkins `2.516.3` or newer
+- Jenkins `2.568.3` or newer
 
 ## Getting Started
 
@@ -50,6 +54,7 @@ It introduces setup, verification, and management flows for user accounts inside
 3. Configure:
    - `Issuer Name`
    - `Require MFA for all users`
+   - `Remember MFA for "Keep me signed in" (hours)` (default: 24, 0 disables)
    - `Exempt Users` (optional)
    - `Exempt Roles` (optional)
 4. Save settings.
@@ -91,6 +96,37 @@ It introduces setup, verification, and management flows for user accounts inside
 ![MFA user management table/actions page](./images/mfa-user-management.png)
 (MFA user management: `Manage Jenkins` > `MFA User Management`)
 
+## Remember MFA ("Keep me signed in")
+
+By default, MFA verification lives only in the HTTP session, so every new
+session (new browser session, session timeout, controller restart) triggers a
+new MFA challenge -- even for users who checked Jenkins' "Keep me signed in"
+at login.
+
+With this feature, users who logged in with "Keep me signed in" receive a
+long-lived `openmfa-remember` cookie after passing MFA and are not challenged
+again until it expires. Users who log in without "Keep me signed in" keep the
+per-session behavior.
+
+How it works:
+
+- The cookie is a stateless, HMAC-SHA256-signed token bound to the username,
+  an absolute expiry, and a hash of the user's current TOTP secret. Nothing is
+  stored server-side per device.
+- Duration is configured by `Remember MFA for "Keep me signed in" (hours)`
+  (default: 24). Setting it to `0` disables the feature entirely.
+- Re-enrolling or disabling MFA changes the TOTP secret and therefore
+  invalidates all previously issued cookies for that user.
+- Logging out clears the cookie.
+- The signing key is generated automatically on first use and persisted in the
+  global configuration. Rotating the key (or setting a new one via JCasC)
+  immediately invalidates all issued remember-MFA cookies -- this is the
+  emergency "forget all remembered devices" switch.
+
+No configuration is required on a standard installation with a persistent
+`JENKINS_HOME`. For ephemeral setups, see
+[Ephemeral JENKINS_HOME](#ephemeral-jenkins_home-kubernetes--jenkins-operator).
+
 ## Configuration as Code (JCasC)
 
 This plugin exposes global configuration and can be managed through Jenkins Configuration as Code.
@@ -109,6 +145,12 @@ security:
   openMFA:
     issuer: 'Jenkins'
     requireMFA: true
+    rememberMfaHours: 24
+    # Optional. Omit to let the plugin generate and persist a key in
+    # JENKINS_HOME. Set it explicitly (via any JCasC secret source, e.g.
+    # Vault, env var, or mounted secret) when JENKINS_HOME is ephemeral,
+    # so remember-MFA cookies survive restarts.
+    rememberMfaKey: ${OPENMFA_REMEMBER_KEY}
     exemptUsers:
       - svc-deploy
       - break-glass
@@ -132,11 +174,31 @@ Exemptions are useful for:
 
 **Note:** Exempted users bypass MFA entirely. Do not exempt regular user accounts.
 
+## Ephemeral JENKINS_HOME (Kubernetes / jenkins-operator)
+
+On setups where `JENKINS_HOME` does not survive restarts (e.g.
+[jenkins-operator](https://github.com/jenkinsci/kubernetes-operator) with its
+default ephemeral home), two pieces of state need attention:
+
+- **Remember-MFA signing key** -- set `rememberMfaKey` via JCasC from an
+  external secret source (Vault, Kubernetes Secret, env var). The key is then
+  re-applied on every boot and issued cookies stay valid across pod restarts.
+  Without it, each fresh instance generates a new key and all remembered
+  devices are challenged again.
+- **User TOTP enrollments** -- stored by Jenkins in `$JENKINS_HOME/users/` and
+  encrypted with `$JENKINS_HOME/secrets/master.key`. These are runtime user
+  data and cannot come from configuration: persist `users/` and `secrets/`
+  together (PVC mounts or backup/restore), always as a pair -- one without the
+  other is unusable.
+
 ## Security Notes
 
 - Treat JCasC files and Jenkins configuration files as privileged, since they control authentication behavior.
-- API token authentication is not challenged with interactive MFA.
+- API token authentication is not challenged with interactive MFA. Basic auth with a real password is challenged; use API tokens for scripted access.
 - OpenMFA uses per-session verification and redirects back to the original destination after successful MFA.
+- The remember-MFA cookie is `HttpOnly`, `Secure` on HTTPS, HMAC-SHA256 signed
+  with constant-time comparison, and carries no secret material -- only the
+  username, expiry, and signature.
 
 ## Development
 

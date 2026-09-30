@@ -3,7 +3,12 @@ package io.jenkins.plugins.openmfa;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
 import hudson.ExtensionList;
+import hudson.util.Secret;
 import io.jenkins.plugins.openmfa.constant.UIConstants;
+import java.security.SecureRandom;
+import java.util.Arrays;
+import java.util.Base64;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import jenkins.model.GlobalConfiguration;
 import jenkins.model.GlobalConfigurationCategory;
@@ -30,6 +35,8 @@ public class MFAGlobalConfiguration extends GlobalConfiguration {
   private static final AtomicReference<MFAGlobalConfiguration> FALLBACK_INSTANCE =
     new AtomicReference<>();
 
+  private static final SecureRandom RANDOM = new SecureRandom();
+
   /**
    * Get the singleton instance of this configuration.
    */
@@ -53,14 +60,37 @@ public class MFAGlobalConfiguration extends GlobalConfiguration {
     FALLBACK_INSTANCE.set(null);
   }
 
-  /** Comma/newline-separated list of roles/groups exempt from MFA */
-  private String exemptRoles = "";
+  private static List<String> splitLines(String text) {
+    if (text == null || text.isBlank()) {
+      return List.of();
+    }
+    return Arrays.stream(text.split("\n"))
+      .map(String::trim)
+      .filter(s -> !s.isEmpty())
+      .toList();
+  }
 
-  /** Comma/newline-separated list of usernames exempt from MFA */
-  private String exemptUsers = "";
+  /** Roles/groups exempt from MFA */
+  private List<String> exemptRoles = List.of();
+
+  /** Usernames exempt from MFA */
+  private List<String> exemptUsers = List.of();
 
   /** The issuer name shown in authenticator apps */
   private String issuer = UIConstants.Defaults.DEFAULT_ISSUER;
+
+  /**
+   * How many hours a "remember MFA" cookie stays valid after a user who chose
+   * "Keep me signed in" passes MFA. 0 disables the feature.
+   */
+  private int rememberMfaHours = UIConstants.Defaults.DEFAULT_REMEMBER_MFA_HOURS;
+
+  /**
+   * HMAC key used to sign remember-MFA tokens. Generated on first use;
+   * can be set explicitly (e.g. via JCasC) so tokens survive JENKINS_HOME
+   * resets. Rotating it invalidates all issued remember-MFA cookies.
+   */
+  private Secret rememberMfaKey;
 
   /** Whether MFA is required for all users */
   private boolean requireMFA = UIConstants.Defaults.DEFAULT_REQUIRE_MFA;
@@ -73,6 +103,12 @@ public class MFAGlobalConfiguration extends GlobalConfiguration {
   @Override
   public boolean configure(StaplerRequest2 req, JSONObject json)
     throws FormException {
+    // The UI submits exemptions as textarea text (one entry per line);
+    // convert to the list form before binding the rest
+    setExemptUsers(splitLines(json.optString("exemptUsers", "")));
+    setExemptRoles(splitLines(json.optString("exemptRoles", "")));
+    json.remove("exemptUsers");
+    json.remove("exemptRoles");
     req.bindJSON(this, json); // Bind the JSON object to the configuration object
     save(); // Save the configuration object
     return true;
@@ -99,29 +135,47 @@ public class MFAGlobalConfiguration extends GlobalConfiguration {
   }
 
   /**
-   * Get the list of exempt roles (for Jelly view).
-   * Returns one role per line for easier editing.
+   * Exempt roles as text for the Jelly textarea, one role per line.
    */
-  public String getExemptRoles() {
-    return exemptRoles;
+  public String getExemptRolesText() {
+    return String.join("\n", exemptRoles);
   }
 
   /**
-   * Get the list of exempt users (for Jelly view).
-   * Returns one user per line for easier editing.
+   * Exempt users as text for the Jelly textarea, one user per line.
    */
-  public String getExemptUsers() {
-    return exemptUsers;
+  public String getExemptUsersText() {
+    return String.join("\n", exemptUsers);
+  }
+
+  /**
+   * Returns the remember-MFA signing key, generating and persisting one on
+   * first use.
+   */
+  @NonNull
+  public synchronized Secret getOrCreateRememberMfaKey() {
+    if (rememberMfaKey == null || rememberMfaKey.getPlainText().isEmpty()) {
+      byte[] keyBytes = new byte[32];
+      RANDOM.nextBytes(keyBytes);
+      rememberMfaKey =
+        Secret.fromString(Base64.getEncoder().encodeToString(keyBytes));
+      save();
+    }
+    return rememberMfaKey;
+  }
+
+  public synchronized Secret getRememberMfaKey() {
+    return rememberMfaKey;
   }
 
   @DataBoundSetter
-  public void setExemptRoles(String exemptRoles) {
-    this.exemptRoles = exemptRoles != null ? exemptRoles : "";
+  public void setExemptRoles(List<String> exemptRoles) {
+    this.exemptRoles = exemptRoles != null ? List.copyOf(exemptRoles) : List.of();
   }
 
   @DataBoundSetter
-  public void setExemptUsers(String exemptUsers) {
-    this.exemptUsers = exemptUsers != null ? exemptUsers : "";
+  public void setExemptUsers(List<String> exemptUsers) {
+    this.exemptUsers = exemptUsers != null ? List.copyOf(exemptUsers) : List.of();
   }
 
   @DataBoundSetter
@@ -131,6 +185,16 @@ public class MFAGlobalConfiguration extends GlobalConfiguration {
         && !issuer.trim().isEmpty()
           ? issuer.trim()
           : UIConstants.Defaults.DEFAULT_ISSUER;
+  }
+
+  @DataBoundSetter
+  public void setRememberMfaHours(int rememberMfaHours) {
+    this.rememberMfaHours = Math.max(0, rememberMfaHours);
+  }
+
+  @DataBoundSetter
+  public synchronized void setRememberMfaKey(Secret rememberMfaKey) {
+    this.rememberMfaKey = rememberMfaKey;
   }
 
   @DataBoundSetter

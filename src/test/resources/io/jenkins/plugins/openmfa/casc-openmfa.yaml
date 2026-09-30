@@ -1,0 +1,12 @@
+security:
+  openMFA:
+    issuer: "Jenkins"
+    requireMFA: true
+    rememberMfaHours: 5
+    rememberMfaKey: "test-signing-key"
+    exemptUsers:
+      - svc-deploy
+      - break-glass
+    exemptRoles:
+      - ci-agents
+      - service-accounts

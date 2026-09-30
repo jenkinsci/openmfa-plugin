@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import hudson.model.User;
 import io.jenkins.plugins.openmfa.MFAGlobalConfiguration;
+import java.util.List;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,7 +30,7 @@ class ExemptionServiceTest {
   void testUserExemptByRole(JenkinsRule j) throws Exception {
     j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
     MFAGlobalConfiguration config = MFAGlobalConfiguration.get();
-    config.setExemptRoles("admin\nci-agents");
+    config.setExemptRoles(List.of("admin", "ci-agents"));
     ExemptionService exemptionService = new ExemptionService();
     User user = User.getById("adminuser", true);
     // User has no roles assigned yet in test environment
@@ -40,7 +41,7 @@ class ExemptionServiceTest {
   void testUserExemptByUsername(JenkinsRule j) throws Exception {
     j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
     MFAGlobalConfiguration config = MFAGlobalConfiguration.get();
-    config.setExemptUsers("testuser\nexemptuser");
+    config.setExemptUsers(List.of("testuser", "exemptuser"));
     ExemptionService exemptionService = new ExemptionService();
     User user = User.getById("testuser", true);
     assertTrue(exemptionService.isExempt(user));
@@ -50,7 +51,7 @@ class ExemptionServiceTest {
   void testUserExemptByUsernameCaseInsensitive(JenkinsRule j) throws Exception {
     j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
     MFAGlobalConfiguration config = MFAGlobalConfiguration.get();
-    config.setExemptUsers("TESTUSER");
+    config.setExemptUsers(List.of("TESTUSER"));
     ExemptionService exemptionService = new ExemptionService();
     User user = User.getById("testuser", true);
     assertTrue(exemptionService.isExempt(user));
@@ -60,7 +61,7 @@ class ExemptionServiceTest {
   void testUserNotExemptByUsername(JenkinsRule j) throws Exception {
     j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
     MFAGlobalConfiguration config = MFAGlobalConfiguration.get();
-    config.setExemptUsers("otheruser");
+    config.setExemptUsers(List.of("otheruser"));
     ExemptionService exemptionService = new ExemptionService();
     User user = User.getById("testuser", true);
     assertFalse(exemptionService.isExempt(user));

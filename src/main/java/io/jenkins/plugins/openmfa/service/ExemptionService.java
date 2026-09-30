@@ -3,8 +3,6 @@ package io.jenkins.plugins.openmfa.service;
 import hudson.model.User;
 import io.jenkins.plugins.openmfa.MFAGlobalConfiguration;
 import io.jenkins.plugins.openmfa.base.Service;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import lombok.extern.java.Log;
 import org.springframework.security.core.Authentication;
@@ -51,7 +49,7 @@ public class ExemptionService {
   }
 
   private boolean isExemptByRole(User user, MFAGlobalConfiguration config) {
-    List<String> exemptRoles = parseList(config.getExemptRoles());
+    List<String> exemptRoles = config.getExemptRoles();
     if (exemptRoles.isEmpty()) {
       return false;
     }
@@ -68,7 +66,7 @@ public class ExemptionService {
   }
 
   private boolean isExemptByUsername(User user, MFAGlobalConfiguration config) {
-    List<String> exemptUsers = parseList(config.getExemptUsers());
+    List<String> exemptUsers = config.getExemptUsers();
     if (exemptUsers.isEmpty()) {
       return false;
     }
@@ -76,16 +74,5 @@ public class ExemptionService {
     String userId = user.getId().toLowerCase().trim();
     return exemptUsers.stream()
       .anyMatch(exempt -> exempt.toLowerCase().trim().equals(userId));
-  }
-
-  private List<String> parseList(String input) {
-    if (input == null || input.trim().isEmpty()) {
-      return Collections.emptyList();
-    }
-
-    return Arrays.stream(input.split("\n"))
-      .map(String::trim)
-      .filter(s -> !s.isEmpty())
-      .toList();
   }
 }

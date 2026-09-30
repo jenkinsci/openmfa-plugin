@@ -7,6 +7,7 @@ import hudson.model.User;
 import io.jenkins.plugins.openmfa.base.MFAContext;
 import io.jenkins.plugins.openmfa.constant.PluginConstants;
 import io.jenkins.plugins.openmfa.service.RateLimitService;
+import io.jenkins.plugins.openmfa.service.RememberMFAService;
 import io.jenkins.plugins.openmfa.service.SessionService;
 import io.jenkins.plugins.openmfa.util.JenkinsUtil;
 import io.jenkins.plugins.openmfa.util.SecurityUtil;
@@ -50,6 +51,9 @@ public class MFALoginAction extends InvisibleAction implements RootAction {
 
   private final RateLimitService rateLimitService =
     MFAContext.i().getService(RateLimitService.class);
+
+  private final RememberMFAService rememberMFAService =
+    MFAContext.i().getService(RememberMFAService.class);
 
   private final SessionService sessionService =
     MFAContext.i().getService(SessionService.class);
@@ -128,6 +132,18 @@ public class MFALoginAction extends InvisibleAction implements RootAction {
       rateLimitService.clearFailedAttempts(username);
       // Mark MFA as verified in the new session
       sessionService.verifySession(req);
+
+      // Remember this verification if the user chose "Keep me signed in"
+      if (
+        rememberMFAService.isEnabled() && rememberMFAService.shouldRemember(req)
+      ) {
+        rememberMFAService.issueCookie(
+          req,
+          Stapler.getCurrentResponse2(),
+          username,
+          mfaProperty.getSecret()
+        );
+      }
 
       // Redirect to original requested page, or root if none
       String from = req.getParameter(PluginConstants.FROM_PARAM);

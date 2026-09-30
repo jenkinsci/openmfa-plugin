@@ -5,6 +5,7 @@ import hudson.model.User;
 import io.jenkins.plugins.openmfa.base.MFAContext;
 import io.jenkins.plugins.openmfa.constant.PluginConstants;
 import io.jenkins.plugins.openmfa.service.ExemptionService;
+import io.jenkins.plugins.openmfa.service.RememberMFAService;
 import io.jenkins.plugins.openmfa.service.SessionService;
 import io.jenkins.plugins.openmfa.util.JenkinsUtil;
 import io.jenkins.plugins.openmfa.util.SecurityUtil;
@@ -63,6 +64,9 @@ public class MFAFilter implements Filter {
   private ExemptionService exemptionService =
     MFAContext.i().getService(ExemptionService.class);
 
+  private RememberMFAService rememberMFAService =
+    MFAContext.i().getService(RememberMFAService.class);
+
   private SessionService sessionService =
     MFAContext.i().getService(SessionService.class);
 
@@ -103,6 +107,11 @@ public class MFAFilter implements Filter {
     Optional<User> user = JenkinsUtil.getCurrentUser();
     log.fine("Current user: " + user.map(User::getId).orElse("<anonymous>"));
 
+    if (isLogout(req)) {
+      // Logging out also invalidates the remembered MFA verification
+      rememberMFAService.clearCookie(req, resp);
+    }
+
     if (user.isEmpty() || shouldAllowPath(req)) {
       log.fine("Allowing path without MFA check: " + req.getRequestURI());
       chain.doFilter(req, resp);
@@ -138,14 +147,7 @@ public class MFAFilter implements Filter {
    *         already have query params, or empty string if there is no target
    */
   private String buildFromParam(HttpServletRequest req) {
-    String uri = req.getRequestURI();
-    String contextPath = req.getContextPath();
-    String relativePath = uri;
-    if (
-      contextPath != null && !contextPath.isEmpty() && uri.startsWith(contextPath)
-    ) {
-      relativePath = uri.substring(contextPath.length());
-    }
+    String relativePath = relativePath(req);
     if (relativePath.isEmpty()) {
       relativePath = "/";
     }
@@ -212,6 +214,14 @@ public class MFAFilter implements Filter {
       return true;
     }
 
+    // A valid remember-MFA cookie (issued after "Keep me signed in" + MFA)
+    // stands in for the MFA challenge in a fresh session
+    if (rememberMFAService.isVerifiedByCookie(req, user)) {
+      log.fine("Valid remember-MFA cookie for user: " + username);
+      MFAContext.i().getService(SessionService.class).verifySession(req);
+      return true;
+    }
+
     // MFA is required but not yet verified, redirect to MFA page
     log.fine(
       String.format(
@@ -236,19 +246,31 @@ public class MFAFilter implements Filter {
   }
 
   /**
-   * Checks if the request path should be allowed without MFA verification.
+   * Checks if the request is a logout request.
    */
-  private boolean shouldAllowPath(HttpServletRequest req) {
+  private boolean isLogout(HttpServletRequest req) {
+    return "/logout".equals(relativePath(req));
+  }
+
+  /**
+   * Returns the request path with the context path stripped.
+   */
+  private String relativePath(HttpServletRequest req) {
     String uri = req.getRequestURI();
     String contextPath = req.getContextPath();
-
-    // Remove context path to get the relative path
-    String relativePath = uri;
     if (
       contextPath != null && !contextPath.isEmpty() && uri.startsWith(contextPath)
     ) {
-      relativePath = uri.substring(contextPath.length());
+      return uri.substring(contextPath.length());
     }
+    return uri;
+  }
+
+  /**
+   * Checks if the request path should be allowed without MFA verification.
+   */
+  private boolean shouldAllowPath(HttpServletRequest req) {
+    String relativePath = relativePath(req);
 
     // Check if path matches any allowed pattern
     // Use strict matching to prevent path bypass attacks (e.g., /loginEvil matching

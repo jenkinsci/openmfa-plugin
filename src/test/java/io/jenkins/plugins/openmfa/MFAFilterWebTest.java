@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import hudson.model.User;
 import io.jenkins.plugins.openmfa.base.MFAContext;
 import io.jenkins.plugins.openmfa.service.TOTPService;
+import java.util.List;
 import org.htmlunit.html.HtmlPage;
 import org.junit.jupiter.api.Test;
 import org.jvnet.hudson.test.JenkinsRule;
@@ -77,7 +78,7 @@ class MFAFilterWebTest {
     // Enable requireMFA
     MFAGlobalConfiguration config = MFAGlobalConfiguration.get();
     config.setRequireMFA(true);
-    config.setExemptUsers("exemptuser");
+    config.setExemptUsers(List.of("exemptuser"));
 
     // Create exempt user
     @SuppressWarnings("unused")
@@ -103,7 +104,7 @@ class MFAFilterWebTest {
     // Set exemption with uppercase
     MFAGlobalConfiguration config = MFAGlobalConfiguration.get();
     config.setRequireMFA(true);
-    config.setExemptUsers("EXEMPTUSER");
+    config.setExemptUsers(List.of("EXEMPTUSER"));
 
     try (var wc = j.createWebClient()) {
       wc.setThrowExceptionOnFailingStatusCode(false);
@@ -188,7 +189,7 @@ class MFAFilterWebTest {
     // Enable requireMFA with no exemptions
     MFAGlobalConfiguration config = MFAGlobalConfiguration.get();
     config.setRequireMFA(true);
-    config.setExemptUsers("");
+    config.setExemptUsers(List.of());
 
     try (var wc = j.createWebClient()) {
       wc.setThrowExceptionOnFailingStatusCode(false);

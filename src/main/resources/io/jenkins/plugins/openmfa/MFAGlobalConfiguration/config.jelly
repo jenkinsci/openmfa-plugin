@@ -14,13 +14,18 @@
       <f:checkbox />
     </f:entry>
 
+    <f:entry title="${%config.rememberMfaHours.title}" field="rememberMfaHours">
+      <f:number min="0" step="1" />
+    </f:entry>
+    <f:description> ${%config.rememberMfaHours.description} </f:description>
+
     <f:entry title="${%config.exemptUsers.title}" field="exemptUsers">
-      <f:textarea />
+      <f:textarea value="${instance.exemptUsersText}" />
     </f:entry>
     <f:description> ${%config.exemptUsers.description} </f:description>
 
     <f:entry title="${%config.exemptRoles.title}" field="exemptRoles">
-      <f:textarea />
+      <f:textarea value="${instance.exemptRolesText}" />
     </f:entry>
     <f:description> ${%config.exemptRoles.description} </f:description>
 
