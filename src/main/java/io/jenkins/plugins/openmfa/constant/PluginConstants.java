@@ -22,10 +22,24 @@ public final class PluginConstants {
   public static final class FormParameters {
 
     public static final String CODE = "x-plugin-openmfa-code";
+    public static final String CREDENTIAL_ID = "x-plugin-openmfa-credential-id";
     public static final String SECRET = "x-plugin-openmfa-secret";
     public static final String TOTP_CODE = "x-plugin-openmfa-totp";
 
     private FormParameters() {
+    }
+  }
+
+  /**
+   * Identifiers of the MFA methods a user can satisfy a challenge with, as
+   * persisted in {@code MFAUserProperty.lastUsedMethod}.
+   */
+  public static final class MFAMethods {
+
+    public static final String TOTP = "totp";
+    public static final String WEBAUTHN = "webauthn";
+
+    private MFAMethods() {
     }
   }
 
@@ -73,6 +87,21 @@ public final class PluginConstants {
     public static final String MFA_VERIFIED = "X-Plugin-OpenMFA-Verified";
     public static final String PENDING_AUTH = "X-Plugin-OpenMFA-Pending-Auth";
 
+    /**
+     * Serialized WebAuthn assertion request for the in-flight login ceremony.
+     * Single-use: removed as soon as a finish is attempted.
+     */
+    public static final String WEBAUTHN_ASSERTION_CEREMONY =
+      "X-Plugin-OpenMFA-WebAuthn-Assertion";
+
+    /**
+     * Serialized WebAuthn credential creation options for the in-flight
+     * registration ceremony. Single-use: removed as soon as a finish is
+     * attempted.
+     */
+    public static final String WEBAUTHN_REGISTRATION_CEREMONY =
+      "X-Plugin-OpenMFA-WebAuthn-Registration";
+
     private SessionAttributes() {
     }
   }
@@ -89,6 +118,45 @@ public final class PluginConstants {
     public static final String SETUP_ACTION_URL = "mfa-setup";
 
     private Urls() {
+    }
+  }
+
+  /**
+   * WebAuthn ceremony constants
+   */
+  public static final class WebAuthn {
+
+    /**
+     * How long a started registration or authentication ceremony stays
+     * valid, in milliseconds (5 minutes). Enforced server-side when a
+     * ceremony is finished, and advertised to the browser as the ceremony
+     * timeout.
+     */
+    public static final long CEREMONY_TTL_MS = 5 * 60 * 1000L;
+
+    /**
+     * Most credentials a single user may register. Keeps a verified session
+     * from being used to grow a user's record without limit, and keeps the
+     * allow-credentials list of a login ceremony small.
+     */
+    public static final int MAX_CREDENTIALS_PER_USER = 10;
+
+    /**
+     * Longest accepted user-chosen label for a registered credential, in
+     * characters. The label is only ever shown back to its owner, but it is
+     * attacker-controlled free text that gets persisted in the user's
+     * {@code config.xml}, so it is capped rather than stored unbounded.
+     */
+    public static final int MAX_CREDENTIAL_NAME_LENGTH = 64;
+
+    /**
+     * Upper bound on the size of a WebAuthn ceremony request body accepted
+     * by the login and setup endpoints. A body past this size is treated as
+     * invalid input rather than being buffered in full.
+     */
+    public static final int MAX_RESPONSE_BYTES = 64 * 1024;
+
+    private WebAuthn() {
     }
   }
 }

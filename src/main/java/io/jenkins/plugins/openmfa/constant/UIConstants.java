@@ -15,6 +15,7 @@ public final class UIConstants {
    */
   public static final class Defaults {
 
+    public static final boolean DEFAULT_ALLOW_WEBAUTHN = true;
     public static final String DEFAULT_ISSUER = "Jenkins";
     public static final boolean DEFAULT_MFA_ENABLED = false;
     public static final int DEFAULT_REMEMBER_MFA_HOURS = 24;

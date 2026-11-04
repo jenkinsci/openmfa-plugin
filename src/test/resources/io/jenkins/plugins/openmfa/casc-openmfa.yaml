@@ -10,3 +10,7 @@ security:
     exemptRoles:
       - ci-agents
       - service-accounts
+    allowWebAuthn: false
+    webAuthnRpId: "jenkins.example.com"
+    webAuthnAllowedOrigins:
+      - "https://jenkins.example.com"
