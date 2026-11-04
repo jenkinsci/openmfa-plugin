@@ -119,3 +119,21 @@
   font-family: monospace;
   margin-left: 4px;
 }
+
+/* Method sections (TOTP vs WebAuthn) - toggled by mfa-webauthn-login.js */
+.mfa-section-hidden {
+  display: none;
+}
+
+.mfa-method-switch-link {
+  display: inline-block;
+  margin-top: 16px;
+  font-size: 0.875rem;
+}
+
+#mfa-webauthn-error-msg {
+  display: none;
+  color: var(--error-color, #d33);
+  font-size: 0.875rem;
+  margin-bottom: 8px;
+}

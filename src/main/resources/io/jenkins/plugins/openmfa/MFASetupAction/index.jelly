@@ -51,6 +51,22 @@
           style="display: none"
         ></span>
       </j:if>
+      <j:if test="${request.getParameter('success') == 'key_removed'}">
+        <span
+          id="mfa-notification-data"
+          data-type="success"
+          data-msg="${%success.toast.key_removed.message}"
+          style="display: none"
+        ></span>
+      </j:if>
+      <j:if test="${request.getParameter('error') == 'key_not_found'}">
+        <span
+          id="mfa-notification-data"
+          data-type="error"
+          data-msg="${%error.toast.key_not_found.message}"
+          style="display: none"
+        ></span>
+      </j:if>
 
       <span
         id="mfa-disable-dialog-messages"
@@ -187,6 +203,189 @@
             </div>
           </j:otherwise>
         </j:choose>
+
+        <!--
+          Security keys ride on top of an active TOTP enrollment: TOTP is
+          the anchor, a key is never the first factor registered.
+        -->
+        <j:if
+          test="${mfaProperty != null and mfaProperty.enabled and it.isWebAuthnAvailable()}"
+        >
+          <div
+            id="mfa-webauthn-card"
+            class="jenkins-card jenkins-!-margin-bottom-6 jenkins-!-padding-6"
+            data-remove-title="${%webauthn.remove.confirm.title}"
+            data-remove-message="${%webauthn.remove.confirm.message}"
+            data-remove-ok="${%webauthn.remove.button}"
+            data-remove-cancel="${%disable.confirm.cancel}"
+          >
+            <h2 class="jenkins-!-margin-bottom-2">${%webauthn.title}</h2>
+            <p class="jenkins-!-margin-bottom-4">${%webauthn.message}</p>
+
+            <j:choose>
+              <j:when test="${!it.isSessionMFAVerified()}">
+                <!--
+                  The setup page is on the MFA filter allow-list, so being
+                  here proves only that the password was right. Key
+                  management needs a session that actually passed MFA.
+                -->
+                <div
+                  id="mfa-webauthn-verify-first"
+                  class="jenkins-alert jenkins-alert-warning jenkins-!-margin-bottom-0"
+                >
+                  <j:out
+                    value="${%webauthn.verify.first(it.getLoginPath())}"
+                    escapeText="false"
+                  />
+                </div>
+              </j:when>
+              <j:otherwise>
+                <j:set
+                  var="credentials"
+                  value="${it.getWebAuthnCredentials()}"
+                />
+
+                <j:choose>
+                  <j:when test="${credentials.isEmpty()}">
+                    <p
+                      id="mfa-webauthn-empty"
+                      class="jenkins-!-margin-bottom-4"
+                      style="color: var(--text-color-secondary)"
+                    >
+                      ${%webauthn.none}
+                    </p>
+                  </j:when>
+                  <j:otherwise>
+                    <table
+                      id="mfa-webauthn-list"
+                      class="jenkins-table jenkins-!-margin-bottom-4"
+                    >
+                      <thead>
+                        <tr>
+                          <th>${%webauthn.col.name}</th>
+                          <th>${%webauthn.col.created}</th>
+                          <th>${%webauthn.col.lastused}</th>
+                          <th></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <j:forEach var="credential" items="${credentials}">
+                          <tr>
+                            <td>${credential.name}</td>
+                            <td>${credential.createdAt}</td>
+                            <td>
+                              <j:choose>
+                                <j:when test="${credential.lastUsedAt != null}">
+                                  ${credential.lastUsedAt}
+                                </j:when>
+                                <j:otherwise>${%webauthn.never}</j:otherwise>
+                              </j:choose>
+                            </td>
+                            <td>
+                              <form
+                                method="post"
+                                action="${it.getWebAuthnRemoveUrl()}"
+                                class="mfa-webauthn-remove-form"
+                              >
+                                <input
+                                  type="hidden"
+                                  name="${it.formParamCredentialId}"
+                                  value="${credential.credentialId}"
+                                />
+                                <button
+                                  type="button"
+                                  class="jenkins-button jenkins-!-destructive-color"
+                                >
+                                  ${%webauthn.remove.button}
+                                </button>
+                              </form>
+                            </td>
+                          </tr>
+                        </j:forEach>
+                      </tbody>
+                    </table>
+                  </j:otherwise>
+                </j:choose>
+
+                <j:choose>
+                  <j:when test="${!it.isSelfService()}">
+                    <!--
+                      Admins can revoke a lost key but cannot enrol one:
+                      registration needs the owner's own authenticator.
+                    -->
+                    <p
+                      id="mfa-webauthn-admin-notice"
+                      class="jenkins-!-margin-bottom-0"
+                      style="color: var(--text-color-secondary)"
+                    >
+                      ${%webauthn.admin.notice}
+                    </p>
+                  </j:when>
+                  <j:when test="${it.isWebAuthnLimitReached()}">
+                    <p
+                      id="mfa-webauthn-limit"
+                      class="jenkins-!-margin-bottom-0"
+                      style="color: var(--text-color-secondary)"
+                    >
+                      ${%webauthn.limit.reached(it.getMaxWebAuthnCredentials())}
+                    </p>
+                  </j:when>
+                  <j:otherwise>
+                    <div
+                      id="mfa-webauthn-add"
+                      data-start-url="${it.getWebAuthnRegisterStartUrl()}"
+                      data-finish-url="${it.getWebAuthnRegisterFinishUrl()}"
+                      data-error-unsupported="${%webauthn.error.unsupported}"
+                      data-error-generic="${%webauthn.error.generic}"
+                      data-error-name_required="${%webauthn.error.name}"
+                      data-error-name_too_long="${%webauthn.error.name.long(it.getWebAuthnNameMaxLength())}"
+                      data-error-credential_limit="${%webauthn.limit.reached(it.getMaxWebAuthnCredentials())}"
+                    >
+                      <div class="mfa-form-group">
+                        <ul>
+                          <li>
+                            <label for="mfa-webauthn-name">
+                              ${%webauthn.name.label}
+                            </label>
+                          </li>
+                          <li>
+                            <input
+                              type="text"
+                              id="mfa-webauthn-name"
+                              maxlength="${it.getWebAuthnNameMaxLength()}"
+                              placeholder="${%webauthn.name.placeholder}"
+                              autocomplete="off"
+                              style="margin-bottom: 0"
+                            />
+                          </li>
+                          <li class="jenkins-!-margin-top-4">
+                            <button
+                              type="button"
+                              id="mfa-webauthn-add-button"
+                              class="jenkins-button jenkins-button--primary"
+                            >
+                              ${%webauthn.add.button}
+                            </button>
+                          </li>
+                        </ul>
+                      </div>
+                      <p
+                        id="mfa-webauthn-error"
+                        class="jenkins-!-margin-top-2 jenkins-!-margin-bottom-0"
+                        style="display: none; color: var(--error-color)"
+                      ></p>
+                    </div>
+                  </j:otherwise>
+                </j:choose>
+              </j:otherwise>
+            </j:choose>
+          </div>
+
+          <st:adjunct includes="io.jenkins.plugins.openmfa.webauthn-common" />
+          <st:adjunct
+            includes="io.jenkins.plugins.openmfa.MFASetupAction.mfa-webauthn-setup"
+          />
+        </j:if>
 
         <div class="jenkins-alert jenkins-alert-warning">
           <h3

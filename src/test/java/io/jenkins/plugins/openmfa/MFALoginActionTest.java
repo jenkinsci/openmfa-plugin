@@ -1,5 +1,8 @@
 package io.jenkins.plugins.openmfa;
 
+import static io.jenkins.plugins.openmfa.WebAuthnTestSupport.findById;
+import static io.jenkins.plugins.openmfa.WebAuthnTestSupport.postWithCrumb;
+import static io.jenkins.plugins.openmfa.WebAuthnTestSupport.testCredential;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -7,16 +10,14 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import hudson.model.User;
-import hudson.security.csrf.CrumbIssuer;
+import hudson.util.Secret;
+import io.jenkins.plugins.openmfa.WebAuthnTestSupport.FakeWebAuthnService;
 import io.jenkins.plugins.openmfa.base.MFAContext;
 import io.jenkins.plugins.openmfa.constant.PluginConstants;
+import io.jenkins.plugins.openmfa.service.TOTPService;
 import io.jenkins.plugins.openmfa.service.WebAuthnService;
-import io.jenkins.plugins.openmfa.service.model.WebAuthnCredential;
-import jakarta.servlet.http.HttpSession;
-import java.net.URL;
-import org.htmlunit.HttpMethod;
 import org.htmlunit.Page;
-import org.htmlunit.WebRequest;
+import org.htmlunit.html.HtmlElement;
 import org.htmlunit.html.HtmlPage;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -30,6 +31,9 @@ import org.jvnet.hudson.test.junit.jupiter.WithJenkins;
 @WithJenkins
 class MFALoginActionTest {
 
+  private final TOTPService totpService =
+    MFAContext.i().getService(TOTPService.class);
+
   /**
    * Restore the real WebAuthnService after any test that stubbed it, so the
    * stub never leaks into an unrelated test.
@@ -37,6 +41,112 @@ class MFALoginActionTest {
   @AfterEach
   void restoreRealWebAuthnService() {
     MFAContext.i().removeService(WebAuthnService.class);
+  }
+
+  /**
+   * No WebAuthn UI is shown, even for a user with a registered credential,
+   * when WebAuthn is disabled globally.
+   */
+  @Test
+  void testChallengePageShowsNoWebAuthnUiWhenAllowWebAuthnFalse(JenkinsRule j)
+    throws Exception {
+    j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
+    MFAGlobalConfiguration.get().setAllowWebAuthn(false);
+    enrollUserWithWebAuthnCredential("webauthndisabledrenderuser");
+
+    try (var wc = j.createWebClient()) {
+      wc.setThrowExceptionOnFailingStatusCode(false);
+      wc.getOptions().setJavaScriptEnabled(false);
+      wc.login("webauthndisabledrenderuser");
+
+      HtmlPage mfaPage = wc.goTo(PluginConstants.Urls.LOGIN_ACTION_URL);
+
+      assertNull(
+        findById(mfaPage, "mfa-webauthn-section"),
+        "No WebAuthn section should be rendered when the feature is disabled globally"
+      );
+      HtmlElement totpSection = findById(mfaPage, "mfa-totp-section");
+      assertNotNull(totpSection, "TOTP section should be present");
+      assertFalse(
+        totpSection.getAttribute("class").contains("mfa-section-hidden"),
+        "TOTP section should be visible by default"
+      );
+    }
+  }
+
+  /**
+   * The challenge page shows only the TOTP form, with no WebAuthn UI at all,
+   * for a user with no registered WebAuthn credential.
+   */
+  @Test
+  void testChallengePageShowsOnlyTotpFormForKeylessUser(JenkinsRule j)
+    throws Exception {
+    j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
+    MFAGlobalConfiguration.get().setRequireMFA(true);
+
+    try (var wc = j.createWebClient()) {
+      wc.setThrowExceptionOnFailingStatusCode(false);
+      wc.getOptions().setJavaScriptEnabled(false);
+      wc.login("keylessuser");
+
+      HtmlPage mfaPage = wc.goTo(PluginConstants.Urls.LOGIN_ACTION_URL);
+
+      assertNull(
+        findById(mfaPage, "mfa-webauthn-section"),
+        "No WebAuthn section should be rendered for a key-less user"
+      );
+
+      HtmlElement totpSection = findById(mfaPage, "mfa-totp-section");
+      assertNotNull(totpSection, "TOTP section should be present");
+      assertFalse(
+        totpSection.getAttribute("class").contains("mfa-section-hidden"),
+        "TOTP section should be visible by default"
+      );
+    }
+  }
+
+  /**
+   * After a WebAuthn login, the key prompt is the active section and the TOTP
+   * section is rendered hidden.
+   */
+  @Test
+  void testChallengePageShowsWebAuthnSectionWhenPreferredMethodIsWebAuthn(
+    JenkinsRule j) throws Exception {
+    j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
+    MFAContext.i()
+      .registerService(WebAuthnService.class, new FakeWebAuthnService("{}"));
+    User user = enrollUserWithWebAuthnCredential("webauthnpreferreduser");
+    MFAUserProperty.forUser(user)
+      .setLastUsedMethodAndSave(PluginConstants.MFAMethods.WEBAUTHN);
+
+    try (var wc = j.createWebClient()) {
+      wc.setThrowExceptionOnFailingStatusCode(false);
+      wc.getOptions().setJavaScriptEnabled(false);
+      wc.login("webauthnpreferreduser");
+
+      HtmlPage mfaPage = wc.goTo(PluginConstants.Urls.LOGIN_ACTION_URL);
+
+      HtmlElement webauthnSection = findById(mfaPage, "mfa-webauthn-section");
+      assertNotNull(
+        webauthnSection, "WebAuthn section should be rendered for a key-enrolled user"
+      );
+      assertFalse(
+        webauthnSection.getAttribute("class").contains("mfa-section-hidden"),
+        "WebAuthn section should be the visible/active section"
+      );
+
+      HtmlElement totpSection = findById(mfaPage, "mfa-totp-section");
+      assertNotNull(totpSection, "TOTP section should still be present in the DOM");
+      assertTrue(
+        totpSection.getAttribute("class").contains("mfa-section-hidden"),
+        "TOTP section should be hidden when WebAuthn is the preferred method"
+      );
+
+      assertNotNull(
+        findById(mfaPage, "mfa-use-code-link"),
+        "A 'Use code instead' switch link should be present"
+      );
+    }
   }
 
   /**
@@ -262,9 +372,10 @@ class MFALoginActionTest {
   void testWebauthnVerifyFailureCountsTowardLockout(JenkinsRule j)
     throws Exception {
     j.jenkins.setSecurityRealm(j.createDummySecurityRealm());
-    FakeWebAuthnService fake = new FakeWebAuthnService("{}");
-    fake.finishResult = false;
-    MFAContext.i().registerService(WebAuthnService.class, fake);
+    MFAContext.i()
+      .registerService(
+        WebAuthnService.class, new FakeWebAuthnService("{}").assertionResult(false)
+      );
     enrollUserWithWebAuthnCredential("webauthnlockoutuser");
 
     try (var wc = j.createWebClient()) {
@@ -351,9 +462,8 @@ class MFALoginActionTest {
   }
 
   /**
-   * A successful assertion verifies the session, records "webauthn" as the
-   * last used method, and (with "Keep me signed in") issues the remember-MFA
-   * cookie.
+   * A successful assertion verifies the session, records "webauthn" and issues
+   * the remember-MFA cookie.
    */
   @Test
   void testWebauthnVerifySuccessVerifiesSessionAndRemembers(JenkinsRule j)
@@ -399,78 +509,16 @@ class MFALoginActionTest {
     }
   }
 
-  /**
-   * Creates a user with a registered WebAuthn credential (and no TOTP
-   * secret), returning the user.
-   */
+  /** Creates a user with active TOTP plus a registered WebAuthn credential. */
   private User enrollUserWithWebAuthnCredential(String username)
     throws Exception {
     User user = User.getById(username, true);
     MFAUserProperty property = MFAUserProperty.getOrCreate(user);
-    property.addWebAuthnCredential(
-      new WebAuthnCredential(
-        "cred-" + username, "cose-" + username, 0, "Test key",
-        java.time.Instant.now().toString(), null
-      )
-    );
+    Secret secret = totpService.generateSecret();
+    property.setSecret(secret);
+    property.addWebAuthnCredential(testCredential(username));
     user.save();
     return user;
-  }
-
-  /**
-   * POSTs a crumb-protected request to a MFALoginAction endpoint, optionally
-   * with a raw JSON body.
-   */
-  private Page postWithCrumb(
-    JenkinsRule j, JenkinsRule.WebClient wc, String path, String body)
-    throws Exception {
-    WebRequest request = new WebRequest(new URL(j.getURL(), path), HttpMethod.POST);
-    CrumbIssuer crumbIssuer = j.jenkins.getCrumbIssuer();
-    if (crumbIssuer != null) {
-      request
-        .setAdditionalHeader(
-          crumbIssuer.getCrumbRequestField(),
-          crumbIssuer.getCrumb((jakarta.servlet.ServletRequest) null)
-        );
-    }
-    if (body != null) {
-      request.setAdditionalHeader("Content-Type", "application/json");
-      request.setRequestBody(body);
-    }
-    return wc.getPage(request);
-  }
-
-  /**
-   * Fake {@link WebAuthnService} used to stub the ceremony outcome for the
-   * assertion-endpoint tests without needing a real authenticator.
-   */
-  private static class FakeWebAuthnService extends WebAuthnService {
-
-    private boolean available = true;
-
-    private boolean finishResult = true;
-
-    private final String optionsJson;
-
-    FakeWebAuthnService(String optionsJson) {
-      this.optionsJson = optionsJson;
-    }
-
-    @Override
-    public boolean finishAssertion(
-      HttpSession session, User user, String responseJson) {
-      return finishResult;
-    }
-
-    @Override
-    public boolean isAvailable() {
-      return available;
-    }
-
-    @Override
-    public String startAssertion(HttpSession session, User user) {
-      return optionsJson;
-    }
   }
 
 }
