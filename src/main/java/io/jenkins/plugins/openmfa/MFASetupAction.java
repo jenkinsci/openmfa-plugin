@@ -52,8 +52,8 @@ public class MFASetupAction extends InvisibleAction {
 
     MFAUserProperty property = MFAUserProperty.forUser(targetUser);
     if (property != null) {
-      property.setSecret(null);
-      targetUser.save();
+      // Also rotates the MFA epoch, so remember-MFA cookies stop validating.
+      property.clearAllFactors();
       log.info(String.format("MFA disabled for user: %s", targetUser.getId()));
     }
 
@@ -80,9 +80,7 @@ public class MFASetupAction extends InvisibleAction {
       return HttpResponses.redirectTo("?error=invalid_code");
     }
 
-    MFAUserProperty property = MFAUserProperty.getOrCreate(targetUser);
-    property.setSecret(secret);
-    targetUser.save();
+    MFAUserProperty.getOrCreate(targetUser).enrollSecret(secret);
 
     log.info(String.format("MFA enabled for user: %s", targetUser.getId()));
 

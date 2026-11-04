@@ -141,7 +141,7 @@ public class MFALoginAction extends InvisibleAction implements RootAction {
           req,
           Stapler.getCurrentResponse2(),
           username,
-          mfaProperty.getSecret()
+          mfaProperty.getOrCreateMfaEpoch()
         );
       }
 

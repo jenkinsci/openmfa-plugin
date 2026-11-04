@@ -96,8 +96,9 @@ public class UserService {
 
     MFAUserProperty property = MFAUserProperty.forUser(user);
     if (property != null) {
-      property.setSecret(null);
-      user.save();
+      // Clears the TOTP secret and rotates the MFA epoch, so a reset also
+      // invalidates any remember-MFA cookie.
+      property.clearAllFactors();
       log.info(String.format("MFA reset for user: %s by admin", user.getId()));
     }
   }

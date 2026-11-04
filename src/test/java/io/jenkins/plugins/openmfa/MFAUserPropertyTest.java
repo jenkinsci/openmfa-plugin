@@ -2,6 +2,7 @@ package io.jenkins.plugins.openmfa;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -60,9 +61,47 @@ class MFAUserPropertyTest {
   }
 
   @Test
+  void testMfaEpochLazyAndStable(JenkinsRule j) {
+    MFAUserProperty property = new MFAUserProperty();
+
+    String epoch1 = property.getOrCreateMfaEpoch();
+    assertNotNull(epoch1, "Epoch should be lazily generated");
+    assertFalse(epoch1.isEmpty(), "Epoch should not be empty");
+
+    String epoch2 = property.getOrCreateMfaEpoch();
+    assertEquals(epoch1, epoch2, "Repeated calls should return the same epoch");
+  }
+
+  @Test
   void testNullUserRejected() {
     MFAUserProperty property = MFAUserProperty.forUser(null);
     assertNull(property, "Null user should return null property");
+  }
+
+  /**
+   * A property that predates the mfaEpoch field (i.e. loaded from old XML
+   * containing only {@code <secret>}) has {@code mfaEpoch == null}; lazy
+   * generation must still work transparently.
+   */
+  @Test
+  void testOldXmlWithoutEpochLoads(JenkinsRule j) {
+    MFAUserProperty property = new MFAUserProperty();
+    property.setSecret(totpService.generateSecret());
+
+    String epoch = property.getOrCreateMfaEpoch();
+    assertNotNull(epoch, "Epoch should be generated even without a persisted value");
+    assertFalse(epoch.isEmpty(), "Epoch should not be empty");
+  }
+
+  @Test
+  void testRotateMfaEpochChangesValue(JenkinsRule j) {
+    MFAUserProperty property = new MFAUserProperty();
+
+    String epoch1 = property.getOrCreateMfaEpoch();
+    property.rotateMfaEpoch();
+    String epoch2 = property.getOrCreateMfaEpoch();
+
+    assertNotEquals(epoch1, epoch2, "Rotating the epoch should change its value");
   }
 
   @Test

@@ -111,12 +111,14 @@ per-session behavior.
 How it works:
 
 - The cookie is a stateless, HMAC-SHA256-signed token bound to the username,
-  an absolute expiry, and a hash of the user's current TOTP secret. Nothing is
-  stored server-side per device.
+  an absolute expiry, and the user's **MFA epoch** -- a random per-user value
+  independent of any particular TOTP secret, so the binding does not depend
+  on how the user passed MFA. Nothing is stored server-side per device.
 - Duration is configured by `Remember MFA for "Keep me signed in" (hours)`
   (default: 24). Setting it to `0` disables the feature entirely.
-- Re-enrolling or disabling MFA changes the TOTP secret and therefore
-  invalidates all previously issued cookies for that user.
+- The epoch -- and therefore every outstanding remember-MFA cookie for that
+  user -- rotates on: re-enrolling or disabling TOTP, or an admin's full MFA
+  reset.
 - Logging out clears the cookie.
 - The signing key is generated automatically on first use and persisted in the
   global configuration. Rotating the key (or setting a new one via JCasC)
