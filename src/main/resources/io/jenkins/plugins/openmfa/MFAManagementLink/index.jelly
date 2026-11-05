@@ -193,7 +193,9 @@
                                 <j:when test="${user.mfaEnabled}">
                                   ${%methods.totp.enabled}
                                 </j:when>
-                                <j:otherwise>${%methods.totp.disabled}</j:otherwise>
+                                <j:otherwise
+                                  >${%methods.totp.disabled}</j:otherwise
+                                >
                               </j:choose>
                             </span>
                             <j:choose>
@@ -241,7 +243,9 @@
                                 </details>
                               </j:when>
                               <j:otherwise>
-                                <span class="mfa-mgmt-method-badge mfa-mgmt-method-badge-secondary">
+                                <span
+                                  class="mfa-mgmt-method-badge mfa-mgmt-method-badge-secondary"
+                                >
                                   ${%methods.webauthn.none}
                                 </span>
                               </j:otherwise>

@@ -175,7 +175,7 @@ passkeys -- as an alternative way to pass the MFA challenge.
 security:
   openMFA:
     allowWebAuthn: true
-    webAuthnRpId: ''   # empty derives it from the root URL hostname
+    webAuthnRpId: '' # empty derives it from the root URL hostname
     webAuthnAllowedOrigins:
       - 'https://jenkins.example.com'
 ```

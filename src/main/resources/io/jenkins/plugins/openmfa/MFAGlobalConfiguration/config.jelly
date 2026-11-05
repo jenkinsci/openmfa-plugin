@@ -45,7 +45,9 @@
     >
       <f:textarea value="${instance.webAuthnAllowedOriginsText}" />
     </f:entry>
-    <f:description> ${%config.webAuthnAllowedOrigins.description} </f:description>
+    <f:description>
+      ${%config.webAuthnAllowedOrigins.description}
+    </f:description>
 
     <f:entry>
       <a href="${rootURL}/manage/mfa-management" class="jenkins-button">

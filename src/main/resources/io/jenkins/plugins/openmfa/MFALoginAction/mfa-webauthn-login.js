@@ -116,7 +116,7 @@
       })
       .then(function (options) {
         const publicKey = decodePublicKeyOptions(options.publicKey);
-        return window.navigator.credentials.get({ publicKey: publicKey });
+        return window.navigator.credentials.get({publicKey: publicKey});
       })
       .then(function (credential) {
         const body = JSON.stringify(serializeAssertion(credential));
@@ -126,7 +126,10 @@
         return fetch(url, {
           method: 'POST',
           redirect: 'follow',
-          headers: Object.assign({ 'Content-Type': 'application/json' }, crumbHeaders),
+          headers: Object.assign(
+            {'Content-Type': 'application/json'},
+            crumbHeaders,
+          ),
           body: body,
         });
       })

@@ -158,10 +158,7 @@
                       >
                         ${%webauthn.touch.key}
                       </p>
-                      <span
-                        id="mfa-webauthn-error-msg"
-                        style="display: none"
-                      >
+                      <span id="mfa-webauthn-error-msg" style="display: none">
                         ${%error.webauthn.failed}
                       </span>
                       <a
@@ -191,7 +188,11 @@
                     action="${rootURL}${it.securityCheckEndpoint}"
                   >
                     <j:if test="${it.fromParam != null and it.fromParam != ''}">
-                      <input type="hidden" name="from" value="${it.fromParam}" />
+                      <input
+                        type="hidden"
+                        name="from"
+                        value="${it.fromParam}"
+                      />
                     </j:if>
                     <div class="mfa-login-code-wrapper">
                       <div class="mfa-login-code-boxes">

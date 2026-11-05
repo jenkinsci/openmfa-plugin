@@ -1,9 +1,9 @@
 security:
   openMFA:
-    issuer: "Jenkins"
+    issuer: 'Jenkins'
     requireMFA: true
     rememberMfaHours: 5
-    rememberMfaKey: "test-signing-key"
+    rememberMfaKey: 'test-signing-key'
     exemptUsers:
       - svc-deploy
       - break-glass
@@ -11,6 +11,6 @@ security:
       - ci-agents
       - service-accounts
     allowWebAuthn: false
-    webAuthnRpId: "jenkins.example.com"
+    webAuthnRpId: 'jenkins.example.com'
     webAuthnAllowedOrigins:
-      - "https://jenkins.example.com"
+      - 'https://jenkins.example.com'
