@@ -81,3 +81,48 @@
 .mfa-mgmt-set-form input[type='hidden'] {
   display: none;
 }
+
+.mfa-mgmt-methods-cell {
+  white-space: nowrap;
+}
+
+.mfa-mgmt-method-badge {
+  display: inline-block;
+  margin-bottom: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-color-secondary, #6b7280);
+}
+
+.mfa-mgmt-method-badge-secondary {
+  color: var(--text-color-secondary, #6b7280);
+  font-weight: 400;
+}
+
+.mfa-mgmt-webauthn-details summary {
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--link-color, #0b5394);
+}
+
+.mfa-mgmt-webauthn-list {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+}
+
+.mfa-mgmt-webauthn-list li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 2px 0;
+}
+
+.mfa-mgmt-webauthn-name {
+  font-size: 0.85rem;
+}
+
+.mfa-mgmt-remove-webauthn-form {
+  display: inline-block;
+  margin: 0;
+}

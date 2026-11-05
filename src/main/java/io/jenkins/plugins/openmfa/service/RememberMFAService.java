@@ -12,7 +12,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Optional;
 import javax.crypto.Mac;
@@ -28,14 +27,15 @@ import org.springframework.security.core.context.SecurityContextHolder;
  * are not asked for MFA on every new HTTP session.
  *
  * Token format: {@code base64url(username):expiryEpochMillis:base64url(hmac)}
- * where the HMAC covers the username, the expiry, and a hash of the user's
- * TOTP secret — so changing or disabling MFA invalidates all issued tokens.
+ * where the HMAC covers the username, the expiry, and the user's current MFA
+ * epoch — a method-agnostic value that changes whenever the user's MFA
+ * configuration is reset or rotated, so disabling or reconfiguring MFA (by
+ * any method) invalidates all issued tokens.
  */
 @Log
 @Service
 public class RememberMFAService {
 
-  private static final String HASH_ALGORITHM = "SHA-256";
   private static final String HMAC_ALGORITHM = "HmacSHA256";
   private static final String SEPARATOR = ":";
   private static final int TOKEN_PARTS = 3;
@@ -63,19 +63,19 @@ public class RememberMFAService {
    *
    * @param username
    *          the Jenkins user id the token is issued for
-   * @param totpSecret
-   *          the user's current TOTP secret (binds the token to it)
+   * @param mfaEpoch
+   *          the user's current MFA epoch (binds the token to it)
    * @param expiryEpochMillis
    *          absolute expiry time in epoch milliseconds
    * @return the token value suitable for a cookie
    */
   public String createTokenValue(
-    String username, Secret totpSecret, long expiryEpochMillis) {
+    String username, String mfaEpoch, long expiryEpochMillis) {
     String payload =
       encode(username.getBytes(StandardCharsets.UTF_8))
         + SEPARATOR
         + expiryEpochMillis;
-    return payload + SEPARATOR + encode(sign(payload, totpSecret));
+    return payload + SEPARATOR + encode(sign(payload, mfaEpoch));
   }
 
   /**
@@ -89,23 +89,23 @@ public class RememberMFAService {
   }
 
   /**
-   * Validates a token value against the expected user and current TOTP
-   * secret. Rejects malformed, expired, tampered, or foreign tokens without
+   * Validates a token value against the expected user and current MFA
+   * epoch. Rejects malformed, expired, tampered, or foreign tokens without
    * throwing.
    *
    * @param tokenValue
    *          the raw cookie value
    * @param username
    *          the currently authenticated user id
-   * @param totpSecret
-   *          the user's current TOTP secret
+   * @param mfaEpoch
+   *          the user's current MFA epoch
    * @param nowMillis
    *          current time in epoch milliseconds
    * @return true if the token is valid for this user
    */
   public boolean isValidTokenValue(
-    String tokenValue, String username, Secret totpSecret, long nowMillis) {
-    if (tokenValue == null || tokenValue.isEmpty() || totpSecret == null) {
+    String tokenValue, String username, String mfaEpoch, long nowMillis) {
+    if (tokenValue == null || tokenValue.isEmpty() || mfaEpoch == null) {
       return false;
     }
 
@@ -131,7 +131,7 @@ public class RememberMFAService {
       return false;
     }
 
-    byte[] expectedMac = sign(parts[0] + SEPARATOR + parts[1], totpSecret);
+    byte[] expectedMac = sign(parts[0] + SEPARATOR + parts[1], mfaEpoch);
     byte[] actualMac;
     try {
       actualMac = Base64.getUrlDecoder().decode(parts[2]);
@@ -156,13 +156,19 @@ public class RememberMFAService {
       return false;
     }
     MFAUserProperty property = MFAUserProperty.forUser(user);
-    if (property == null || property.getSecret() == null) {
+    if (property == null) {
       return false;
     }
+    // The epoch is resolved only once a cookie is actually present:
+    // getOrCreateMfaEpoch() generates and *saves* on first use, and this
+    // runs on the MFA filter's hot path for every request of every user.
+    // Issuing a cookie creates the epoch, so a user who could possibly
+    // present a valid one already has it.
     return findCookie(request)
       .map(
         value -> isValidTokenValue(
-          value, user.getId(), property.getSecret(), System.currentTimeMillis()
+          value, user.getId(), property.getOrCreateMfaEpoch(),
+          System.currentTimeMillis()
         )
       )
       .orElse(false);
@@ -177,14 +183,14 @@ public class RememberMFAService {
    *          the HTTP response to add the cookie to
    * @param username
    *          the Jenkins user id
-   * @param totpSecret
-   *          the user's current TOTP secret
+   * @param mfaEpoch
+   *          the user's current MFA epoch
    */
   public void issueCookie(
     HttpServletRequest request,
     HttpServletResponse response,
     String username,
-    Secret totpSecret) {
+    String mfaEpoch) {
     int hours = MFAGlobalConfiguration.get().getRememberMfaHours();
     long expiry =
       System.currentTimeMillis() + hours * PluginConstants.RememberMFA.HOUR_MS;
@@ -192,7 +198,7 @@ public class RememberMFAService {
     Cookie cookie =
       new Cookie(
         PluginConstants.RememberMFA.COOKIE_NAME,
-        createTokenValue(username, totpSecret, expiry)
+        createTokenValue(username, mfaEpoch, expiry)
       );
     cookie.setHttpOnly(true);
     cookie.setSecure(request.isSecure());
@@ -255,12 +261,12 @@ public class RememberMFAService {
   }
 
   /**
-   * Computes the HMAC over the payload and a hash of the TOTP secret using
-   * the plugin's signing key.
+   * Computes the HMAC over the payload and the user's MFA epoch using the
+   * plugin's signing key.
    */
-  private byte[] sign(String payload, Secret totpSecret) {
+  private byte[] sign(String payload, String mfaEpoch) {
     try {
-      String message = payload + SEPARATOR + totpSecretHash(totpSecret);
+      String message = payload + SEPARATOR + mfaEpoch;
       Secret key = MFAGlobalConfiguration.get().getOrCreateRememberMfaKey();
       Mac mac = Mac.getInstance(HMAC_ALGORITHM);
       mac.init(
@@ -272,13 +278,5 @@ public class RememberMFAService {
     } catch (Exception e) {
       throw new MFAException("Error signing remember-MFA token", e);
     }
-  }
-
-  private String totpSecretHash(Secret totpSecret)
-    throws NoSuchAlgorithmException {
-    byte[] hash =
-      MessageDigest.getInstance(HASH_ALGORITHM)
-        .digest(totpSecret.getPlainText().getBytes(StandardCharsets.UTF_8));
-    return encode(hash);
   }
 }

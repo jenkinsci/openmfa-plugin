@@ -20,6 +20,7 @@ It introduces setup, verification, and management flows for user accounts inside
   - [User Flow](#user-flow)
   - [MFA User Management](#mfa-user-management)
   - [Remember MFA ("Keep me signed in")](#remember-mfa-keep-me-signed-in)
+  - [Security Keys (WebAuthn)](#security-keys-webauthn)
   - [Configuration as Code (JCasC)](#configuration-as-code-jcasc)
   - [MFA Exemptions](#mfa-exemptions)
   - [Ephemeral JENKINS_HOME (Kubernetes / jenkins-operator)](#ephemeral-jenkins_home-kubernetes--jenkins-operator)
@@ -39,6 +40,8 @@ It introduces setup, verification, and management flows for user accounts inside
 - Session-based MFA verification after primary login
 - Remember MFA across sessions for users who check "Keep me signed in"
   (signed cookie, configurable duration, disabled by setting it to 0)
+- WebAuthn (FIDO2) security keys and platform authenticators as an
+  alternative second factor on top of TOTP
 - Basic brute-force protection on code verification attempts
 - Supports Jenkins dark theme for all UI elements
 - Configurable exemptions for service accounts and specific roles
@@ -111,12 +114,17 @@ per-session behavior.
 How it works:
 
 - The cookie is a stateless, HMAC-SHA256-signed token bound to the username,
-  an absolute expiry, and a hash of the user's current TOTP secret. Nothing is
-  stored server-side per device.
+  an absolute expiry, and the user's **MFA epoch** -- a method-agnostic
+  value independent of any particular TOTP secret or security key, so the
+  same binding and the same cookie work for either method (see
+  [Security Keys (WebAuthn)](#security-keys-webauthn)). Nothing is stored
+  server-side per device.
 - Duration is configured by `Remember MFA for "Keep me signed in" (hours)`
   (default: 24). Setting it to `0` disables the feature entirely.
-- Re-enrolling or disabling MFA changes the TOTP secret and therefore
-  invalidates all previously issued cookies for that user.
+- The epoch -- and therefore every outstanding remember-MFA cookie for that
+  user -- rotates on: re-enrolling or disabling TOTP, removing a security
+  key, or an admin's full MFA reset. Adding a security key does **not**
+  rotate it.
 - Logging out clears the cookie.
 - The signing key is generated automatically on first use and persisted in the
   global configuration. Rotating the key (or setting a new one via JCasC)
@@ -126,6 +134,84 @@ How it works:
 No configuration is required on a standard installation with a persistent
 `JENKINS_HOME`. For ephemeral setups, see
 [Ephemeral JENKINS_HOME](#ephemeral-jenkins_home-kubernetes--jenkins-operator).
+
+## Security Keys (WebAuthn)
+
+Enrolled users can register WebAuthn (FIDO2) security keys -- hardware keys
+(YubiKey, Titan), platform authenticators (Touch ID, Windows Hello) or
+passkeys -- as an alternative way to pass the MFA challenge.
+
+- Keys require an **active TOTP enrollment**; TOTP stays the mandatory base
+  method and the recovery path if every key is lost.
+- Setup page: **registration is self-service only** (admins cannot register
+  on a user's behalf); **removal is self-or-admin** (with an admin notice).
+  Both require the acting session to have **passed MFA**, since the setup
+  page is reachable before verification and a password alone must not add a
+  key. No freshness window: a once-verified session stays eligible.
+- Up to **10 keys** per user, names up to **64 characters**.
+- Removing a key **rotates the MFA epoch**, invalidating all remember-MFA
+  cookies for that user; adding one does not.
+- Disabling TOTP (only while "Require MFA for all users" is off) deletes all
+  keys in the same action and rotates the epoch; the dialog says so.
+- The challenge defaults to the last successful method, with "Use code
+  instead" / "Use security key" links; TOTP is always available.
+- Remember-MFA is method-agnostic: either method issues the same cookie.
+- **Admin side:** MFA User Management shows TOTP status and key count/names
+  per user, and allows per-key removal or a full reset (TOTP + all keys). Key
+  removal there needs only `Jenkins.ADMINISTER`: not gated by the admin's own
+  MFA state, and works with `allowWebAuthn` off (it runs no ceremony).
+
+### Configuration
+
+- `allowWebAuthn` (default: on) -- kill switch; when off, WebAuthn UI is
+  hidden and ceremony endpoints refuse. TOTP is unaffected.
+- `webAuthnRpId` (advanced, default: empty = root URL hostname). **The RP ID
+  is effectively permanent**: changing it invalidates every registered key.
+- `webAuthnAllowedOrigins` (advanced, default: none) -- extra accepted
+  origins. The root URL's origin is always allowed; an RP ID override adds
+  **no** origin, so list every hostname Jenkins is served under.
+
+```yaml
+security:
+  openMFA:
+    allowWebAuthn: true
+    webAuthnRpId: '' # empty derives it from the root URL hostname
+    webAuthnAllowedOrigins:
+      - 'https://jenkins.example.com'
+```
+
+### Threat model / operational notes
+
+- Browsers require a secure context (HTTPS); `localhost` counts as secure,
+  so `mvn hpi:run` works over HTTP.
+- With no root URL and no `webAuthnRpId`, WebAuthn endpoints refuse with an
+  error asking the admin to set the root URL; TOTP keeps working.
+- The setup page is reachable before MFA (pre-existing lockout-recovery
+  posture). Key registration is gated on a verified session; TOTP disable
+  is not, and TOTP re-enrollment (`doEnable`) also marks the session
+  verified -- so a password-only attacker could re-enroll TOTP and then pass
+  the key gate. With `requireMFA` off the gate bounds rather than blocks
+  this: re-enrollment is loud (the victim's authenticator stops working) and
+  remembered-device cookies die on epoch rotation. Pre-existing upstream
+  behavior, documented rather than changed.
+- `java-webauthn-server` pins `com.upokecenter:cbor` `5.0.0-alpha2` (it
+  parses attacker-controlled CBOR) plus `httpclient5` `5.7-beta1` and
+  `httpcore5` `5.5-beta4`; revisit when upstream moves to stable releases.
+
+### Manual end-to-end test script
+
+HtmlUnit cannot drive `navigator.credentials`, so run this by hand with
+Chrome's virtual authenticator and record pass/fail per step in the PR:
+
+1. `mvn hpi:run`, open http://localhost:8080/jenkins. In DevTools -> More tools -> **WebAuthn**, enable the virtual authenticator environment and add one (`ctap2`, `internal` or `usb`, Resident Key + User verification).
+2. Log in, enroll and verify TOTP; the key section appears (before verifying, a "verify MFA first" prompt replaces it). **Add security key** with a name; it lists with "last used: never".
+3. Log out, log in with **Keep me signed in**: the challenge defaults to the key prompt, auto-completes, lands on the original page, and an `openmfa-remember` cookie is set.
+4. In a new session (clear the session cookie or use Incognito with the same authenticator) the remember cookie alone admits you.
+5. On the challenge page, **Use code instead** then **Use security key**: both toggle and the prompt re-triggers.
+6. Click **Remove** on the setup page and confirm the dialog: removal must succeed. This is a plain form relying on `hudson-behavior` crumb injection (not `fetch`) -- check it is not rejected for a missing/stale crumb.
+7. With the remember cookie still present, reload a protected page: a fresh MFA challenge appears (epoch rotated).
+8. Re-add a key, disable TOTP from **Manage MFA**: the dialog warns keys will be removed, and both TOTP and the key are gone afterwards.
+9. In the network tab, both the `webauthn-verify` assertion and the `webauthn-register-finish` attestation bodies **include** `clientExtensionResults` (typically `{}`) and are accepted. `webauthn-server-core` models it as non-null, so omitting it fails parsing -- a bug unit fixtures can miss.
 
 ## Configuration as Code (JCasC)
 
@@ -151,6 +237,14 @@ security:
     # Vault, env var, or mounted secret) when JENKINS_HOME is ephemeral,
     # so remember-MFA cookies survive restarts.
     rememberMfaKey: ${OPENMFA_REMEMBER_KEY}
+    allowWebAuthn: true
+    # Empty/omitted derives the RP ID from the Jenkins root URL hostname.
+    # See "Security Keys (WebAuthn)" below before setting this explicitly --
+    # changing it later invalidates every registered security key.
+    webAuthnRpId: ''
+    # Only needed when Jenkins is reachable under more than one hostname;
+    # the root URL's own origin is always allowed implicitly.
+    webAuthnAllowedOrigins: []
     exemptUsers:
       - svc-deploy
       - break-glass
@@ -199,6 +293,9 @@ default ephemeral home), two pieces of state need attention:
 - The remember-MFA cookie is `HttpOnly`, `Secure` on HTTPS, HMAC-SHA256 signed
   with constant-time comparison, and carries no secret material -- only the
   username, expiry, and signature.
+- See [Security Keys (WebAuthn)](#security-keys-webauthn) for the
+  WebAuthn-specific threat model (RP ID permanence, HTTPS requirement, and
+  the registration-gating rationale).
 
 ## Development
 

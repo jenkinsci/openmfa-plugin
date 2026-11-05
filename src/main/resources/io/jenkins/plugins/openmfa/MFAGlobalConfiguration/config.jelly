@@ -29,6 +29,26 @@
     </f:entry>
     <f:description> ${%config.exemptRoles.description} </f:description>
 
+    <f:entry title="${%config.allowWebAuthn.title}" field="allowWebAuthn">
+      <f:checkbox />
+    </f:entry>
+    <f:description> ${%config.allowWebAuthn.description} </f:description>
+
+    <f:entry title="${%config.webAuthnRpId.title}" field="webAuthnRpId">
+      <f:textbox />
+    </f:entry>
+    <f:description> ${%config.webAuthnRpId.description} </f:description>
+
+    <f:entry
+      title="${%config.webAuthnAllowedOrigins.title}"
+      field="webAuthnAllowedOrigins"
+    >
+      <f:textarea value="${instance.webAuthnAllowedOriginsText}" />
+    </f:entry>
+    <f:description>
+      ${%config.webAuthnAllowedOrigins.description}
+    </f:description>
+
     <f:entry>
       <a href="${rootURL}/manage/mfa-management" class="jenkins-button">
         <l:icon src="symbol-settings" class="icon-sm" />

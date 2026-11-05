@@ -3,7 +3,6 @@ package io.jenkins.plugins.openmfa.service;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import hudson.util.Secret;
 import io.jenkins.plugins.openmfa.MFAGlobalConfiguration;
 import io.jenkins.plugins.openmfa.base.MFAContext;
 import org.junit.jupiter.api.Test;
@@ -18,24 +17,25 @@ class RememberMFAServiceTest {
 
   private static final long ONE_DAY_MS = 24L * 60 * 60 * 1000;
 
+  private final String mfaEpoch = "epoch-aaaaaaaaaaaaaaaa";
+
   private final RememberMFAService rememberMFAService =
     MFAContext.i().getService(RememberMFAService.class);
 
-  private final Secret totpSecret = Secret.fromString("JBSWY3DPEHPK3PXP");
-
   /**
-   * Changing the TOTP secret invalidates previously issued tokens.
+   * Changing the MFA epoch (e.g. because the user rotated or reconfigured
+   * their MFA method) invalidates previously issued tokens.
    */
   @Test
-  void testChangedTotpSecretRejected(JenkinsRule j) {
+  void testEpochChangeInvalidatesToken(JenkinsRule j) {
     long now = System.currentTimeMillis();
     String token =
-      rememberMFAService.createTokenValue("alice", totpSecret, now + ONE_DAY_MS);
+      rememberMFAService.createTokenValue("alice", mfaEpoch, now + ONE_DAY_MS);
 
-    Secret newSecret = Secret.fromString("KRSXG5CTMVRXEZLU");
+    String newEpoch = "epoch-bbbbbbbbbbbbbbbb";
     assertFalse(
-      rememberMFAService.isValidTokenValue(token, "alice", newSecret, now),
-      "Token bound to old TOTP secret should be rejected after secret change"
+      rememberMFAService.isValidTokenValue(token, "alice", newEpoch, now),
+      "Token bound to old MFA epoch should be rejected after the epoch changes"
     );
   }
 
@@ -46,10 +46,10 @@ class RememberMFAServiceTest {
   void testExpiredTokenRejected(JenkinsRule j) {
     long now = System.currentTimeMillis();
     String token =
-      rememberMFAService.createTokenValue("alice", totpSecret, now - 1);
+      rememberMFAService.createTokenValue("alice", mfaEpoch, now - 1);
 
     assertFalse(
-      rememberMFAService.isValidTokenValue(token, "alice", totpSecret, now),
+      rememberMFAService.isValidTokenValue(token, "alice", mfaEpoch, now),
       "Expired token should be rejected"
     );
   }
@@ -81,21 +81,36 @@ class RememberMFAServiceTest {
     long now = System.currentTimeMillis();
 
     assertFalse(
-      rememberMFAService.isValidTokenValue(null, "alice", totpSecret, now),
+      rememberMFAService.isValidTokenValue(null, "alice", mfaEpoch, now),
       "Null token should be rejected"
     );
     assertFalse(
-      rememberMFAService.isValidTokenValue("", "alice", totpSecret, now),
+      rememberMFAService.isValidTokenValue("", "alice", mfaEpoch, now),
       "Empty token should be rejected"
     );
     assertFalse(
-      rememberMFAService.isValidTokenValue("garbage", "alice", totpSecret, now),
+      rememberMFAService.isValidTokenValue("garbage", "alice", mfaEpoch, now),
       "Token without separators should be rejected"
     );
     assertFalse(
       rememberMFAService
-        .isValidTokenValue("a:notanumber:c", "alice", totpSecret, now),
+        .isValidTokenValue("a:notanumber:c", "alice", mfaEpoch, now),
       "Token with non-numeric expiry should be rejected"
+    );
+  }
+
+  /**
+   * A null epoch (e.g. property not yet created) is rejected.
+   */
+  @Test
+  void testNullEpochRejected(JenkinsRule j) {
+    long now = System.currentTimeMillis();
+    String token =
+      rememberMFAService.createTokenValue("alice", mfaEpoch, now + ONE_DAY_MS);
+
+    assertFalse(
+      rememberMFAService.isValidTokenValue(token, "alice", null, now),
+      "Null MFA epoch should be rejected"
     );
   }
 
@@ -106,7 +121,7 @@ class RememberMFAServiceTest {
   void testTamperedExpiryRejected(JenkinsRule j) {
     long now = System.currentTimeMillis();
     String token =
-      rememberMFAService.createTokenValue("alice", totpSecret, now + 1);
+      rememberMFAService.createTokenValue("alice", mfaEpoch, now + 1);
 
     // Extend the expiry field without re-signing
     String[] parts = token.split(":");
@@ -114,7 +129,7 @@ class RememberMFAServiceTest {
     String tampered = String.join(":", parts);
 
     assertFalse(
-      rememberMFAService.isValidTokenValue(tampered, "alice", totpSecret, now),
+      rememberMFAService.isValidTokenValue(tampered, "alice", mfaEpoch, now),
       "Token with tampered expiry should be rejected"
     );
   }
@@ -126,15 +141,27 @@ class RememberMFAServiceTest {
   void testTamperedTokenRejected(JenkinsRule j) {
     long now = System.currentTimeMillis();
     String token =
-      rememberMFAService.createTokenValue("alice", totpSecret, now + ONE_DAY_MS);
+      rememberMFAService.createTokenValue("alice", mfaEpoch, now + ONE_DAY_MS);
 
-    // Flip the last character of the signature
-    char last = token.charAt(token.length() - 1);
+    // Flip a character in the middle of the signature (the final
+    // colon-separated component), not the last character of the token: the
+    // final base64url character of an unpadded HMAC-SHA256 signature
+    // encodes a few bits that fall outside the decoded MAC bytes, so
+    // flipping between 'A' and 'B' there can -- roughly 1 in 16 times --
+    // decode to the exact same signature bytes and make this assertion
+    // flaky. A character in the middle of the signature always sits inside
+    // a complete 4-character base64 group, so altering it always changes
+    // the decoded bytes.
+    int lastColon = token.lastIndexOf(':');
+    String signature = token.substring(lastColon + 1);
+    int middle = lastColon + 1 + signature.length() / 2;
+    char original = token.charAt(middle);
+    char replacement = original == 'A' ? 'B' : 'A';
     String tampered =
-      token.substring(0, token.length() - 1) + (last == 'A' ? 'B' : 'A');
+      token.substring(0, middle) + replacement + token.substring(middle + 1);
 
     assertFalse(
-      rememberMFAService.isValidTokenValue(tampered, "alice", totpSecret, now),
+      rememberMFAService.isValidTokenValue(tampered, "alice", mfaEpoch, now),
       "Token with tampered signature should be rejected"
     );
   }
@@ -147,31 +174,31 @@ class RememberMFAServiceTest {
     long now = System.currentTimeMillis();
     String token =
       rememberMFAService
-        .createTokenValue("alice:admin", totpSecret, now + ONE_DAY_MS);
+        .createTokenValue("alice:admin", mfaEpoch, now + ONE_DAY_MS);
 
     assertTrue(
       rememberMFAService
-        .isValidTokenValue(token, "alice:admin", totpSecret, now),
+        .isValidTokenValue(token, "alice:admin", mfaEpoch, now),
       "Username containing separator should round-trip"
     );
     assertFalse(
-      rememberMFAService.isValidTokenValue(token, "alice", totpSecret, now),
+      rememberMFAService.isValidTokenValue(token, "alice", mfaEpoch, now),
       "Token for alice:admin should not validate for alice"
     );
   }
 
   /**
-   * A freshly created token for the same user and secret validates.
+   * A freshly created token for the same user and epoch validates.
    */
   @Test
   void testValidTokenValidates(JenkinsRule j) {
     long now = System.currentTimeMillis();
     String token =
-      rememberMFAService.createTokenValue("alice", totpSecret, now + ONE_DAY_MS);
+      rememberMFAService.createTokenValue("alice", mfaEpoch, now + ONE_DAY_MS);
 
     assertTrue(
-      rememberMFAService.isValidTokenValue(token, "alice", totpSecret, now),
-      "Fresh token for same user and secret should validate"
+      rememberMFAService.isValidTokenValue(token, "alice", mfaEpoch, now),
+      "Fresh token for same user and epoch should validate"
     );
   }
 
@@ -182,10 +209,10 @@ class RememberMFAServiceTest {
   void testWrongUserRejected(JenkinsRule j) {
     long now = System.currentTimeMillis();
     String token =
-      rememberMFAService.createTokenValue("alice", totpSecret, now + ONE_DAY_MS);
+      rememberMFAService.createTokenValue("alice", mfaEpoch, now + ONE_DAY_MS);
 
     assertFalse(
-      rememberMFAService.isValidTokenValue(token, "bob", totpSecret, now),
+      rememberMFAService.isValidTokenValue(token, "bob", mfaEpoch, now),
       "Token issued for alice should not validate for bob"
     );
   }
