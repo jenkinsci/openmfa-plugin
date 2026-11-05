@@ -29,7 +29,7 @@ import org.kohsuke.stapler.Stapler;
 /**
  * User property to store MFA secret and status. Factor mutations go through
  * methods that own epoch rotation and persistence; the raw
- * {@link #setSecret(Secret)} is a test fixture setter.
+ * {@code setSecret(Secret)} is a test fixture setter.
  */
 @Log
 @Getter
