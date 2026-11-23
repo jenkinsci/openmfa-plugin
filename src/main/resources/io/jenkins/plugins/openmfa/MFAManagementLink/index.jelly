@@ -26,6 +26,24 @@
         >
         </span>
       </j:if>
+      <j:if test="${request.getParameter('success') == 'webauthn_removed'}">
+        <span
+          id="mfa-notification-data"
+          data-type="success"
+          data-msg="${%webauthn.remove.success}"
+          style="display: none"
+        >
+        </span>
+      </j:if>
+      <j:if test="${request.getParameter('error') == 'webauthn_not_found'}">
+        <span
+          id="mfa-notification-data"
+          data-type="error"
+          data-msg="${%webauthn.remove.error.notfound}"
+          style="display: none"
+        >
+        </span>
+      </j:if>
 
       <span
         id="mfa-reset-dialog-messages"
@@ -40,6 +58,17 @@
         data-toast-error-default="${%reset.error.default}"
         data-status-disabled="${%table.status.disabled}"
         data-set-button-text="${%set.button}"
+      >
+      </span>
+
+      <span
+        id="mfa-webauthn-remove-dialog-messages"
+        data-title="${%webauthn.remove.confirm.title}"
+        data-message-prefix="${%webauthn.remove.confirm.messagePrefix}"
+        data-message-suffix="${%webauthn.remove.confirm.messageSuffix}"
+        data-cancel-text="${%reset.confirm.cancel}"
+        data-ok-text="${%webauthn.remove.button}"
+        data-toast-error-default="${%webauthn.remove.error.default}"
       >
       </span>
 
@@ -130,6 +159,7 @@
                         <th>${%table.user}</th>
                         <th>${%table.fullname}</th>
                         <th>${%table.status}</th>
+                        <th>${%table.methods}</th>
                         <th>${%table.actions}</th>
                       </tr>
                     </thead>
@@ -156,6 +186,70 @@
                             >
                               ${user.statusText}
                             </span>
+                          </td>
+                          <td class="mfa-mgmt-methods-cell">
+                            <span class="mfa-mgmt-method-badge">
+                              <j:choose>
+                                <j:when test="${user.mfaEnabled}">
+                                  ${%methods.totp.enabled}
+                                </j:when>
+                                <j:otherwise
+                                  >${%methods.totp.disabled}</j:otherwise
+                                >
+                              </j:choose>
+                            </span>
+                            <j:choose>
+                              <j:when test="${user.hasWebAuthn()}">
+                                <details class="mfa-mgmt-webauthn-details">
+                                  <summary>
+                                    ${%methods.webauthn.count(user.webAuthnKeyCount)}
+                                  </summary>
+                                  <ul class="mfa-mgmt-webauthn-list">
+                                    <j:forEach
+                                      var="credential"
+                                      items="${user.webAuthnCredentials}"
+                                    >
+                                      <li>
+                                        <span class="mfa-mgmt-webauthn-name">
+                                          ${credential.name}
+                                        </span>
+                                        <l:isAdmin>
+                                          <f:form
+                                            method="post"
+                                            action="removeWebAuthnCredential"
+                                            class="mfa-mgmt-remove-webauthn-form"
+                                          >
+                                            <input
+                                              type="hidden"
+                                              name="userId"
+                                              value="${user.userId}"
+                                            />
+                                            <input
+                                              type="hidden"
+                                              name="credentialId"
+                                              value="${credential.credentialId}"
+                                            />
+                                            <button
+                                              type="button"
+                                              class="jenkins-button jenkins-button--tertiary jenkins-!-destructive-color jenkins-!-margin-0"
+                                            >
+                                              ${%webauthn.remove.button}
+                                            </button>
+                                          </f:form>
+                                        </l:isAdmin>
+                                      </li>
+                                    </j:forEach>
+                                  </ul>
+                                </details>
+                              </j:when>
+                              <j:otherwise>
+                                <span
+                                  class="mfa-mgmt-method-badge mfa-mgmt-method-badge-secondary"
+                                >
+                                  ${%methods.webauthn.none}
+                                </span>
+                              </j:otherwise>
+                            </j:choose>
                           </td>
                           <td class="mfa-mgmt-actions-cell">
                             <l:isAdmin>

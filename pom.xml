@@ -45,9 +45,10 @@
     | unwanted libraries from being packaged, resulting in leaner,
     | safer plugins.
     -->
-    <hpi.bundledArtifacts>core,jai-imageio-core,javase,jcommander</hpi.bundledArtifacts>
+    <hpi.bundledArtifacts>cbor,core,datautilities,httpclient5,httpcore5,httpcore5-h2,jai-imageio-core,javase,jcommander,numbers,webauthn-server-core,yubico-util</hpi.bundledArtifacts>
     <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
     <lombok.version>1.18.42</lombok.version>
+    <webauthn.version>2.7.0</webauthn.version>
     <zxing.version>3.5.3</zxing.version>
     <!--
     | help prevent accidental usage of the deprecated commons-lang-2 library
@@ -80,6 +81,62 @@
       <groupId>com.google.zxing</groupId>
       <artifactId>javase</artifactId>
       <version>${zxing.version}</version>
+    </dependency>
+
+    <!--
+    | Jackson is supplied by the jackson2-api plugin rather than bundled:
+    | it already ships every Jackson artifact java-webauthn-server needs
+    | (databind, core, annotations, dataformat-cbor, datatype-jdk8,
+    | datatype-jsr310) at a compatible 2.22.x, so the Yubico dependencies
+    | below exclude their own copies. Declared first so its versions win
+    | the dependency mediation.
+    -->
+    <dependency>
+      <groupId>org.jenkins-ci.plugins</groupId>
+      <artifactId>jackson2-api</artifactId>
+    </dependency>
+
+    <!-- Yubico java-webauthn-server for WebAuthn ceremonies -->
+    <dependency>
+      <groupId>com.yubico</groupId>
+      <artifactId>webauthn-server-core</artifactId>
+      <version>${webauthn.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.core</groupId>
+          <artifactId>jackson-databind</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.dataformat</groupId>
+          <artifactId>jackson-dataformat-cbor</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.datatype</groupId>
+          <artifactId>jackson-datatype-jdk8</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.datatype</groupId>
+          <artifactId>jackson-datatype-jsr310</artifactId>
+        </exclusion>
+        <!--
+        | Jenkins core 2.568.3 declares Guava directly, at exactly the
+        | 33.6.0-jre this library resolves to, so core's copy serves it and
+        | bundling a second one would only shadow it (the same reasoning
+        | that keeps SLF4J out). Excluding Guava takes its build-time
+        | annotation jars with it, which also settles the
+        | RequireUpperBoundDeps clash between Guava's error_prone 2.47.0
+        | and the 2.18.0 the Jenkins parent manages.
+        -->
+        <exclusion>
+          <groupId>com.google.guava</groupId>
+          <artifactId>guava</artifactId>
+        </exclusion>
+        <!-- Jenkins core owns the SLF4J API; never bundle a second copy -->
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>slf4j-api</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
 
     <!-- Ionicons API (icons in UI) -->

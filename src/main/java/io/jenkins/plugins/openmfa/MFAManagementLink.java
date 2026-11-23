@@ -32,6 +32,66 @@ import org.kohsuke.stapler.interceptor.RequirePOST;
 public class MFAManagementLink extends ManagementLink {
 
   /**
+   * Removes a registered WebAuthn credential from a user.
+   *
+   * <p>
+   * Deliberately gated by {@link Jenkins#ADMINISTER} (via
+   * {@link #checkAdminPermission()}) plus the usual POST+crumb protection
+   * ONLY: unlike the self-service removal on the MFA setup page, this
+   * endpoint does not require the calling admin's own session to be
+   * MFA-verified, and does not require WebAuthn to be enabled globally. An
+   * MFA-exempt administrator revoking a lost key, and cleanup after the
+   * feature has been turned off, are exactly the scenarios this endpoint
+   * exists for.
+   *
+   * @param userId
+   *          The ID of the user to remove a credential from
+   * @param credentialId
+   *          The ID of the credential to remove
+   * @return HTTP response indicating success or failure
+   */
+  @RequirePOST
+  public HttpResponse doRemoveWebAuthnCredential(
+    @QueryParameter String userId,
+    @QueryParameter String credentialId) {
+    checkAdminPermission();
+
+    if (userId == null || userId.trim().isEmpty()) {
+      return HttpResponses.error(
+        UIConstants.HttpStatus.BAD_REQUEST,
+        "User ID is required"
+      );
+    }
+    if (credentialId == null || credentialId.trim().isEmpty()) {
+      return HttpResponses.error(
+        UIConstants.HttpStatus.BAD_REQUEST,
+        "Credential ID is required"
+      );
+    }
+
+    User user = User.getById(userId, false);
+    if (user == null) {
+      return HttpResponses.error(
+        UIConstants.HttpStatus.NOT_FOUND,
+        "User not found: " + userId
+      );
+    }
+
+    UserService userService = MFAContext.i().getService(UserService.class);
+    boolean removed = userService.removeWebAuthnCredential(user, credentialId);
+    if (!removed) {
+      return HttpResponses.redirectTo(
+        ".?error=webauthn_not_found&user_id=" + userId
+      );
+    }
+
+    // The removal itself is logged by UserService, which owns the operation.
+    return HttpResponses.redirectTo(
+      ".?success=webauthn_removed&user_id=" + userId
+    );
+  }
+
+  /**
    * Resets MFA for a specific user.
    *
    * @param userId

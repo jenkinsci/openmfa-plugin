@@ -7,10 +7,12 @@ import hudson.security.SecurityRealm;
 import io.jenkins.plugins.openmfa.MFAUserProperty;
 import io.jenkins.plugins.openmfa.base.Service;
 import io.jenkins.plugins.openmfa.service.model.UserInfo;
+import io.jenkins.plugins.openmfa.service.model.WebAuthnCredential;
 import io.jenkins.plugins.openmfa.util.JenkinsUtil;
 import io.jenkins.plugins.openmfa.util.TOTPUtil;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import jenkins.model.Jenkins;
 import jenkins.security.LastGrantedAuthoritiesProperty;
@@ -65,10 +67,14 @@ public class UserService {
    * @return UserMFAInfo containing the user's MFA status
    */
   public UserInfo getUserMFAInfo(User user) {
+    MFAUserProperty property = MFAUserProperty.forUser(user);
+    List<WebAuthnCredential> webAuthnCredentials =
+      property == null ? List.of() : property.getWebAuthnCredentials();
     return new UserInfo(
       user.getId(),
       user.getFullName(),
-      TOTPUtil.isMFAEnabled(user)
+      TOTPUtil.isMFAEnabled(user),
+      webAuthnCredentials
     );
   }
 
@@ -84,6 +90,33 @@ public class UserService {
   }
 
   /**
+   * Removes one of a user's registered WebAuthn credentials.
+   *
+   * @param user
+   *          the user to remove a credential from
+   * @param credentialId
+   *          the credential id to remove
+   * @return whether a credential was found and removed
+   */
+  public boolean removeWebAuthnCredential(User user, String credentialId) {
+    JenkinsUtil.checkAdminPermission();
+
+    MFAUserProperty property = MFAUserProperty.forUser(user);
+    if (property == null) {
+      return false;
+    }
+    boolean removed = property.removeWebAuthnCredential(credentialId);
+    if (removed) {
+      log.info(
+        String.format(
+          "Admin removed a WebAuthn credential for user: %s", user.getId()
+        )
+      );
+    }
+    return removed;
+  }
+
+  /**
    * Resets MFA for a user, clearing their secret and disabling MFA.
    *
    * @param user
@@ -96,8 +129,10 @@ public class UserService {
 
     MFAUserProperty property = MFAUserProperty.forUser(user);
     if (property != null) {
-      property.setSecret(null);
-      user.save();
+      // Clears the TOTP secret and every registered security key, and
+      // rotates the MFA epoch, so a full reset leaves no second factor
+      // behind and invalidates any remember-MFA cookie.
+      property.clearAllFactors();
       log.info(String.format("MFA reset for user: %s by admin", user.getId()));
     }
   }

@@ -70,6 +70,9 @@ public class MFAGlobalConfiguration extends GlobalConfiguration {
       .toList();
   }
 
+  /** Whether WebAuthn security keys may be used as a second factor */
+  private boolean allowWebAuthn = UIConstants.Defaults.DEFAULT_ALLOW_WEBAUTHN;
+
   /** Roles/groups exempt from MFA */
   private List<String> exemptRoles = List.of();
 
@@ -95,6 +98,19 @@ public class MFAGlobalConfiguration extends GlobalConfiguration {
   /** Whether MFA is required for all users */
   private boolean requireMFA = UIConstants.Defaults.DEFAULT_REQUIRE_MFA;
 
+  /**
+   * Additional origins (besides the one derived from the Jenkins root URL)
+   * that are accepted when verifying WebAuthn assertions, e.g. when Jenkins
+   * is reachable behind multiple hostnames.
+   */
+  private List<String> webAuthnAllowedOrigins = List.of();
+
+  /**
+   * The WebAuthn Relying Party ID. Empty means unset, in which case it is
+   * derived from the Jenkins root URL.
+   */
+  private String webAuthnRpId = "";
+
   public MFAGlobalConfiguration() {
     // Load persisted configuration when Jenkins starts
     load();
@@ -107,8 +123,12 @@ public class MFAGlobalConfiguration extends GlobalConfiguration {
     // convert to the list form before binding the rest
     setExemptUsers(splitLines(json.optString("exemptUsers", "")));
     setExemptRoles(splitLines(json.optString("exemptRoles", "")));
+    setWebAuthnAllowedOrigins(
+      splitLines(json.optString("webAuthnAllowedOrigins", ""))
+    );
     json.remove("exemptUsers");
     json.remove("exemptRoles");
+    json.remove("webAuthnAllowedOrigins");
     req.bindJSON(this, json); // Bind the JSON object to the configuration object
     save(); // Save the configuration object
     return true;
@@ -168,6 +188,19 @@ public class MFAGlobalConfiguration extends GlobalConfiguration {
     return rememberMfaKey;
   }
 
+  /**
+   * Additional allowed WebAuthn origins as text for the Jelly textarea, one
+   * origin per line.
+   */
+  public String getWebAuthnAllowedOriginsText() {
+    return String.join("\n", webAuthnAllowedOrigins);
+  }
+
+  @DataBoundSetter
+  public void setAllowWebAuthn(boolean allowWebAuthn) {
+    this.allowWebAuthn = allowWebAuthn;
+  }
+
   @DataBoundSetter
   public void setExemptRoles(List<String> exemptRoles) {
     this.exemptRoles = exemptRoles != null ? List.copyOf(exemptRoles) : List.of();
@@ -200,5 +233,18 @@ public class MFAGlobalConfiguration extends GlobalConfiguration {
   @DataBoundSetter
   public void setRequireMFA(boolean requireMFA) {
     this.requireMFA = requireMFA;
+  }
+
+  @DataBoundSetter
+  public void setWebAuthnAllowedOrigins(List<String> webAuthnAllowedOrigins) {
+    this.webAuthnAllowedOrigins =
+      webAuthnAllowedOrigins != null
+        ? List.copyOf(webAuthnAllowedOrigins)
+        : List.of();
+  }
+
+  @DataBoundSetter
+  public void setWebAuthnRpId(String webAuthnRpId) {
+    this.webAuthnRpId = webAuthnRpId != null ? webAuthnRpId.trim() : "";
   }
 }
