@@ -128,10 +128,16 @@ class RememberMFAServiceTest {
     String token =
       rememberMFAService.createTokenValue("alice", totpSecret, now + ONE_DAY_MS);
 
-    // Flip the last character of the signature
-    char last = token.charAt(token.length() - 1);
+    // Flip the first character of the signature. A 32-byte MAC encodes to 43
+    // base64url characters whose last one carries only 2 significant bits, so
+    // changing that character can decode to the same bytes; the first one
+    // always changes what the signature decodes to.
+    int start = token.lastIndexOf(':') + 1;
+    char first = token.charAt(start);
     String tampered =
-      token.substring(0, token.length() - 1) + (last == 'A' ? 'B' : 'A');
+      token.substring(0, start)
+        + (first == 'A' ? 'B' : 'A')
+        + token.substring(start + 1);
 
     assertFalse(
       rememberMFAService.isValidTokenValue(tampered, "alice", totpSecret, now),

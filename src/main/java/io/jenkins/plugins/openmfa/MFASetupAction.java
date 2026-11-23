@@ -14,8 +14,10 @@ import io.jenkins.plugins.openmfa.base.MFAContext;
 import io.jenkins.plugins.openmfa.constant.PluginConstants;
 import io.jenkins.plugins.openmfa.constant.TOTPConstants;
 import io.jenkins.plugins.openmfa.constant.UIConstants;
+import io.jenkins.plugins.openmfa.service.RememberMFAService;
 import io.jenkins.plugins.openmfa.service.SessionService;
 import io.jenkins.plugins.openmfa.service.TOTPService;
+import jakarta.servlet.http.HttpServletRequest;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -46,6 +48,7 @@ public class MFASetupAction extends InvisibleAction {
   @RequirePOST
   public HttpResponse doDisable() throws IOException {
     requireCanConfigureTargetUser();
+    requireVerifiedSessionIfEnrolled();
     if (MFAGlobalConfiguration.get().isRequireMFA()) {
       return HttpResponses.redirectTo("?error=require_mfa");
     }
@@ -66,6 +69,7 @@ public class MFASetupAction extends InvisibleAction {
   @RequirePOST
   public HttpResponse doEnable() throws IOException {
     requireCanConfigureTargetUser();
+    requireVerifiedSessionIfEnrolled();
 
     var req = Stapler.getCurrentRequest2();
     String secretParam = req.getParameter(PluginConstants.FormParameters.SECRET);
@@ -217,6 +221,37 @@ public class MFASetupAction extends InvisibleAction {
 
   private void requireCanConfigureTargetUser() throws HttpResponseException {
     if (!canConfigureTargetUser()) {
+      throw HttpResponses.forbidden();
+    }
+  }
+
+  /**
+   * Changing or removing an existing factor is done from a session that has
+   * completed MFA (or a remembered verification). First-time enrolment is
+   * unaffected.
+   */
+  private void requireVerifiedSessionIfEnrolled() throws HttpResponseException {
+    MFAUserProperty property = MFAUserProperty.forUser(targetUser);
+    if (property == null || !property.isEnabled()) {
+      return;
+    }
+    HttpServletRequest req = Stapler.getCurrentRequest2();
+    // A remembered MFA verification counts too: the setup page is exempt from
+    // the filter, so a remember-me cookie may not have marked the session yet.
+    boolean verified =
+      MFAContext.i()
+        .getService(SessionService.class)
+        .isVerifiedSession(req.getSession(false))
+        || MFAContext.i()
+          .getService(RememberMFAService.class)
+          .isVerifiedByCookie(req, User.current());
+    if (!verified) {
+      log.warning(
+        String.format(
+          "MFA change for user %s needs a verified session",
+          targetUser.getId()
+        )
+      );
       throw HttpResponses.forbidden();
     }
   }

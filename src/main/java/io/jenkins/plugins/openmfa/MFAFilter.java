@@ -61,6 +61,24 @@ public class MFAFilter implements Filter {
       PluginConstants.Urls.SECURITY_CHECK_ENDPOINT
     );
 
+  /**
+   * True if the path is not in canonical form (dot segments, encoded
+   * separators, path parameters, empty segments).
+   */
+  static boolean isAmbiguousPath(String path) {
+    String lower = path.toLowerCase(java.util.Locale.ROOT);
+    return lower.contains("..")
+      || lower.contains("/./")
+      || lower.endsWith("/.")
+      || lower.contains("//")
+      || lower.contains(";")
+      || lower.contains("\\")
+      || lower.contains("%2e")
+      || lower.contains("%2f")
+      || lower.contains("%5c")
+      || lower.contains("%3b");
+  }
+
   private ExemptionService exemptionService =
     MFAContext.i().getService(ExemptionService.class);
 
@@ -271,6 +289,12 @@ public class MFAFilter implements Filter {
    */
   private boolean shouldAllowPath(HttpServletRequest req) {
     String relativePath = relativePath(req);
+
+    // The allowlist is compared with the request URI as received, so only
+    // paths that are already in canonical form are matched against it.
+    if (isAmbiguousPath(relativePath)) {
+      return false;
+    }
 
     // Check if path matches any allowed pattern
     // Use strict matching to prevent path bypass attacks (e.g., /loginEvil matching
