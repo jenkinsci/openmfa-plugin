@@ -201,6 +201,9 @@ class RememberMFAWebTest {
     try (var reEnrollWc = j.createWebClient()) {
       reEnrollWc.setThrowExceptionOnFailingStatusCode(false);
       reEnrollWc.login("reenrolluser");
+      // #17's gate requires an MFA-verified session (or a remembered one) to
+      // change an enrolled factor; this client would otherwise be refused.
+      addRememberCookie(j, reEnrollWc, tokenBeforeReEnrollment);
       Secret newSecret = totpService.generateSecret();
       postEnable(
         j, reEnrollWc, "reenrolluser", newSecret,

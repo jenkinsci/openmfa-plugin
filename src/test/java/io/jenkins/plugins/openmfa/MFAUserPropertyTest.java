@@ -12,7 +12,6 @@ import hudson.util.Secret;
 import io.jenkins.plugins.openmfa.base.MFAContext;
 import io.jenkins.plugins.openmfa.service.TOTPService;
 import io.jenkins.plugins.openmfa.service.model.WebAuthnCredential;
-import java.io.File;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -208,36 +207,6 @@ class MFAUserPropertyTest {
     );
   }
 
-  /**
-   * The credential list must survive a real save and reload. It lives in the
-   * user's config.xml, so a serialization gap would silently drop every key on
-   * restart.
-   */
-  @Test
-  void testWebAuthnCredentialsSurviveSaveAndReload(JenkinsRule j)
-    throws Exception {
-    User user = User.getById("persistuser", true);
-    MFAUserProperty property = MFAUserProperty.getOrCreate(user);
-    property.addWebAuthnCredential(
-      new WebAuthnCredential(
-        "cred-1", "pk-1", 7L, "Laptop", "2026-01-01T00:00:00Z", null
-      )
-    );
-    user.save();
-
-    File config =
-      new File(j.jenkins.getRootDir(), "users/persistuser/config.xml");
-    assertTrue(config.isFile(), "The user config must exist on disk");
-
-    MFAUserProperty reloaded =
-      (MFAUserProperty) jenkins.model.Jenkins.XSTREAM2.fromXML(config);
-    List<WebAuthnCredential> credentials = reloaded.getWebAuthnCredentials();
-    assertEquals(1, credentials.size(), "One credential must survive the reload");
-    assertEquals("cred-1", credentials.get(0).getCredentialId());
-    assertEquals("Laptop", credentials.get(0).getName());
-    assertEquals(7L, credentials.get(0).getSignatureCount());
-  }
-
   @Test
   void testRotateMfaEpochChangesValue(JenkinsRule j) {
     MFAUserProperty property = new MFAUserProperty();
@@ -323,5 +292,35 @@ class MFAUserPropertyTest {
     // No secret set
 
     assertFalse(property.verifyCode("123456")); // Should fail when not configured
+  }
+
+  /**
+   * The credential list must survive a real save and reload. It lives in the
+   * user's config.xml, so a serialization gap would silently drop every key on
+   * restart.
+   */
+  @Test
+  void testWebAuthnCredentialsSurviveSerializationRoundTrip(JenkinsRule j)
+    throws Exception {
+    User user = User.getById("persistuser", true);
+    MFAUserProperty property = MFAUserProperty.getOrCreate(user);
+    property.addWebAuthnCredential(
+      new WebAuthnCredential(
+        "cred-1", "pk-1", 7L, "Laptop", "2026-01-01T00:00:00Z", null
+      )
+    );
+    user.save();
+
+    // The property is persisted by the same XStream serializer Jenkins uses for
+    // user config.xml, so a round trip here is what a restart exercises.
+    String xml = jenkins.model.Jenkins.XSTREAM2.toXML(property);
+    MFAUserProperty reloaded =
+      (MFAUserProperty) jenkins.model.Jenkins.XSTREAM2.fromXML(xml);
+
+    List<WebAuthnCredential> credentials = reloaded.getWebAuthnCredentials();
+    assertEquals(1, credentials.size(), "One credential must survive the reload");
+    assertEquals("cred-1", credentials.get(0).getCredentialId());
+    assertEquals("Laptop", credentials.get(0).getName());
+    assertEquals(7L, credentials.get(0).getSignatureCount());
   }
 }

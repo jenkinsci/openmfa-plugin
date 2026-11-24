@@ -490,6 +490,37 @@ public class MFASetupAction extends InvisibleAction {
   }
 
   /**
+   * Changing or removing an existing factor is done from a session that has
+   * completed MFA (or a remembered verification). First-time enrolment is
+   * unaffected.
+   */
+  private void requireVerifiedSessionIfEnrolled() throws HttpResponseException {
+    MFAUserProperty property = MFAUserProperty.forUser(targetUser);
+    if (property == null || !property.isEnabled()) {
+      return;
+    }
+    HttpServletRequest req = Stapler.getCurrentRequest2();
+    // A remembered MFA verification counts too: the setup page is exempt from
+    // the filter, so a remember-me cookie may not have marked the session yet.
+    boolean verified =
+      MFAContext.i()
+        .getService(SessionService.class)
+        .isVerifiedSession(req.getSession(false))
+        || MFAContext.i()
+          .getService(RememberMFAService.class)
+          .isVerifiedByCookie(req, User.current());
+    if (!verified) {
+      log.warning(
+        String.format(
+          "MFA change for user %s needs a verified session",
+          targetUser.getId()
+        )
+      );
+      throw HttpResponses.forbidden();
+    }
+  }
+
+  /**
    * Gate for every security-key endpoint: self-or-admin; self-only when
    * {@code selfOnly} (admins must not enrol their own key on another account);
    * an MFA-verified session (the page is allow-listed, so a stolen password
@@ -541,36 +572,5 @@ public class MFASetupAction extends InvisibleAction {
   /** Looked up per call so services stubbed after startup are seen. */
   private WebAuthnService webAuthnService() {
     return MFAContext.i().getService(WebAuthnService.class);
-  }
-
-  /**
-   * Changing or removing an existing factor is done from a session that has
-   * completed MFA (or a remembered verification). First-time enrolment is
-   * unaffected.
-   */
-  private void requireVerifiedSessionIfEnrolled() throws HttpResponseException {
-    MFAUserProperty property = MFAUserProperty.forUser(targetUser);
-    if (property == null || !property.isEnabled()) {
-      return;
-    }
-    HttpServletRequest req = Stapler.getCurrentRequest2();
-    // A remembered MFA verification counts too: the setup page is exempt from
-    // the filter, so a remember-me cookie may not have marked the session yet.
-    boolean verified =
-      MFAContext.i()
-        .getService(SessionService.class)
-        .isVerifiedSession(req.getSession(false))
-        || MFAContext.i()
-          .getService(RememberMFAService.class)
-          .isVerifiedByCookie(req, User.current());
-    if (!verified) {
-      log.warning(
-        String.format(
-          "MFA change for user %s needs a verified session",
-          targetUser.getId()
-        )
-      );
-      throw HttpResponses.forbidden();
-    }
   }
 }
