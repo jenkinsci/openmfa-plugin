@@ -48,7 +48,8 @@ It introduces setup, verification, and management flows for user accounts inside
 
 ## Requirements
 
-- Jenkins `2.568.3` or newer
+- Jenkins `2.528.3` or newer
+- Java 17 or newer
 
 ## Getting Started
 
@@ -73,7 +74,9 @@ It introduces setup, verification, and management flows for user accounts inside
 1. User signs in with username/password.
 2. If MFA is required and the user is not enrolled, user is redirected to MFA setup.
 3. User scans QR code in authenticator app and verifies setup.
-4. On future logins, user enters a 6-digit TOTP code.
+4. On future logins the user completes the MFA challenge: a 6-digit TOTP
+   code, or a registered security key if one is enrolled. The last successful
+   method is offered first, and either can be switched to.
 
 **Showcases**
 
@@ -92,7 +95,10 @@ It introduces setup, verification, and management flows for user accounts inside
 ## MFA User Management
 
 - Go to `Manage Jenkins` > `MFA User Management`.
-- Use this page to inspect enrollment state and perform admin-side MFA operations.
+- The table shows each user's TOTP status and the security keys they have
+  registered, with per-key removal and a full reset that clears TOTP and every
+  key.
+- Other admin-side MFA operations are reachable from the same page.
 
 **Showcases**
 
@@ -186,14 +192,11 @@ security:
   so `mvn hpi:run` works over HTTP.
 - With no root URL and no `webAuthnRpId`, WebAuthn endpoints refuse with an
   error asking the admin to set the root URL; TOTP keeps working.
-- The setup page is reachable before MFA (pre-existing lockout-recovery
-  posture). Key registration is gated on a verified session; TOTP disable
-  is not, and TOTP re-enrollment (`doEnable`) also marks the session
-  verified -- so a password-only attacker could re-enroll TOTP and then pass
-  the key gate. With `requireMFA` off the gate bounds rather than blocks
-  this: re-enrollment is loud (the victim's authenticator stops working) and
-  remembered-device cookies die on epoch rotation. Pre-existing upstream
-  behavior, documented rather than changed.
+- The setup page is reachable before MFA (lockout-recovery posture). Changing
+  or removing an existing factor — including registering a key — requires a
+  session that has passed MFA or a remembered verification; first-time
+  enrollment does not. The MFA path allowlist matches canonical paths only, so
+  ambiguous paths are routed through the normal MFA check.
 - `java-webauthn-server` pins `com.upokecenter:cbor` `5.0.0-alpha2` (it
   parses attacker-controlled CBOR) plus `httpclient5` `5.7-beta1` and
   `httpcore5` `5.5-beta4`; revisit when upstream moves to stable releases.
