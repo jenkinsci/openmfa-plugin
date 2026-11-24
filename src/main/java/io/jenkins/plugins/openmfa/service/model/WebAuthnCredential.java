@@ -13,6 +13,10 @@ import lombok.Setter;
  * registration: the signature counter advances and the last-used timestamp
  * updates on every authentication, while the remaining fields are fixed at
  * registration time.
+ *
+ * <p>
+ * {@code publicKeyCose} holds public key material only, so the scan rule
+ * {@code jenkins/plaintext-storage} is suppressed on that field.
  */
 @Getter
 public class WebAuthnCredential {
@@ -26,6 +30,7 @@ public class WebAuthnCredential {
 
   private final String name;
 
+  @SuppressWarnings("lgtm[jenkins/plaintext-storage]")
   private final String publicKeyCose;
 
   @Setter
