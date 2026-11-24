@@ -125,87 +125,154 @@
                     <l:icon src="symbol-lock-closed" class="icon-lg" />
                   </div>
                   <h1 class="jenkins-!-margin-bottom-2">${%title}</h1>
+                </div>
+
+                <j:set
+                  var="webAuthnAvailable"
+                  value="${it.isWebAuthnAvailableForUser()}"
+                />
+                <!--
+                  No need to re-test availability: getPreferredMethod() only
+                  answers 'webauthn' when it is available for this user.
+                -->
+                <j:set
+                  var="webAuthnPreferred"
+                  value="${it.preferredMethod == 'webauthn'}"
+                />
+
+                <j:if test="${webAuthnAvailable}">
+                  <div
+                    id="mfa-webauthn-section"
+                    class="${webAuthnPreferred ? '' : 'mfa-section-hidden'}"
+                    data-challenge-url="${rootURL}/${it.urlName}/webauthn-challenge"
+                    data-verify-url="${rootURL}/${it.urlName}/webauthn-verify"
+                    data-from-param="${it.fromParam != null ? it.fromParam : ''}"
+                  >
+                    <div class="jenkins-!-text-center">
+                      <div class="mfa-login-icon jenkins-!-margin-bottom-4">
+                        <l:icon src="symbol-key" class="icon-lg" />
+                      </div>
+                      <p
+                        class="jenkins-!-margin-bottom-6"
+                        style="color: var(--text-color-secondary)"
+                      >
+                        ${%webauthn.touch.key}
+                      </p>
+                      <span id="mfa-webauthn-error-msg" style="display: none">
+                        ${%error.webauthn.failed}
+                      </span>
+                      <a
+                        href="#"
+                        id="mfa-use-code-link"
+                        class="mfa-method-switch-link"
+                      >
+                        ${%use.code.instead}
+                      </a>
+                    </div>
+                  </div>
+                </j:if>
+
+                <div
+                  id="mfa-totp-section"
+                  class="${webAuthnPreferred ? 'mfa-section-hidden' : ''}"
+                >
                   <p
                     class="jenkins-!-margin-bottom-6"
                     style="color: var(--text-color-secondary)"
                   >
                     ${%prompt}
                   </p>
-                </div>
 
-                <form
-                  method="post"
-                  action="${rootURL}${it.securityCheckEndpoint}"
-                >
-                  <j:if test="${it.fromParam != null and it.fromParam != ''}">
-                    <input type="hidden" name="from" value="${it.fromParam}" />
-                  </j:if>
-                  <div class="mfa-login-code-wrapper">
-                    <div class="mfa-login-code-boxes">
+                  <form
+                    method="post"
+                    action="${rootURL}${it.securityCheckEndpoint}"
+                  >
+                    <j:if test="${it.fromParam != null and it.fromParam != ''}">
                       <input
-                        type="text"
-                        class="mfa-login-digit"
-                        maxlength="1"
-                        data-index="0"
-                        inputmode="numeric"
-                        pattern="[0-9]"
+                        type="hidden"
+                        name="from"
+                        value="${it.fromParam}"
                       />
+                    </j:if>
+                    <div class="mfa-login-code-wrapper">
+                      <div class="mfa-login-code-boxes">
+                        <input
+                          type="text"
+                          class="mfa-login-digit"
+                          maxlength="1"
+                          data-index="0"
+                          inputmode="numeric"
+                          pattern="[0-9]"
+                        />
+                        <input
+                          type="text"
+                          class="mfa-login-digit"
+                          maxlength="1"
+                          data-index="1"
+                          inputmode="numeric"
+                          pattern="[0-9]"
+                        />
+                        <input
+                          type="text"
+                          class="mfa-login-digit"
+                          maxlength="1"
+                          data-index="2"
+                          inputmode="numeric"
+                          pattern="[0-9]"
+                        />
+                        <input
+                          type="text"
+                          class="mfa-login-digit"
+                          maxlength="1"
+                          data-index="3"
+                          inputmode="numeric"
+                          pattern="[0-9]"
+                        />
+                        <input
+                          type="text"
+                          class="mfa-login-digit"
+                          maxlength="1"
+                          data-index="4"
+                          inputmode="numeric"
+                          pattern="[0-9]"
+                        />
+                        <input
+                          type="text"
+                          class="mfa-login-digit"
+                          maxlength="1"
+                          data-index="5"
+                          inputmode="numeric"
+                          pattern="[0-9]"
+                        />
+                      </div>
                       <input
-                        type="text"
-                        class="mfa-login-digit"
-                        maxlength="1"
-                        data-index="1"
-                        inputmode="numeric"
-                        pattern="[0-9]"
-                      />
-                      <input
-                        type="text"
-                        class="mfa-login-digit"
-                        maxlength="1"
-                        data-index="2"
-                        inputmode="numeric"
-                        pattern="[0-9]"
-                      />
-                      <input
-                        type="text"
-                        class="mfa-login-digit"
-                        maxlength="1"
-                        data-index="3"
-                        inputmode="numeric"
-                        pattern="[0-9]"
-                      />
-                      <input
-                        type="text"
-                        class="mfa-login-digit"
-                        maxlength="1"
-                        data-index="4"
-                        inputmode="numeric"
-                        pattern="[0-9]"
-                      />
-                      <input
-                        type="text"
-                        class="mfa-login-digit"
-                        maxlength="1"
-                        data-index="5"
-                        inputmode="numeric"
-                        pattern="[0-9]"
+                        type="hidden"
+                        name="${it.formParamTotpCode}"
+                        id="mfa-login-code-hidden"
                       />
                     </div>
-                    <input
-                      type="hidden"
-                      name="${it.formParamTotpCode}"
-                      id="mfa-login-code-hidden"
-                    />
-                  </div>
 
-                  <button
-                    type="submit"
-                    class="jenkins-button jenkins-button--primary"
-                    style="width: 100%"
-                  >
-                    ${%submit.button}
-                  </button>
-                </form>
+                    <button
+                      type="submit"
+                      class="jenkins-button jenkins-button--primary"
+                      style="width: 100%"
+                    >
+                      ${%submit.button}
+                    </button>
+                  </form>
+
+                  <j:if test="${webAuthnAvailable}">
+                    <div class="jenkins-!-margin-top-4">
+                      <a
+                        href="#"
+                        id="mfa-use-webauthn-link"
+                        class="mfa-method-switch-link"
+                      >
+                        ${%use.security.key}
+                      </a>
+                    </div>
+                  </j:if>
+                </div>
 
                 <div class="mfa-login-footer">
                   <p>${%lost.device}</p>
@@ -217,6 +284,12 @@
           <st:adjunct
             includes="io.jenkins.plugins.openmfa.MFALoginAction.mfa-login-enabled"
           />
+          <j:if test="${webAuthnAvailable}">
+            <st:adjunct includes="io.jenkins.plugins.openmfa.webauthn-common" />
+            <st:adjunct
+              includes="io.jenkins.plugins.openmfa.MFALoginAction.mfa-webauthn-login"
+            />
+          </j:if>
         </j:when>
         <j:otherwise>
           <div class="mfa-login-container">

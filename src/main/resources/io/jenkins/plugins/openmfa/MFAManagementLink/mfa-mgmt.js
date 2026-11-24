@@ -145,6 +145,98 @@ function showResetConfirm(userId, username, form) {
 }
 
 /**
+ * Get localized labels and messages for the WebAuthn remove dialog from the
+ * DOM.
+ */
+function _getWebAuthnRemoveDialogLabels() {
+  const el = document.getElementById('mfa-webauthn-remove-dialog-messages');
+  if (!el) return null;
+  return {
+    title: el.getAttribute('data-title') || '',
+    messagePrefix: el.getAttribute('data-message-prefix') || '',
+    messageSuffix: el.getAttribute('data-message-suffix') || '',
+    okText: el.getAttribute('data-ok-text') || '',
+    cancelText: el.getAttribute('data-cancel-text') || '',
+    toastErrorDefault: el.getAttribute('data-toast-error-default') || '',
+  };
+}
+
+/**
+ * Submits a WebAuthn credential removal form. The endpoint always responds
+ * with a redirect (success or "not found" alike - see
+ * MFAManagementLink#doRemoveWebAuthnCredential), so a redirected response
+ * just follows that redirect to pick up the resulting notification. A
+ * non-redirect response (e.g. a permission or validation failure) has no
+ * server-rendered notification to fall back on, so it is surfaced here as a
+ * generic toast instead of silently reloading the page.
+ */
+function submitRemoveWebAuthn(form) {
+  const labels = _getWebAuthnRemoveDialogLabels() || {};
+  const btn = form.querySelector('button');
+  if (btn) btn.disabled = true;
+
+  const crumb = getJenkinsCrumb(form);
+  const headers = {};
+  if (crumb) headers[crumb.header] = crumb.value;
+
+  fetch(form.action, {
+    method: 'POST',
+    body: new FormData(form),
+    credentials: 'same-origin',
+    headers: headers,
+  })
+    .then(function (response) {
+      if (response.redirected) {
+        window.location.href = response.url;
+        return;
+      }
+      if (!response.ok) {
+        showToast(labels.toastErrorDefault, 'error');
+        if (btn) btn.disabled = false;
+        return;
+      }
+      window.location.reload();
+    })
+    .catch(function () {
+      showToast(labels.toastErrorDefault, 'error');
+      if (btn) btn.disabled = false;
+    });
+}
+
+/**
+ * Shows the remove-security-key confirmation dialog, falling back to the
+ * browser confirm() if the Design Library dialog API is unavailable.
+ */
+function showRemoveWebAuthnConfirm(credentialName, form) {
+  const labels = _getWebAuthnRemoveDialogLabels();
+  const message =
+    (labels ? labels.messagePrefix : '') +
+    ' ' +
+    credentialName +
+    (labels ? labels.messageSuffix : '');
+
+  if (typeof dialog === 'undefined') {
+    if (window.confirm(message)) {
+      submitRemoveWebAuthn(form);
+    }
+    return;
+  }
+
+  dialog
+    .confirm(labels ? labels.title : '', {
+      message: message,
+      okText: labels ? labels.okText : undefined,
+      cancelText: labels ? labels.cancelText : undefined,
+      type: 'destructive',
+    })
+    .then(function (confirmed) {
+      if (confirmed) {
+        submitRemoveWebAuthn(form);
+      }
+    });
+}
+
+/**
  * Show notificationBar if server rendered notification data is present.
  */
 function initNotification() {
@@ -178,6 +270,24 @@ function initNotification() {
           });
         }
       })(resetForms[j]);
+    }
+
+    const webAuthnRemoveForms = document.querySelectorAll(
+      '.mfa-mgmt-remove-webauthn-form',
+    );
+    for (let k = 0; k < webAuthnRemoveForms.length; k++) {
+      (function (form) {
+        const removeBtn = form.querySelector('button');
+        if (removeBtn) {
+          removeBtn.addEventListener('click', function () {
+            const nameSpan = form
+              .closest('li')
+              .querySelector('.mfa-mgmt-webauthn-name');
+            const name = nameSpan ? nameSpan.textContent.trim() : '';
+            showRemoveWebAuthnConfirm(name, form);
+          });
+        }
+      })(webAuthnRemoveForms[k]);
     }
   }
 

@@ -1,6 +1,7 @@
 package io.jenkins.plugins.openmfa;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import io.jenkins.plugins.casc.ConfigurationAsCode;
@@ -46,6 +47,17 @@ class MFAGlobalConfigurationCasCTest {
       List.of("ci-agents", "service-accounts"),
       config.getExemptRoles(),
       "exemptRoles should bind as a list"
+    );
+    assertFalse(config.isAllowWebAuthn(), "allowWebAuthn should bind");
+    assertEquals(
+      "jenkins.example.com",
+      config.getWebAuthnRpId(),
+      "webAuthnRpId should bind"
+    );
+    assertEquals(
+      List.of("https://jenkins.example.com"),
+      config.getWebAuthnAllowedOrigins(),
+      "webAuthnAllowedOrigins should bind as a list"
     );
   }
 
