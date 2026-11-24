@@ -218,8 +218,12 @@ public class MFAUserProperty extends UserProperty {
    * issued while it was registered stop validating.
    *
    * @return whether a credential was removed
+   * @throws IOException
+   *           if persisting the removal fails; propagated so the caller can
+   *           report failure instead of claiming success
    */
-  public synchronized boolean removeWebAuthnCredential(String credentialId) {
+  public synchronized boolean removeWebAuthnCredential(String credentialId)
+    throws IOException {
     if (webAuthnCredentials == null) {
       return false;
     }
@@ -227,10 +231,13 @@ public class MFAUserProperty extends UserProperty {
       webAuthnCredentials.removeIf(
         c -> c.getCredentialId().equals(credentialId)
       );
-    if (removed) {
-      rotateMfaEpoch();
+    if (!removed) {
+      return false;
     }
-    return removed;
+    // Inline rather than rotateMfaEpoch(): that helper swallows a failed save.
+    mfaEpoch = generateMfaEpoch();
+    saveUser();
+    return true;
   }
 
   /** Rotates the MFA epoch, invalidating existing remember-MFA tokens. */

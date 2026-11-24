@@ -12,6 +12,7 @@ import hudson.util.Secret;
 import io.jenkins.plugins.openmfa.base.MFAContext;
 import io.jenkins.plugins.openmfa.service.TOTPService;
 import io.jenkins.plugins.openmfa.service.model.WebAuthnCredential;
+import java.io.File;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,7 +30,8 @@ class MFAUserPropertyTest {
   }
 
   @Test
-  void testAddListRemoveWebAuthnCredentialRoundTrip(JenkinsRule j) {
+  void testAddListRemoveWebAuthnCredentialRoundTrip(JenkinsRule j)
+    throws Exception {
     MFAUserProperty property = new MFAUserProperty();
     assertFalse(property.hasWebAuthn());
     assertTrue(property.getWebAuthnCredentials().isEmpty());
@@ -180,14 +182,16 @@ class MFAUserPropertyTest {
   }
 
   @Test
-  void testRemoveWebAuthnCredentialReturnsFalseWhenNotFound(JenkinsRule j) {
+  void testRemoveWebAuthnCredentialReturnsFalseWhenNotFound(JenkinsRule j)
+    throws Exception {
     MFAUserProperty property = new MFAUserProperty();
 
     assertFalse(property.removeWebAuthnCredential("does-not-exist"));
   }
 
   @Test
-  void testRemoveWebAuthnCredentialRotatesEpoch(JenkinsRule j) {
+  void testRemoveWebAuthnCredentialRotatesEpoch(JenkinsRule j)
+    throws Exception {
     MFAUserProperty property = new MFAUserProperty();
     property.addWebAuthnCredential(
       new WebAuthnCredential(
@@ -202,6 +206,36 @@ class MFAUserPropertyTest {
     assertNotEquals(
       epochBefore, epochAfter, "Removing a credential must rotate the MFA epoch"
     );
+  }
+
+  /**
+   * The credential list must survive a real save and reload. It lives in the
+   * user's config.xml, so a serialization gap would silently drop every key on
+   * restart.
+   */
+  @Test
+  void testWebAuthnCredentialsSurviveSaveAndReload(JenkinsRule j)
+    throws Exception {
+    User user = User.getById("persistuser", true);
+    MFAUserProperty property = MFAUserProperty.getOrCreate(user);
+    property.addWebAuthnCredential(
+      new WebAuthnCredential(
+        "cred-1", "pk-1", 7L, "Laptop", "2026-01-01T00:00:00Z", null
+      )
+    );
+    user.save();
+
+    File config =
+      new File(j.jenkins.getRootDir(), "users/persistuser/config.xml");
+    assertTrue(config.isFile(), "The user config must exist on disk");
+
+    MFAUserProperty reloaded =
+      (MFAUserProperty) jenkins.model.Jenkins.XSTREAM2.fromXML(config);
+    List<WebAuthnCredential> credentials = reloaded.getWebAuthnCredentials();
+    assertEquals(1, credentials.size(), "One credential must survive the reload");
+    assertEquals("cred-1", credentials.get(0).getCredentialId());
+    assertEquals("Laptop", credentials.get(0).getName());
+    assertEquals(7L, credentials.get(0).getSignatureCount());
   }
 
   @Test

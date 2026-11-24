@@ -78,7 +78,22 @@ public class MFAManagementLink extends ManagementLink {
     }
 
     UserService userService = MFAContext.i().getService(UserService.class);
-    boolean removed = userService.removeWebAuthnCredential(user, credentialId);
+    boolean removed;
+    try {
+      removed = userService.removeWebAuthnCredential(user, credentialId);
+    } catch (IOException e) {
+      log.severe(
+        String.format(
+          "Failed to remove a WebAuthn credential for user %s: %s",
+          userId,
+          e.getMessage()
+        )
+      );
+      return HttpResponses.error(
+        UIConstants.HttpStatus.INTERNAL_SERVER_ERROR,
+        "Failed to remove the security key: " + e.getMessage()
+      );
+    }
     if (!removed) {
       return HttpResponses.redirectTo(
         ".?error=webauthn_not_found&user_id=" + userId

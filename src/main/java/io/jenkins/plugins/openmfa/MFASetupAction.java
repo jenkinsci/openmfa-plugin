@@ -233,10 +233,23 @@ public class MFASetupAction extends InvisibleAction {
     var req = Stapler.getCurrentRequest2();
     String credentialId =
       req.getParameter(PluginConstants.FormParameters.CREDENTIAL_ID);
-    boolean removed =
-      credentialId != null
-        && !credentialId.isBlank()
-        && property.removeWebAuthnCredential(credentialId);
+    boolean removed;
+    try {
+      removed =
+        credentialId != null
+          && !credentialId.isBlank()
+          && property.removeWebAuthnCredential(credentialId);
+    } catch (IOException e) {
+      log.log(
+        Level.SEVERE,
+        "Failed to remove a WebAuthn credential for user: " + targetUser.getId(),
+        e
+      );
+      return HttpResponses.error(
+        UIConstants.HttpStatus.INTERNAL_SERVER_ERROR,
+        "The security key could not be removed."
+      );
+    }
 
     if (!removed) {
       return redirectToSetupPage(req, "error=key_not_found");

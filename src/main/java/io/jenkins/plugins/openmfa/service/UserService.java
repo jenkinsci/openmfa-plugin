@@ -98,7 +98,8 @@ public class UserService {
    *          the credential id to remove
    * @return whether a credential was found and removed
    */
-  public boolean removeWebAuthnCredential(User user, String credentialId) {
+  public boolean removeWebAuthnCredential(User user, String credentialId)
+    throws IOException {
     JenkinsUtil.checkAdminPermission();
 
     MFAUserProperty property = MFAUserProperty.forUser(user);
